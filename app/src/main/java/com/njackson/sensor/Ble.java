@@ -31,6 +31,8 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.math.BigInteger;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 import javax.inject.Inject;
 
@@ -53,6 +55,7 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_TEMPERATURE_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.TEMPERATURE_MEASUREMENT);
     public final static UUID UUID_LIGHT_MODE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE);
     public final static UUID UUID_LIGHT_MODE_SERVICE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE);
+
 
     private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
 
@@ -357,18 +360,30 @@ public class Ble implements IBle, ITimerHandler {
                 ///Log.d(TAG, "put " + display(gatt) + " into mGattsConnectionPending, size:" + mGattsConnectionPending.size());
 
                 try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                }
-            }
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-            }
-        }
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+		}
+	    }
+	    try {
+		    Thread.sleep(5000);
+	    } catch (InterruptedException e) {
+	    }
+	}
     }
 
-    public void setLightMode(BluetoothGatt gatt, int newMode) {
+    public void setLightMode(BluetoothGatt gatt, String newModeString) {
+	    //Need a way to determine if gatt is FLARE or ION to load correct json
+	    //Option to make auto descision based on battery level and time of day/sunset/sunrise
+	    //also dynamic , if battery level lowers
+	    int newMode = 0;
+	    try {
+		final JSONObject FLARE_RT_JSON = new JSONObject(BLESampleGattAttributes.FLARE_RT_JSON);
+	        //final JSONObject ION_PRO_RT_JSON = new JSONObject(BLESampleGattAttributes.ION_PRO_RT_JSON);
+		newMode = Integer.parseInt(FLARE_RT_JSON.optString(newModeString).toString());
+	    }
+	    catch (JSONException e) {
+		    Log.w(TAG, "Unable to load light JSON: "+e);
+	    }
 	    final BluetoothGattService gattService = gatt.getService(UUID_LIGHT_MODE_SERVICE);
 	    if (gattService == null) {
 		   Log.i(TAG, "LIGHT MODE SERVICE not found");
@@ -403,7 +418,7 @@ public class Ble implements IBle, ITimerHandler {
             BluetoothGatt gatt = iterator.next().getValue();
             Log.d(TAG, "disconnect" + display(gatt));
             if (gatt != null) {
-		setLightMode(gatt, 0);
+		setLightMode(gatt, "Off");
                 gatt.disconnect();
                 gatt.close();
                 //gatt = null;
@@ -679,10 +694,7 @@ public class Ble implements IBle, ITimerHandler {
                 }
             }
         }
-	//https://github.com/dobos/LightRemote/blob/master/src/LightRemote/Assets/Config.xml
-	//maybe need to check which light type and select your prefered mode
-	//maybe lookup sunrise/sunset times and battery level to decide prefered mode
-	setLightMode(gatt, 1);
+	setLightMode(gatt, "Day Flash");
         allwrites = true;
     }
 
