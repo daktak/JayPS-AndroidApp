@@ -293,7 +293,6 @@ public class Ble implements IBle, ITimerHandler {
                             // TODO(jay) post something?
                             //broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
                             displayGattServices(gatt);
-			    setLightMode(gatt, 5);
                         } else {
                             if (debug) Log.w(TAG, display(gatt) + " onServicesDiscovered received: " + status);
                         }
@@ -381,11 +380,16 @@ public class Ble implements IBle, ITimerHandler {
 		   Log.i(TAG, "LIGHT MODE not found");
 		   return;
 	    }
-	    Log.i(TAG, "Setting light mode");
-	    final BigInteger bi = BigInteger.valueOf(newMode);
-	    final byte[] bytes = bi.toByteArray();
-	    gattChar.setValue(bytes);
-	    gatt.writeCharacteristic(gattChar);
+	    if ((newMode==0)||(light_mode==0)) {
+		    Log.i(TAG, String.format("Setting light mode %d",newMode));
+		    gattChar.setValue(newMode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+		    gatt.writeCharacteristic(gattChar);
+	    }
+	//moved this to here so the lightMode can be set without having to create a characteristicWriteQueue
+        Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
+        if (descriptorWriteQueue.size() > 0) {
+            gatt.writeDescriptor(descriptorWriteQueue.element());
+        }
     }
 
     public void disconnectAllDevices() {
@@ -675,10 +679,10 @@ public class Ble implements IBle, ITimerHandler {
                 }
             }
         }
-        Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
-        if (descriptorWriteQueue.size() > 0) {
-            gatt.writeDescriptor(descriptorWriteQueue.element());
-        }
+	//https://github.com/dobos/LightRemote/blob/master/src/LightRemote/Assets/Config.xml
+	//maybe need to check which light type and select your prefered mode
+	//maybe lookup sunrise/sunset times and battery level to decide prefered mode
+	setLightMode(gatt, 1);
         allwrites = true;
     }
 
