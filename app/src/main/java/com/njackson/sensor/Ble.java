@@ -630,7 +630,7 @@ public class Ble implements IBle, ITimerHandler {
                 if (debug) Log.i(TAG, display(gatt) + " displayGattServices characteristic: " +  display(gattCharacteristic) + " charaProp=" + charaProp);
                 if ((charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
 		    if (UUID_LIGHT_MODE.equals(gattCharacteristic.getUuid())) {
-			readCharacteristic(gattCharacteristic);
+			display(gattCharacteristic);
 		    }
 //                    if (gattCharacteristic.getUuid().toString().equals("00002a00-0000-1000-8000-00805f9b34fb") // device name
 //                            || gattCharacteristic.getUuid().toString().equals("00002a38-0000-1000-8000-00805f9b34fb") // Body Sensor Location
