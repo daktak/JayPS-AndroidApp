@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.math.BigInteger;
 
 import javax.inject.Inject;
 
@@ -292,6 +293,7 @@ public class Ble implements IBle, ITimerHandler {
                             // TODO(jay) post something?
                             //broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
                             displayGattServices(gatt);
+			    setLightMode(gatt, 5);
                         } else {
                             if (debug) Log.w(TAG, display(gatt) + " onServicesDiscovered received: " + status);
                         }
@@ -367,31 +369,23 @@ public class Ble implements IBle, ITimerHandler {
         }
     }
 
-    public void setLightMode(int newMode) {
-        if (mBluetoothAdapter == null) {
-            Log.w(TAG, "setLightMode BluetoothAdapter not initialized");
-            return;
-	}
-        Log.d(TAG, "setLightMode mGatts.size:" + mGatts.size());
-        Iterator<Map.Entry<String, BluetoothGatt>> iterator = mGatts.entrySet().iterator();
-        while (iterator.hasNext()) {
-            BluetoothGatt gatt = iterator.next().getValue();
-            Log.d(TAG, "setLightMode" + display(gatt));
-            if (gatt != null) {
-		    final BluetoothGattService service = gatt.getService(UUID_LIGHT_MODE_SERVICE);
-		    if (service == null) {
-			    Log.d(TAG, "LIGHT MODE SERVICE not found");
-			    return;
-		    }
-		   BluetoothGattCharacteristic gattChar = service.getCharacteristic(UUID_LIGHT_MODE);
-		   if (gattChar == null) {
-			   Log.d(TAG, "LIGHT MODE not found");
-			   return;
-		   }
-		   gattChar.setValue();
-		   gatt.WriteCharacteristic(gattChar);
+    public void setLightMode(BluetoothGatt gatt, int newMode) {
+	    final BluetoothGattService gattService = gatt.getService(UUID_LIGHT_MODE_SERVICE);
+	    if (gattService == null) {
+		   Log.i(TAG, "LIGHT MODE SERVICE not found");
+		   return;
 	    }
-	}
+		    
+	    final BluetoothGattCharacteristic gattChar = gattService.getCharacteristic(UUID_LIGHT_MODE);
+	    if (gattChar == null) {
+		   Log.i(TAG, "LIGHT MODE not found");
+		   return;
+	    }
+	    Log.i(TAG, "Setting light mode");
+	    final BigInteger bi = BigInteger.valueOf(newMode);
+	    final byte[] bytes = bi.toByteArray();
+	    gattChar.setValue(bytes);
+	    gatt.writeCharacteristic(gattChar);
     }
 
     public void disconnectAllDevices() {
@@ -405,6 +399,7 @@ public class Ble implements IBle, ITimerHandler {
             BluetoothGatt gatt = iterator.next().getValue();
             Log.d(TAG, "disconnect" + display(gatt));
             if (gatt != null) {
+		setLightMode(gatt, 0);
                 gatt.disconnect();
                 gatt.close();
                 //gatt = null;
