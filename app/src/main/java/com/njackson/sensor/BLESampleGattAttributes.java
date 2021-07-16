@@ -23,6 +23,10 @@ public class BLESampleGattAttributes {
     //https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.temperature_measurement.xml
     public static String BATTERY_LEVEL = "00002A19-0000-1000-8000-00805f9b34fb";
 
+    //https://github.com/dobos/LightRemote/blob/master/src/LightRemote/Constants.cs
+    public static String LIGHT_MODE_SERVICE = "71261000-3692-ae93-e711-472ba41689c9";
+    public static String LIGHT_MODE = "71261001-3692-ae93-e711-472ba41689c9";
+
     static {
         // Sample Services.
         // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
@@ -62,6 +66,8 @@ public class BLESampleGattAttributes {
         attributes.put("00002a5b-0000-1000-8000-00805f9b34fb", "CSC Measurement");
         attributes.put("00002a5c-0000-1000-8000-00805f9b34fb", "CSC Feature");
         attributes.put("00002a5d-0000-1000-8000-00805f9b34fb", "Sensor Location");
+
+	attributes.put(UUID_LIGHT_MODE, "Light Mode");
     }
 
     public static String lookup(String uuid, String defaultName) {
