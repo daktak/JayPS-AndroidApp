@@ -367,6 +367,33 @@ public class Ble implements IBle, ITimerHandler {
         }
     }
 
+    public void setLightMode(int newMode) {
+        if (mBluetoothAdapter == null) {
+            Log.w(TAG, "setLightMode BluetoothAdapter not initialized");
+            return;
+	}
+        Log.d(TAG, "setLightMode mGatts.size:" + mGatts.size());
+        Iterator<Map.Entry<String, BluetoothGatt>> iterator = mGatts.entrySet().iterator();
+        while (iterator.hasNext()) {
+            BluetoothGatt gatt = iterator.next().getValue();
+            Log.d(TAG, "setLightMode" + display(gatt));
+            if (gatt != null) {
+		    final BluetoothGattService service = gatt.getService(UUID_LIGHT_MODE_SERVICE);
+		    if (service == null) {
+			    Log.d(TAG, "LIGHT MODE SERVICE not found");
+			    return;
+		    }
+		   BluetoothGattCharacteristic gattChar = service.getCharacteristic(UUID_LIGHT_MODE);
+		   if (gattChar == null) {
+			   Log.d(TAG, "LIGHT MODE not found");
+			   return;
+		   }
+		   gattChar.setValue();
+		   gatt.WriteCharacteristic(gattChar);
+	    }
+	}
+    }
+
     public void disconnectAllDevices() {
         if (mBluetoothAdapter == null) {
             Log.w(TAG, "disconnectAllDevices BluetoothAdapter not initialized");
