@@ -67,7 +67,7 @@ public class BLESampleGattAttributes {
         attributes.put("00002a5c-0000-1000-8000-00805f9b34fb", "CSC Feature");
         attributes.put("00002a5d-0000-1000-8000-00805f9b34fb", "Sensor Location");
 
-	attributes.put(UUID_LIGHT_MODE, "Light Mode");
+	attributes.put("71261001-3692-ae93-e711-472ba41689c9", "Light Mode");
     }
 
     public static String lookup(String uuid, String defaultName) {
