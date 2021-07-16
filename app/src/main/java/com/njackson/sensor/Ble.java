@@ -387,14 +387,12 @@ public class Ble implements IBle, ITimerHandler {
 	    final BluetoothGattService gattService = gatt.getService(UUID_LIGHT_MODE_SERVICE);
 	    if (gattService == null) {
 		   Log.i(TAG, "LIGHT MODE SERVICE not found");
-	           continueWrite(gatt);
 		   return;
 	    }
 		    
 	    final BluetoothGattCharacteristic gattChar = gattService.getCharacteristic(UUID_LIGHT_MODE);
 	    if (gattChar == null) {
 		   Log.i(TAG, "LIGHT MODE not found");
-	           continueWrite(gatt);
 		   return;
 	    }
 	    if ((newMode==0)||(light_mode==0)) {
@@ -402,15 +400,6 @@ public class Ble implements IBle, ITimerHandler {
 		    gattChar.setValue(newMode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
 		    gatt.writeCharacteristic(gattChar);
 	    }
-	    continueWrite(gatt);
-    }
-
-    public void continueWrite(BluetoothGatt gatt) {
-	//moved this to here so the lightMode can be set without having to create a characteristicWriteQueue
-        Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
-        if (descriptorWriteQueue.size() > 0) {
-            gatt.writeDescriptor(descriptorWriteQueue.element());
-        }
     }
 
     public void disconnectAllDevices() {
@@ -701,6 +690,10 @@ public class Ble implements IBle, ITimerHandler {
             }
         }
 	setLightMode(gatt, "Day Flash");
+        Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
+        if (descriptorWriteQueue.size() > 0) {
+            gatt.writeDescriptor(descriptorWriteQueue.element());
+	}
         allwrites = true;
     }
 
