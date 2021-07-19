@@ -311,7 +311,11 @@ public class Ble implements IBle, ITimerHandler {
                     public void onCharacteristicRead(BluetoothGatt gatt,
                                                      BluetoothGattCharacteristic characteristic,
                                                      int status) {
-                        readCharacteristicQueue.remove();
+                        try {
+                            readCharacteristicQueue.remove();
+                        } catch (Exception e) {
+                            Log.d(TAG, "Error removing readCharacteristicQueu item " + e);
+                        }
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             String msg = decodeCharacteristic(gatt, characteristic);
@@ -348,7 +352,11 @@ public class Ble implements IBle, ITimerHandler {
                         } else {
                             Log.d(TAG, display(gatt) + " Callback: Error writing GATT Descriptor: " + status);
                         }
-                        descriptorWriteQueue.remove();  //pop the item that we just finishing writing
+                        try {
+                            descriptorWriteQueue.remove();  //pop the item that we just finishing writing
+                        } catch (Exception e) {
+                            Log.d(TAG, "Error removing descriptorWriteQueue item " + e);
+                        }
                         //if there is more to write, do it!
                         if (descriptorWriteQueue.size() > 0) {
                             Log.d(TAG, display(gatt) + " write next descriptor");
@@ -369,7 +377,11 @@ public class Ble implements IBle, ITimerHandler {
                         } else {
                             Log.d(TAG, display(gatt) + " Callback: Error writing GATT Characteristic: " + status);
                         }
-                        characteristicWriteQueue.remove();  //pop the item that we just finishing writing
+                        try {
+                            characteristicWriteQueue.remove();  //pop the item that we just finishing writing
+                        } catch (Exception e) {
+                            Log.d(TAG, "Error removing characteristicWriteQueue item " + e);
+                        }
                         if (descriptorWriteQueue.size() > 0) {
                             Log.d(TAG, display(gatt) + " write next descriptor");
                             gatt.writeDescriptor(descriptorWriteQueue.element());
