@@ -204,7 +204,7 @@ public class UploadActivity extends FragmentActivity {
                     new ClientParametersAuthentication(_clientId, _clientSecret),
                     _clientId,
                     _urlAuthorize)
-                    .setScopes(Arrays.asList("view_private,write"))
+                    .setScopes(Arrays.asList("activity:write,activity:read_all"))
                     .setCredentialStore(credentialStore)
                     .setRequestInitializer(new HttpRequestInitializer() {
                         @Override
