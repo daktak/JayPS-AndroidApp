@@ -49,7 +49,7 @@ import fr.jayps.android.AdvancedLocation;
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "PB-SettingsActivity";
-    public  static final int max_ble_devices = 3;
+    public  static final int max_ble_devices = 6;
 
     @Inject IInstallWatchFace _installWatchFace;
     @Inject SharedPreferences _sharedPreferences;
