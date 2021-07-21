@@ -67,6 +67,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         addPreferencesFromResource(R.xml.preferences);
 
+        setNextcloudShareLink(true);
+
         Preference installPreference = findPreference("INSTALL_WATCHFACE");
         installPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
@@ -409,7 +411,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         setUnitsSummary();
         setRefreshSummary(_sharedPreferences.getString("REFRESH_INTERVAL", String.valueOf(Constants.REFRESH_INTERVAL_DEFAULT)));
-        setLoginJaypsSummary();
+        setLoginNextcloudSummary();
         setLoginMmtSummary();
         setLiveSummary();
         setStravaSummary();
@@ -447,15 +449,18 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (s.equals("LIVE_TRACKING") || s.equals("LIVE_TRACKING_MMT")) {
             setLiveSummary();
         }
-        if (s.equals("LIVE_TRACKING_LOGIN")) {
+        if (s.equals("LIVE_TRACKING_URL")) {
             setLiveSummary();
-            setLoginJaypsSummary();
+            setLoginNextcloudSummary();
         }
         if (s.equals("LIVE_TRACKING_MMT_LOGIN")) {
             setLiveSummary();
             setLoginMmtSummary();
         }
         if (s.equals("LIVE_TRACKING_PASSWORD") || s.equals("LIVE_TRACKING_MMT_PASSWORD")) {
+            setLiveSummary();
+        }
+        if (s.equals("LIVE_TRACKING_TOKEN") || s.equals("LIVE_TRACKING_DEVICE")) {
             setLiveSummary();
         }
         if (s.equals("STRAVA_AUTO")) {
@@ -517,10 +522,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     }
 
-    private void setLoginJaypsSummary() {
-        String login = _sharedPreferences.getString("LIVE_TRACKING_LOGIN", "");
-        Preference loginPref = findPreference("LIVE_TRACKING_LOGIN");
-        loginPref.setSummary(login);
+    private void setLoginNextcloudSummary() {
+        String url = _sharedPreferences.getString("LIVE_TRACKING_URL", "");
+        Preference urlPref = findPreference("LIVE_TRACKING_URL");
+        urlPref.setSummary(url);
     }
 
     private void setLoginMmtSummary() {
@@ -531,14 +536,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     // TODO(jay) : call me when PreferenceScreen "live_screen" is closed
     private void setLiveSummary() {
-        Boolean live_jayps = _sharedPreferences.getBoolean("LIVE_TRACKING", false) && !_sharedPreferences.getString("LIVE_TRACKING_LOGIN", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_PASSWORD", "").equals("");
+        Boolean live_nextcloud = _sharedPreferences.getBoolean("LIVE_TRACKING", false) && !_sharedPreferences.getString("LIVE_TRACKING_URL", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_TOKEN", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_DEVICE", "").equals("");
         Boolean live_mmt = _sharedPreferences.getBoolean("LIVE_TRACKING_MMT", false) && !_sharedPreferences.getString("LIVE_TRACKING_MMT_LOGIN", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_MMT_PASSWORD", "").equals("");
-        Preference live_jayps_screen = findPreference("live_jayps_screen");
+        Preference live_nextcloud_screen = findPreference("live_nextcloud_screen");
         String live = "Disable";
-        if (live_jayps) {
+        if (live_nextcloud) {
             live = "Enable";
         }
-        live_jayps_screen.setSummary(live);
+        live_nextcloud_screen.setSummary(live);
+        setNextcloudShareLink(live_nextcloud);
+
         Preference live_mmt_screen = findPreference("live_mmt_screen");
         live = "Disable";
         if (live_mmt) {
@@ -619,5 +626,36 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         Preference hrmMaxPref = findPreference("PREF_BLE_HRM_HRMAX");
         hrmMaxPref.setSummary(_sharedPreferences.getString("PREF_BLE_HRM_HRMAX", getString(R.string.PREF_BLE_HRM_HRMAX_SUMMARY)));
+    }
+    
+    private void setNextcloudShareLink(Boolean live) {
+        Preference ncTracking_pref = findPreference("LIVE_TRACKING_SHARE");
+        if (live) {
+            StringBuilder ncURL = new StringBuilder();
+
+            ncURL.append(_sharedPreferences.getString("LIVE_TRACKING_URL", ""));
+            ncURL.append("/index.php/apps/phonetrack/publicWebLog/");
+            ncURL.append(_sharedPreferences.getString("LIVE_TRACKING_TOKEN", ""));
+            ncURL.append("/");
+            ncURL.append(_sharedPreferences.getString("LIVE_TRACKING_DEVICE", ""));
+            ncURL.append("?lineToggle=0&refresh=15&arrow=0&gradient=0&autozoom=1&tooltip=0&linewidth=4&pointradius=8&nbpoints=1000");
+
+            ncTracking_pref.setSummary(ncURL.toString());
+            ncTracking_pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent share = new Intent(Intent.ACTION_SEND);
+                    share.setType("text/plain");
+                    share.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                    share.putExtra(Intent.EXTRA_SUBJECT, "My LiveTracking URL");
+                    share.putExtra(Intent.EXTRA_TEXT, ncURL.toString());
+                    startActivity(Intent.createChooser(share, "Share NC Tracking Link"));
+                    return true;
+                }
+            });
+        } else {
+            ncTracking_pref.setSummary("Disabled");
+            ncTracking_pref.setOnPreferenceClickListener(null);
+        }
     }
 }
