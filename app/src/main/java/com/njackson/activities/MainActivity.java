@@ -3,7 +3,6 @@ package com.njackson.activities;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -57,8 +56,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     @Inject Navigator _navigator;
     @Inject IAnalytics _parseAnalytics;
 
-    private boolean _authInProgress;
-
     @Subscribe
     public void onStartButtonTouched(StartButtonTouchedEvent event) {
         _serviceStarter.startLocationServices();
@@ -72,7 +69,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     @Subscribe
     public void onRecognitionState(ActivityRecognitionStatus event) {
         if(event.getStatus() == ActivityRecognitionStatus.Status.UNABLE_TO_START) {
-            Toast.makeText(this, "Google Play Services is not available", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.alert_google_play_not_available, Toast.LENGTH_SHORT).show();
             Log.d(TAG, "PLAY_NOT_AVAILABLE");
         }
     }
@@ -82,9 +79,9 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         if (event.getStatus() == BaseStatus.Status.DISABLED) {
 
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-            alertDialogBuilder.setMessage("GPS is disabled in your device. Would you like to enable it?")
+            alertDialogBuilder.setMessage(R.string.alert_gps_off_enable_it)
                     .setCancelable(false)
-                    .setPositiveButton("Goto Settings Page To Enable GPS",
+                    .setPositiveButton(R.string.alert_gps_go_to_settings,
                             new DialogInterface.OnClickListener(){
                                 public void onClick(DialogInterface dialog, int id){
                                     Intent callGPSSettingIntent = new Intent(
@@ -92,7 +89,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                                     startActivity(callGPSSettingIntent);
                                 }
                             });
-            alertDialogBuilder.setNegativeButton("Cancel",
+            alertDialogBuilder.setNegativeButton(R.string.cancel,
                     new DialogInterface.OnClickListener(){
                         public void onClick(DialogInterface dialog, int id){
                             dialog.cancel();
@@ -156,7 +153,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                 _dataStore.setStartTime(settings.getLong("GPS_LAST_START", 0));
                 _dataStore.setDistance(settings.getFloat("GPS_DISTANCE", 0));
                 _dataStore.setElapsedTime(settings.getLong("GPS_ELAPSEDTIME", 0));
-                _dataStore.setAscent((float) settings.getFloat("GPS_ASCENT", 0));
+                _dataStore.setAscent(settings.getFloat("GPS_ASCENT", 0));
                 _dataStore.commit();
 
                 editor.putString("hrm_name", settings.getString("hrm_name", ""));
@@ -204,7 +201,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                 GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""));
                 _parseAnalytics.trackEvent("gpx_export");
             } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the export", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.action_upload_strava) {
@@ -213,10 +210,10 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                     StravaUpload strava_upload = new StravaUpload(this);
                     strava_upload.upload(_sharedPreferences.getString("strava_token", ""));
                 } else {
-                    Toast.makeText(getApplicationContext(), "Please configure Strava in the settings before using the upload", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_configure_strava_upload, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Strava", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.alert_enable_tracks_strava_upload, Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.action_upload_runkeeper) {
@@ -225,24 +222,24 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                     RunkeeperUpload runkeeper_upload = new RunkeeperUpload(this);
                     runkeeper_upload.upload(_sharedPreferences.getString("runkeeper_token", ""));
                 } else {
-                    Toast.makeText(getApplicationContext(), "Please configure Runkeeper in the settings before using the upload", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_configure_runkeeper_upload, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Runkeeper", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.alert_enable_tracks_runkeeper_upload, Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.action_load_route) {
-            Toast.makeText(getApplicationContext(), "Open a GPX file", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.alert_open_gpx_file, Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             //intent.setType("application/gpx+xml"); // does not work for all gpx file.... (ko: recent, dropbox...)
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             try {
-                startActivityForResult(Intent.createChooser(intent, "Select txt file"), Constants.CODE_LOAD_GPX);
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.alert_select_txt_file)), Constants.CODE_LOAD_GPX);
             } catch (android.content.ActivityNotFoundException ex) {
                 // Potentially direct the user to the Market with a Dialog
-                Toast.makeText(getApplicationContext(), "Impossible to open file", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.alert_unable_to_open_file, Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.action_reset) {
@@ -257,7 +254,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                             _bus.post(new ResetGPSState());
                             AdvancedLocation advancedLocation = new AdvancedLocation(getApplicationContext());
                             advancedLocation.resetGPX();
-                            Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), R.string.done, Toast.LENGTH_SHORT).show();
                         }
                     })
                     .setNegativeButton(android.R.string.no, null).show();
@@ -286,7 +283,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         }
     }
 
-
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //Log.d(TAG, "requestCode=" + requestCode + " resultCode=" + resultCode);
         if (requestCode == Constants.CODE_LOAD_GPX) {
@@ -301,11 +297,12 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                     }
                     _navigator.loadGpx(gpx.toString());
                     _parseAnalytics.trackEvent("navigation_load");
-                    Toast.makeText(getApplicationContext(), "Route loaded - " + _navigator.getNbPoints() + " points", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_route_loaded + " - " + _navigator.getNbPoints() + " points", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e);
                 }
             }
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

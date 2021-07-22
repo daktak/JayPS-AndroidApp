@@ -101,7 +101,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                                 _bus.post(new ResetGPSState());
                                 AdvancedLocation advancedLocation = new AdvancedLocation(getApplicationContext());
                                 advancedLocation.resetGPX();
-                                Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), R.string.done, Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton(android.R.string.no, null).show();
@@ -129,7 +129,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 AdvancedLocation advancedLocation = new AdvancedLocation(getApplicationContext());
                                 advancedLocation.resetGPX();
-                                Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), R.string.done, Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton(android.R.string.no, null).show();
@@ -150,16 +150,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         Preference pref = findPreference("PREF_PRESSURE_INFO");
         SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) != null){
-            pref.setSummary("Pressure sensor available");
+            pref.setSummary(R.string.PREF_PRESSURE_SENSOR_AVAILABLE);
         } else {
-            pref.setSummary("No pressure sensor");
+            pref.setSummary(R.string.PREF_PRESSURE_SENSOR_NOT_AVAILABLE);
         }
 
         pref = findPreference("PREF_GEOID_HEIGHT_INFO");
         if (_sharedPreferences.getFloat("GEOID_HEIGHT", 0) != 0) {
-            pref.setSummary("Correction: " + _sharedPreferences.getFloat("GEOID_HEIGHT", 0) + "m");
+            pref.setSummary(R.string.correction +": " + _sharedPreferences.getFloat("GEOID_HEIGHT", 0) + "m");
         } else {
-            pref.setSummary("No correction");
+            pref.setSummary(R.string.no_correction);
         }
 
         setHrmSummary();
@@ -193,16 +193,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             public boolean onPreferenceClick(Preference preference) {
                 if (preference.getKey().equals("PREF_LOAD_ROUTE")) {
                     _navigator.debugLevel = _sharedPreferences.getBoolean("PREF_DEBUG", false) ? 1 : 0;
-                    Toast.makeText(getApplicationContext(), "Open a GPX file", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_open_gpx_file, Toast.LENGTH_SHORT).show();
 
                     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                     intent.setType("*/*");
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     try {
-                        startActivityForResult(Intent.createChooser(intent, "Select txt file"), Constants.CODE_LOAD_GPX);
+                        startActivityForResult(Intent.createChooser(intent, getString(R.string.alert_select_txt_file)), Constants.CODE_LOAD_GPX);
                     } catch (android.content.ActivityNotFoundException ex) {
                         // Potentially direct the user to the Market with a Dialog
-                        Toast.makeText(getApplicationContext(), "Impossible to open file", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_unable_to_open_file, Toast.LENGTH_SHORT).show();
                     }
                 }
                 return false;
@@ -215,9 +215,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 if (preference.getKey().equals("PREF_NAV_STOP")) {
                     if (_navigator.getNbPoints() > 0) {
                         _navigator.clearRoute(true);
-                        Toast.makeText(getApplicationContext(), "Navigation was stopped", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_nav_stopped, Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getApplicationContext(), "The navigation was not started", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_nav_not_started, Toast.LENGTH_SHORT).show();
                     }
                 }
                 return false;
@@ -311,10 +311,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         StravaUpload strava_upload = new StravaUpload(_activity);
                         strava_upload.upload(_sharedPreferences.getString("strava_token", ""));
                     } else {
-                        Toast.makeText(getApplicationContext(), "Please configure Strava in the settings before using the upload", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_configure_strava_upload, Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Strava", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_enable_tracks_strava_upload, Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
@@ -328,10 +328,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         RunkeeperUpload runkeeper_upload = new RunkeeperUpload(_activity);
                         runkeeper_upload.upload(_sharedPreferences.getString("runkeeper_token", ""));
                     } else {
-                        Toast.makeText(getApplicationContext(), "Please configure Runkeeper in the settings before using the upload", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_configure_runkeeper_upload, Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Runkeeper", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_enable_tracks_runkeeper_upload, Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
@@ -350,7 +350,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                     }
                     _navigator.loadGpx(gpx.toString());
                     _parseAnalytics.trackEvent("navigation_load");
-                    Toast.makeText(getApplicationContext(), "Route loaded - " + _navigator.getNbPoints() + " points", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_route_loaded + " - " + _navigator.getNbPoints() + " points", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e);
                 }
@@ -379,7 +379,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
             if (!hrm_address.equals("")) {
                 if (_serviceStarter.isLocationServicesRunning()) {
-                    Toast.makeText(getApplicationContext(), "Please restart GPS to display BLE sensor data", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_restart_gps_for_sensor, Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -560,12 +560,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         strava_auto.setSummary(listDesc);
 
         Preference strava_screen = findPreference("strava_screen");
-        String strava = "Disable";
+        String strava = getString(R.string.disabled);
         if (!_sharedPreferences.getString("strava_token", "").isEmpty()) {
             if (_sharedPreferences.getString("STRAVA_AUTO", "disable").equals("disable")) {
-                strava = "Manual upload";
+                strava = getString(R.string.manual_upload);
             } else {
-                strava = "Automatic upload";
+                strava = getString(R.string.automatic_upload);
             }
         }
         strava_screen.setSummary(strava);
@@ -581,12 +581,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         runkeeper_activity_type.setSummary(listDesc);
 
         Preference runkeeper_screen = findPreference("runkeeper_screen");
-        String runkeeper = "Disable";
+        String runkeeper = getString(R.string.disabled);
         if (!_sharedPreferences.getString("runkeeper_token", "").isEmpty()) {
             if (_sharedPreferences.getString("RUNKEEPER_AUTO", "disable").equals("disable")) {
-                runkeeper = "Manual upload";
+                runkeeper = getString(R.string.manual_upload);
             } else {
-                runkeeper = "Automatic upload";
+                runkeeper = getString(R.string.automatic_upload);
             }
         }
         runkeeper_screen.setSummary(runkeeper);
@@ -618,7 +618,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 summary = getResources().getString(R.string.ble_not_supported);
             }
             if (summary.equals("")) {
-                summary = "Click to choose a sensor";
+                summary = getString(R.string.pref_choose_sensor);
             }
             Preference hrmPref = findPreference("PREF_BLE"+i);
             hrmPref.setSummary(summary);
@@ -649,12 +649,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                     share.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
                     share.putExtra(Intent.EXTRA_SUBJECT, "My LiveTracking URL");
                     share.putExtra(Intent.EXTRA_TEXT, ncURL.toString());
-                    startActivity(Intent.createChooser(share, "Share NC Tracking Link"));
+                    startActivity(Intent.createChooser(share, getString(R.string.action_share_nextcloud_livetracking_link)));
                     return true;
                 }
             });
         } else {
-            ncTracking_pref.setSummary("Disabled");
+            ncTracking_pref.setSummary(R.string.disabled);
             ncTracking_pref.setOnPreferenceClickListener(null);
         }
     }

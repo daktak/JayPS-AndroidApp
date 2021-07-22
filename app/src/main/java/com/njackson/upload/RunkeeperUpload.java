@@ -51,7 +51,7 @@ public class RunkeeperUpload {
     }
 
     public void upload(String token) {
-        Toast.makeText(_context, "Runkeeper: uploading... Please wait", Toast.LENGTH_LONG).show();
+        Toast.makeText(_context, R.string.alert_runkeeper_uploading_please_wait, Toast.LENGTH_LONG).show();
         final String runkeeper_token = token;
 
         new Thread(new Runnable() {
@@ -136,11 +136,11 @@ public class RunkeeperUpload {
             InputStream is = null;
             if (result.serverResponseCode == 201) {
                 is = urlConnection.getInputStream();
-                result.message = "Your activity has been created";
+                result.message = _context.getString(R.string.runkeeper_upload_success);
                 _parseAnalytics.trackEvent("runkeeper_ok");
             } else if (result.serverResponseCode == 400) {
                 is = urlConnection.getErrorStream();
-                result.message = "An error has occurred.";
+                result.message = _context.getString(R.string.runkeeper_upload_error);
                 _parseAnalytics.trackEvent("runkeeper_ko");
             } else {
                 is = urlConnection.getInputStream();
