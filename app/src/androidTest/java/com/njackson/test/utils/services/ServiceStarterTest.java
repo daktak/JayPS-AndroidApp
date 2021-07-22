@@ -11,7 +11,6 @@ import android.test.suitebuilder.annotation.SmallTest;
 import com.njackson.events.ActivityRecognitionCommand.ActivityRecognitionChangeState;
 import com.njackson.events.GPSServiceCommand.GPSChangeState;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
-import com.njackson.events.GoogleFitCommand.GoogleFitChangeState;
 import com.njackson.events.LiveServiceCommand.LiveChangeState;
 import com.njackson.events.base.BaseChangeState;
 import com.njackson.oruxmaps.OruxMaps;
@@ -164,41 +163,6 @@ public class ServiceStarterTest extends AndroidTestCase {
         verify(_mockBus,atLeast(1)).post(statusCaptor.capture());
         assertEquals(BaseChangeState.State.STOP, getStateFromCaptor(statusCaptor, LiveChangeState.class).getState());
     }
-/* Disable Google Fit for v2 (shifted to v2.1+)
-    @SmallTest
-    public void testStartsGoogleFitServiceWhenEnabled() throws Exception {
-        when(_mockPreferences.getBoolean("GOOGLE_FIT",false)).thenReturn(true);
-
-        setupMockServiceRunning();
-        _serviceStarter.startLocationServices();
-        ArgumentCaptor<BaseChangeState> statusCaptor = ArgumentCaptor.forClass(BaseChangeState.class);
-
-        verify(_mockBus,atLeast(1)).post(statusCaptor.capture());
-        assertEquals(BaseChangeState.State.START, getStateFromCaptor(statusCaptor, GoogleFitChangeState.class).getState());
-    }
-*/
-/* Disable Google Fit for v2 (shifted to v2.1+)
-    @SmallTest
-    public void testDoesNOTStartsGoogleFitServiceWhenEnabled() throws Exception {
-        when(_mockPreferences.getBoolean("GOOGLE_FIT",false)).thenReturn(false);
-
-        setupMockServiceRunning();
-        _serviceStarter.startLocationServices();
-        ArgumentCaptor<BaseChangeState> statusCaptor = ArgumentCaptor.forClass(BaseChangeState.class);
-
-        verify(_mockBus,atLeast(1)).post(statusCaptor.capture());
-        assertNull(getStateFromCaptor(statusCaptor, GoogleFitChangeState.class));
-    }
-*/
-    @SmallTest
-    public void testStopsGoogleFitService() throws Exception {
-        setupMockServiceRunning();
-        _serviceStarter.stopLocationServices();
-        ArgumentCaptor<BaseChangeState> statusCaptor = ArgumentCaptor.forClass(BaseChangeState.class);
-
-        verify(_mockBus,atLeast(1)).post(statusCaptor.capture());
-        assertEquals(BaseChangeState.State.STOP, getStateFromCaptor(statusCaptor, GoogleFitChangeState.class).getState());
-    }
 
     @SmallTest
     public void testStartsActivityServiceWhenEnabled() throws Exception {
@@ -211,19 +175,7 @@ public class ServiceStarterTest extends AndroidTestCase {
         verify(_mockBus,atLeast(1)).post(statusCaptor.capture());
         assertEquals(BaseChangeState.State.START, getStateFromCaptor(statusCaptor, ActivityRecognitionChangeState.class).getState());
     }
-/* Disable Google Fit for v2 (shifted to v2.1+)
-    @SmallTest
-    public void testStartsActivityServiceWhenGoogleFitEnabled() throws Exception {
-        when(_mockPreferences.getBoolean("GOOGLE_FIT",false)).thenReturn(true);
 
-        setupMockServiceRunning();
-        _serviceStarter.startLocationServices();
-        ArgumentCaptor<BaseChangeState> statusCaptor = ArgumentCaptor.forClass(BaseChangeState.class);
-
-        verify(_mockBus,atLeast(1)).post(statusCaptor.capture());
-        assertEquals(BaseChangeState.State.START, getStateFromCaptor(statusCaptor, ActivityRecognitionChangeState.class).getState());
-    }
-*/
     @SmallTest
     public void testDoesNOTActivityServiceWhenEnabled() throws Exception {
         when(_mockPreferences.getBoolean("ACTIVITY_RECOGNITION",false)).thenReturn(false);

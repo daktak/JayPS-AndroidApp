@@ -22,7 +22,6 @@ import com.njackson.changelog.IChangeLogBuilder;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.events.UI.StartButtonTouchedEvent;
 import com.njackson.events.UI.StopButtonTouchedEvent;
-import com.njackson.events.GoogleFitCommand.GoogleFitStatus;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.test.application.TestApplication;
 import com.njackson.utils.googleplay.IGooglePlayServices;
@@ -211,63 +210,6 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
     }
 
     @SmallTest
-    public void testOnOtherGoogleFitEventsDoesNothing() throws IntentSender.SendIntentException {
-        when(_mockPlayServices.connectionResultHasResolution(any(ConnectionResult.class))).thenReturn(false);
-
-        _activity = getActivity();
-
-        _bus.post(new GoogleFitStatus(BaseStatus.Status.STARTED, createConnectionResult()));
-
-        verify(_mockPlayServices,timeout(2000).times(0)).connectionResultHasResolution(any(ConnectionResult.class));
-        verify(_mockPlayServices,timeout(2000).times(0)).startConnectionResultResolution(any(ConnectionResult.class), any(MainActivity.class));
-    }
-
-    @SmallTest
-    public void testOnGoogleFitConnectionFailedWithNoResolutionShowsErrorDialog() {
-        when(_mockPlayServices.connectionResultHasResolution(any(ConnectionResult.class))).thenReturn(false);
-
-        _activity = getActivity();
-
-        _bus.post(new GoogleFitStatus(BaseStatus.Status.UNABLE_TO_START, createConnectionResult()));
-
-        verify(_mockPlayServices,timeout(2000).times(1)).showConnectionResultErrorDialog(any(ConnectionResult.class), any(MainActivity.class));
-    }
-
-    @SmallTest
-    public void testOnGoogleFitConnectionFailedWitResolutionDoesNotShowErrorDialog() {
-        when(_mockPlayServices.connectionResultHasResolution(any(ConnectionResult.class))).thenReturn(true);
-
-        _activity = getActivity();
-
-        _bus.post(new GoogleFitStatus(BaseStatus.Status.UNABLE_TO_START, createConnectionResult()));
-
-        verify(_mockPlayServices,timeout(2000).times(0)).showConnectionResultErrorDialog(any(ConnectionResult.class), any(MainActivity.class));
-    }
-
-    @SmallTest
-    public void testOnGoogleFitConnectionFailedWithResolutionStartsResultResolution() throws IntentSender.SendIntentException {
-        when(_mockPlayServices.connectionResultHasResolution(null)).thenReturn(true);
-
-        _activity = getActivity();
-
-        _bus.post(new GoogleFitStatus(BaseStatus.Status.UNABLE_TO_START));
-
-        verify(_mockPlayServices,timeout(2000).times(1)).startConnectionResultResolution(any(ConnectionResult.class), any(MainActivity.class));
-    }
-
-    @SmallTest
-    public void testOnGoogleFitConnectionFailedWithResolutionReceivedSecondTimeDoesNotStartsResultResolution() throws IntentSender.SendIntentException {
-        when(_mockPlayServices.connectionResultHasResolution(null)).thenReturn(true);
-
-        _activity = getActivity();
-
-        _bus.post(new GoogleFitStatus(BaseStatus.Status.UNABLE_TO_START));
-        _bus.post(new GoogleFitStatus(BaseStatus.Status.UNABLE_TO_START));
-
-        verify(_mockPlayServices,timeout(2000).times(1)).startConnectionResultResolution(any(ConnectionResult.class), any(MainActivity.class));
-    }
-
-    @SmallTest
     public void testStopsActivityRecognitionServiceWhenACTIVITY_RECOGNITIONPreferenceChanged() throws Exception {
         when(_mockPreferences.getBoolean("ACTIVITY_RECOGNITION", false)).thenReturn(true);
 
@@ -292,34 +234,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
 
         verify(_mockServiceStarter,times(1)).startActivityService();
     }
-/* Disable Google Fit for v2 (shifted to v2.1+)
-    @SmallTest
-    public void testStopsActivityRecognitionServiceWhenGOOGLE_FITPreferenceChanged() throws Exception {
-        when(_mockPreferences.getBoolean("GOOGLE_FIT", false)).thenReturn(true);
 
-        _activity = getActivity();
-
-        when(_mockPreferences.getBoolean("GOOGLE_FIT", false)).thenReturn(false);
-
-        _activity.onSharedPreferenceChanged(_mockPreferences,"GOOGLE_FIT");
-
-        verify(_mockServiceStarter,times(1)).stopActivityService();
-    }
-*/
-/* Disable Google Fit for v2 (shifted to v2.1+)
-    @SmallTest
-    public void testStartsActivityRecognitionServiceWhenGOOGLE_FITPreferenceChanged() throws Exception {
-        when(_mockPreferences.getBoolean("GOOGLE_FIT", false)).thenReturn(false);
-
-        _activity = getActivity();
-
-        when(_mockPreferences.getBoolean("GOOGLE_FIT", false)).thenReturn(true);
-
-        _activity.onSharedPreferenceChanged(_mockPreferences,"GOOGLE_FIT");
-
-        verify(_mockServiceStarter,times(1)).startActivityService();
-    }
-*/
     @SmallTest
     public void testDoesNothingWhenIncorrectPreferenceChanged() throws Exception {
         _activity = getActivity();

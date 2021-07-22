@@ -64,9 +64,6 @@ public class Constants {
     public static final long ACTIVITY_RECOGNITION_STILL_TIME = 30;
     public static final long ACTIVITY_RECOGNITION_MOVE_TIME = 5;
 
-    public static final String GOOGLE_FIT_SESSION_IDENTIFIER_PREFIX = "PebbleBike-";
-    public static final String GOOGLE_FIT_SESSION_NAME = "Pebble Bike";
-
     public static final String PREFS_NAME_V1 = "PebbleBikePrefs";
 
     public static final int CODE_LOAD_GPX = 10;

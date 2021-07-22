@@ -8,9 +8,6 @@ import android.content.IntentSender;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.Session;
-import com.google.android.gms.fitness.request.SessionInsertRequest;
 import com.google.android.gms.location.ActivityRecognition;
 import com.njackson.Constants;
 
@@ -36,29 +33,6 @@ public class GooglePlayServices implements IGooglePlayServices {
         if(client.isConnected()) {
             ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(client, intent);
         }
-    }
-
-    @Override
-    public Session.Builder newSessionBuilder() {
-        return new Session.Builder();
-    }
-
-    @Override
-    public SessionInsertRequest newSessionInsertRequest(Session session, DataSet dataSet) {
-        return new SessionInsertRequest.Builder()
-                .addDataSet(dataSet)
-                .setSession(session)
-                .build();
-    }
-
-    @Override
-    public String generateSessionIdentifier(long currentTimeMilliseconds) {
-        return Constants.GOOGLE_FIT_SESSION_IDENTIFIER_PREFIX + currentTimeMilliseconds;
-    }
-
-    @Override
-    public String generateSessionName() {
-        return Constants.GOOGLE_FIT_SESSION_NAME;
     }
 
     @Override

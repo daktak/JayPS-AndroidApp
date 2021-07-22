@@ -26,7 +26,6 @@ import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.events.UI.StartButtonTouchedEvent;
 import com.njackson.events.UI.StopButtonTouchedEvent;
-import com.njackson.events.GoogleFitCommand.GoogleFitStatus;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
@@ -79,17 +78,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     }
 
     @Subscribe
-    public void onGoogleFitStatusChanged(GoogleFitStatus event) {
-        if(event.getStatus() == BaseStatus.Status.UNABLE_TO_START) {
-            if(!_playServices.connectionResultHasResolution(event.getConnectionResult())) {
-                _playServices.showConnectionResultErrorDialog(event.getConnectionResult(), this);
-                return;
-            }
-
-            handleGoogleFitFailure(event);
-        }
-    }
-    @Subscribe
     public void onGPSServiceState(GPSStatus event) {
         if (event.getStatus() == BaseStatus.Status.DISABLED) {
 
@@ -112,18 +100,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                     });
             AlertDialog alert = alertDialogBuilder.create();
             alert.show();
-        }
-    }
-
-    private void handleGoogleFitFailure(GoogleFitStatus event) {
-        if (!_authInProgress) {
-            try {
-                Log.i(TAG, "Attempting to resolve failed connection");
-                _authInProgress = true;
-                _playServices.startConnectionResultResolution(event.getConnectionResult(),this);
-            } catch (IntentSender.SendIntentException e) {
-                Log.e(TAG,"Exception while starting resolution activity", e);
-            }
         }
     }
 
@@ -300,10 +276,9 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.compareTo("ACTIVITY_RECOGNITION") == 0 || key.compareTo("GOOGLE_FIT") == 0) {
+        if(key.compareTo("ACTIVITY_RECOGNITION") == 0) {
             boolean activity_start = sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
-            boolean fit_start = sharedPreferences.getBoolean("GOOGLE_FIT",false);
-            if(activity_start || fit_start) {
+            if(activity_start) {
                 _serviceStarter.startActivityService();
             } else {
                 _serviceStarter.stopActivityService();
