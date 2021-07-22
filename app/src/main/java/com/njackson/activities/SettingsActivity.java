@@ -539,17 +539,17 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         Boolean live_nextcloud = _sharedPreferences.getBoolean("LIVE_TRACKING", false) && !_sharedPreferences.getString("LIVE_TRACKING_URL", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_TOKEN", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_DEVICE", "").equals("");
         Boolean live_mmt = _sharedPreferences.getBoolean("LIVE_TRACKING_MMT", false) && !_sharedPreferences.getString("LIVE_TRACKING_MMT_LOGIN", "").equals("") && !_sharedPreferences.getString("LIVE_TRACKING_MMT_PASSWORD", "").equals("");
         Preference live_nextcloud_screen = findPreference("live_nextcloud_screen");
-        String live = "Disable";
+        String live = getString(R.string.disabled);
         if (live_nextcloud) {
-            live = "Enable";
+            live = getString(R.string.enabled);
         }
         live_nextcloud_screen.setSummary(live);
         setNextcloudShareLink(live_nextcloud);
 
         Preference live_mmt_screen = findPreference("live_mmt_screen");
-        live = "Disable";
+        live = getString(R.string.disabled);
         if (live_mmt) {
-            live = "Enable";
+            live = getString(R.string.enabled);
         }
         live_mmt_screen.setSummary(live);
     }

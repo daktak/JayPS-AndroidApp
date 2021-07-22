@@ -49,6 +49,7 @@
     <string name="done">Done</string>
     <string name="disable">Disable</string>
     <string name="disabled">Disabled</string>
+    <string name="enabled">Enabled</string>
     <string name="correction">Correction</string>
     <string name="no_correction">No correction</string>
     <string name="manual_upload">Manual upload</string>
