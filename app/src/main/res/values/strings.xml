@@ -183,7 +183,7 @@
     <string name="CANVAS_DISPLAY_UNITS_SUMMARY">Display units in Canvas</string>
 
     <string name="PREF_CANVAS">Install Canvas</string>
-    <string name="PREF_CANVAS_SUMMARY">Install app from Google Play</string>
+    <string name="PREF_CANVAS_SUMMARY">Install app from ApkPure</string>
     <string name="PREF_CANVAS_URL">https://apkpure.com/canvas-for-pebble/com.pennas.pebblecanvas</string>
 
     <string name="PREF_EXPORT_EMAIL_TITLE">Export email</string>
