@@ -10,8 +10,8 @@ android {
         minSdkVersion 16
         //Must target 25 or lower to recieve broadcast from com.getpebble.action.app.RECIEVE
         targetSdkVersion 25
-        versionCode 401
-        versionName "v3.0.0"
+        versionCode 210001
+        versionName "v21.07.25"
         testInstrumentationRunner "com.njackson.test.MyInstrumentationTestRunner"
     }
 

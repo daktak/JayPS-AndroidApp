@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
+    <release version="21.07.25" versioncode="210001" >
+        <change>Support up to 6 BLE devices</change>
+        <change><![CDATA[<b>If connected the following will be set to "Day Flash"</b><br/>
+            - Bontrager Flare RT<br/>
+            - Bontrager ION PRO RT<br/>
+            - Bontrager 200 RT]]></change>
+        <change>GoPro devices will start and stop recording in current mode</change>
+        <change>Added NextCloud PhoneTrack live tracking</change>
+        <change>Share location menu item added</change>
+        <change>Updated Canvas and OruxMaps links</change>
+    </release>
     <release version="3.1.0-beta1" versioncode="411" >
         <change>Autostart: choose cycling only or walking/running/cycling</change>
         <change>Export: configure email</change>
