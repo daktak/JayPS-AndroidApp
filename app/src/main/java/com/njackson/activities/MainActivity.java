@@ -303,6 +303,5 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                 }
             }
         }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 }

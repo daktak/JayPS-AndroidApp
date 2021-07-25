@@ -146,20 +146,24 @@ public class AltitudeFragment extends BaseFragment {
         Log.d(TAG, "calculatePercentages " + s + " //" + minValue + " " + maxValue);
 */
         for(int v = 0; v < values.length;v++) {
-            float currentHeight = views[v].getHeight();
-            if (values[v] != 0) {
-                float sizePercentage = maxValue != minValue ? ((float) (values[v] - minValue) / (float) (maxValue - minValue)) : 0.5f;
-                float newHeight = sizePercentage * frameHeight;
-                if (newHeight < currentHeight) {
-                    newHeight = currentHeight;
+            try {
+                float currentHeight = views[v].getHeight();
+                if (values[v] != 0) {
+                    float sizePercentage = maxValue != minValue ? ((float) (values[v] - minValue) / (float) (maxValue - minValue)) : 0.5f;
+                    float newHeight = sizePercentage * frameHeight;
+                    if (newHeight < currentHeight) {
+                        newHeight = currentHeight;
+                    }
+
+                    percentages[v] = newHeight / currentHeight;
+
+                    //Log.d(TAG, "views["+v+"]:" + views[v].getHeight() + "sizePercent:" + sizePercentage+ ", newHeight:" + newHeight + ",percent:" + percentages[v]);
+                } else {
+                    // 0: not yet used
+                    percentages[v] = 1;
                 }
-
-                percentages[v] = newHeight / currentHeight;
-
-                //Log.d(TAG, "views["+v+"]:" + views[v].getHeight() + "sizePercent:" + sizePercentage+ ", newHeight:" + newHeight + ",percent:" + percentages[v]);
-            } else {
-                // 0: not yet used
-                percentages[v] = 1;
+            } catch (Exception e) {
+                Log.w(TAG, e);
             }
         }
 /*
