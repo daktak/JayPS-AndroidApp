@@ -614,11 +614,14 @@ public class Ble implements IBle, ITimerHandler {
 		int accumulatedEnergy = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset) * 1000;
 	    }
             */
- 
+
             boolean needToPostData = postCsc(gatt, wheelRevolutionDataPresent, wheelRevolutions, wheelRevolutionsEventTime, crankRevolutionDataPresent, crankRevolutions, crankRevolutionsEventTime);
 
-            res = String.format("Received cadence: %d, wheelRpm: %d %s", (int) _csc.getCrankRpm(), (int) _csc.getWheelRpm(), needToPostData ? "[NEW]" : "");
+            res = String.format("Received cadence: %d, wheelRpm: %d %s, power: %d", (int) _csc.getCrankRpm(), (int) _csc.getWheelRpm(), needToPostData ? "[NEW]" : "", instantaneousPower);
 
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setPower(instantaneousPower);
+            _bus.post(sensorData);
         } else if (UUID_CSC_MEASUREMENT.equals(characteristic.getUuid())) {
             int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             Log.d(TAG, String.format("flags: %d|%s", flags, Integer.toBinaryString(flags)));

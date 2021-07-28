@@ -420,6 +420,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             case BleSensorData.SENSOR_RSC:
                 setBleTitle(getApplicationContext().getString(R.string.PREF_BLE_TITLE) + " " + bleNumber + " - Cadence: " + event.getRunningCadence(), key);
                 break;
+            case BleSensorData.SENSOR_POWER:
+                setBleTitle(getApplicationContext().getString(R.string.PREF_BLE_TITLE) + " " + bleNumber + " - Power: " + event.getPower(), key);
+                break;
         }
     }
 

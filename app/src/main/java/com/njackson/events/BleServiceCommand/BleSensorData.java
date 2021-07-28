@@ -66,4 +66,13 @@ public class BleSensorData {
         this._type = SENSOR_TEMPERATURE;
         this._temperature = temperature;
     }
+
+    private int _power = 0;
+    public int getPower() {
+        return _power;
+    }
+    public void setPower(int power) {
+        this._type = SENSOR_POWER;
+        this._power = power;
+    }
 }

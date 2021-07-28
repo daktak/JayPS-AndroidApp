@@ -171,8 +171,11 @@ public abstract class MyLocation {
     public Location getFirstLocation() { return this._firstLocation; }
     public void setFirstLocation(Location firstLocation) { this._firstLocation = firstLocation;}
 
-
     private boolean _sendNavigation = false;
     public boolean getSendNavigation() { return this._sendNavigation; }
     public void setSendNavigation(boolean sendNavigation) { this._sendNavigation = sendNavigation;}
+
+    private int _power = 0;
+    public int getPower() { return this._power; }
+    public void setPower(int power) { this._power = power;}
 }
