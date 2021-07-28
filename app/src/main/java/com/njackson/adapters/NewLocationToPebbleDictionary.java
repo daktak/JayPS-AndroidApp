@@ -49,6 +49,7 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
     public static final short BYTE_MAXSPEED1 = 21;
     public static final short BYTE_MAXSPEED2 = 22;
     public static final short BYTE_CADENCE = 23;
+    public static final short BYTE_POWER = 24;
 
     public static final short NAV_BYTE_DISTANCE1 = 0;
     public static final short NAV_BYTE_DISTANCE2 = 1;
@@ -79,7 +80,7 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         }
         //Log.d(TAG, "watchfaceVersion=" + watchfaceVersion + " location_data_version=" + location_data_version);
 
-        byte[] data = new byte[24];
+        byte[] data = new byte[25];
 
         data[BYTE_SETTINGS] = (byte) ((event.getUnits() % 8) * (1<<POS_UNITS)); // set the units
 
@@ -121,6 +122,9 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         }
 
         putDataUInt16(data, BYTE_MAXSPEED1, (int) (Math.floor(10 * event.getMaxSpeed())));
+        if (event.getPower() >= 0) {
+            putDataUInt8(data, BYTE_POWER, event.getPower());
+        }
 
         this.addBytes(location_data_version, data);
 
