@@ -59,7 +59,7 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_LIGHT_MODE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE);
     public final static UUID UUID_LIGHT_MODE_SERVICE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE);
 
-    private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
+    private final static int TIMEOUT_CONNECTGATT = 1 * 60 * 1000; // in ms
 
     private boolean debug = true;
     private boolean _bleStarted = false;
