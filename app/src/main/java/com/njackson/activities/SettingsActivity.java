@@ -112,8 +112,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         exportGPXPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""));
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "gpx","");
                 _parseAnalytics.trackEvent("gpx_export");
+                return true;
+            }
+        });
+        Preference exportTCXPreference = findPreference("EXPORT_TCX");
+        exportTCXPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false),_sharedPreferences.getString("EXPORT_EMAIL", ""), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE","Biking"));
                 return true;
             }
         });
@@ -309,7 +317,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
                     if (!_sharedPreferences.getString("strava_token", "").isEmpty()) {
                         StravaUpload strava_upload = new StravaUpload(_activity);
-                        strava_upload.upload(_sharedPreferences.getString("strava_token", ""));
+                        String strava_type =  _sharedPreferences.getString("STRAVA_UPLOAD_TYPE","gpx");
+                        strava_upload.upload(_sharedPreferences.getString("strava_token", ""),strava_type);
                     } else {
                         Toast.makeText(getApplicationContext(), R.string.alert_configure_strava_upload, Toast.LENGTH_SHORT).show();
                     }
@@ -436,6 +445,11 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (s.equals("UNITS_OF_MEASURE")) {
             setUnitsSummary();
         }
+        if (s.equals("TCX_ACTIVITY_TYPE")) {
+            ListPreference tcx_activity = (ListPreference) findPreference("TCX_ACTIVITY_TYPE");
+            CharSequence listDesc = tcx_activity.getEntry();
+            tcx_activity.setSummary(listDesc);
+        }
         if (s.equals("REFRESH_INTERVAL")) {
             int refresh_interval = 0;
             try {
@@ -463,7 +477,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (s.equals("LIVE_TRACKING_TOKEN") || s.equals("LIVE_TRACKING_DEVICE")) {
             setLiveSummary();
         }
-        if (s.equals("STRAVA_AUTO")) {
+        if (s.equals("STRAVA_AUTO") || s.equals("STRAVA_UPLOAD_TYPE")) {
             setStravaSummary();
         }
         if (s.equals("RUNKEEPER_AUTO") || s.equals("RUNKEEPER_ACTIVITY_TYPE")) {
@@ -558,6 +572,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         ListPreference strava_auto = (ListPreference) findPreference("STRAVA_AUTO");
         CharSequence listDesc = strava_auto.getEntry();
         strava_auto.setSummary(listDesc);
+        ListPreference strava_upload = (ListPreference) findPreference("STRAVA_UPLOAD_TYPE");
+        listDesc = strava_upload.getEntry();
+        strava_upload.setSummary(listDesc);
 
         Preference strava_screen = findPreference("strava_screen");
         String strava = getString(R.string.disabled);

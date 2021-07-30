@@ -235,8 +235,15 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         }
         if (id == R.id.action_export_gpx) {
             if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""));
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "gpx","");
                 _parseAnalytics.trackEvent("gpx_export");
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show();
+            }
+        }
+        if (id == R.id.action_export_tcx) {
+            if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE","Biking"));
             } else {
                 Toast.makeText(getApplicationContext(), R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show();
             }
@@ -245,7 +252,8 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
             if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
                 if (!_sharedPreferences.getString("strava_token", "").isEmpty()) {
                     StravaUpload strava_upload = new StravaUpload(this);
-                    strava_upload.upload(_sharedPreferences.getString("strava_token", ""));
+                    String strava_type =  _sharedPreferences.getString("STRAVA_UPLOAD_TYPE","gpx");
+                    strava_upload.upload(_sharedPreferences.getString("strava_token", ""),strava_type);
                 } else {
                     Toast.makeText(getApplicationContext(), R.string.alert_configure_strava_upload, Toast.LENGTH_SHORT).show();
                 }

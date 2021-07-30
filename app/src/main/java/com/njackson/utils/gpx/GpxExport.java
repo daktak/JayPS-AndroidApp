@@ -21,7 +21,7 @@ public class GpxExport {
 
     private static final String TAG = "PB-GpxExport";
 
-    public static void export(Context context, boolean extended_gpx, String email_to) {
+    public static void export(Context context, boolean extended_gpx, String email_to, final String fileFormat, final String tcxType) {
         Toast.makeText(context, R.string.alert_generating_file_please_wait, Toast.LENGTH_LONG).show();
         final Context _context = context;
         final boolean _extended_gpx = extended_gpx;
@@ -29,11 +29,16 @@ public class GpxExport {
         new Thread(new Runnable() {
             public void run() {
                 AdvancedLocation advancedLocation = new AdvancedLocation(_context);
-                String gpx = advancedLocation.getGPX(_extended_gpx);
+                String gpx;
+                if (fileFormat.equals("tcx")) {
+                    gpx = advancedLocation.getTCX(tcxType);
+                } else {
+                    gpx = advancedLocation.getGPX(_extended_gpx);
+                }
 
                 try {
-                    String fileName = new SimpleDateFormat("'track_'yyyyMMddHHmm'.gpx'").format(new Date());
-                    File newFile = new File(_context.getCacheDir(), fileName);
+                    String fileName = new SimpleDateFormat("'track_'yyyyMMddHHmm'.'").format(new Date());
+                    File newFile = new File(_context.getCacheDir(), fileName+fileFormat);
                     FileWriter fileWriter = new FileWriter(newFile);
                     fileWriter.write(gpx);
                     fileWriter.close();
