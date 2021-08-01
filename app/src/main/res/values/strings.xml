@@ -230,4 +230,7 @@
     <string name="parse_server_url">http://s.jayps.fr/index.php</string>
     <string name="parse_app_id">413475423</string>
 
+    <string name="TCX_CREATOR_TITLE">TCX Creator Name</string>
+    <string name="TCX_CREATOR_DIALOG_TITLE">As displayed in Strava</string>
+    <string name="TCX_CREATOR_DEFAULT">JayPS</string>
 </resources>

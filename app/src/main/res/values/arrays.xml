@@ -134,4 +134,25 @@
         <item>tcx</item>
     </string-array>
 
+    <string-array name="TCX_CREATOR_STRING">
+        <item>JayPS</item>
+        <item>Pebble 2 HR</item>
+        <item>Pebble 2</item>
+        <item>Pebble Time Round</item>
+        <item>Pebble Time Steel</item>
+        <item>Pebble Time</item>
+        <item>Pebble Steel</item>
+        <item>Pebble</item>
+    </string-array>
+    <string-array name="TCX_CREATOR_STRING_VALUES">
+        <item>JayPS</item>
+        <item>Pebble 2 HR</item>
+        <item>Pebble 2</item>
+        <item>Pebble Time Round</item>
+        <item>Pebble Time Steel</item>
+        <item>Pebble Time</item>
+        <item>Pebble Steel</item>
+        <item>Pebble</item>
+    </string-array>
+
 </resources>

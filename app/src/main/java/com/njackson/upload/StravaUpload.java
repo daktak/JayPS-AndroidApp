@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.njackson.BuildConfig;
 import com.njackson.analytics.IAnalytics;
 import com.njackson.application.PebbleBikeApplication;
 import com.njackson.pebble.IMessageManager;
@@ -70,7 +71,7 @@ public class StravaUpload {
                 AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                 String gpx;
                 if (uploadType.equals("tcx")) {
-                    gpx = advancedLocation.getTCX(_sharedPreferences.getString("TCX_ACTIVITY_TPE","Biking"));
+                    gpx = advancedLocation.getTCX(_sharedPreferences.getString("TCX_ACTIVITY_TPE","Biking"), _sharedPreferences.getString("TCX_CREATOR","JayPS"), BuildConfig.VERSION_NAME);
                 } else {
                     gpx = advancedLocation.getGPX(false);
                 }

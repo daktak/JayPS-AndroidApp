@@ -81,6 +81,13 @@
                 android:entries="@array/TCX_ACTIVITY_TYPE_ENTRIES"
                 android:entryValues="@array/TCX_ACTIVITY_TYPE_VALUES"
                 android:defaultValue="@string/TCX_ACTIVITY_TYPE_DEFAULT" />
+            <ListPreference
+                android:key="TCX_CREATOR"
+                android:title="@string/TCX_CREATOR_TITLE"
+                android:dialogTitle="@string/TCX_CREATOR_DIALOG_TITLE"
+                android:entries="@array/TCX_CREATOR_STRING"
+                android:entryValues="@array/TCX_CREATOR_STRING_VALUES"
+                android:defaultValue="@string/TCX_CREATOR_DEFAULT" />
             <Preference
                 android:key="RESET_TRACKS"
                 android:title="@string/PREF_RESET_TRACKS_TITLE"

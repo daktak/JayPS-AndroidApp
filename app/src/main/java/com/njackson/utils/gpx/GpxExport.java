@@ -1,5 +1,6 @@
 package com.njackson.utils.gpx;
 
+import com.njackson.BuildConfig;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -18,7 +19,7 @@ public class GpxExport {
 
     private static final String TAG = "PB-GpxExport";
 
-    public static void export(Context context, boolean extended_gpx, final String fileFormat, final String tcxType) {
+    public static void export(Context context, boolean extended_gpx, final String fileFormat, final String tcxType, final String tcxCreator) {
         Toast.makeText(context, "Please wait while generating the file", Toast.LENGTH_LONG).show();
         final Context _context = context;
         final boolean _extended_gpx = extended_gpx;
@@ -27,7 +28,7 @@ public class GpxExport {
                 AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                 String gpx;
                 if (fileFormat.equals("tcx")) {
-                    gpx = advancedLocation.getTCX(tcxType);
+                    gpx = advancedLocation.getTCX(tcxType, tcxCreator, BuildConfig.VERSION_NAME);
                 } else {
                     gpx = advancedLocation.getGPX(_extended_gpx);
                 }
