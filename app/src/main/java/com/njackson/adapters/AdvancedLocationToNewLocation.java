@@ -48,6 +48,7 @@ public class AdvancedLocationToNewLocation extends NewLocation {
         this.setHeartRate(255); // 255: no Heart Rate available
         this.setCyclingCadence(255); // 255: no cadence available
         this.setRunningCadence(255); // 255: no cadence available
+        this.setPower(-1);
     }
 
     private void createUnits(int units) {

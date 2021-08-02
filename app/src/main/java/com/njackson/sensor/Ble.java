@@ -50,6 +50,7 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_RSC_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.RSC_MEASUREMENT);
     public final static UUID UUID_BATTERY_LEVEL = UUID.fromString(BLESampleGattAttributes.BATTERY_LEVEL);
     public final static UUID UUID_TEMPERATURE_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.TEMPERATURE_MEASUREMENT);
+    public final static UUID UUID_POWER_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.POWER_MEASUREMENT);
 
     private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
 
@@ -449,6 +450,24 @@ public class Ble implements IBle, ITimerHandler {
         Log.d(TAG, "serviceDiscovery end");
     }
 
+    private boolean postCsc(final BluetoothGatt gatt, final boolean wheelRevolutionDataPresent, final int cumulativeWheelRevolutions, final int lastWheelEventTime,
+                                                   final boolean crankRevolutionDataPresent, final int cumulativeCrankRevolutions, final int lastCrankEventTime) {
+
+        boolean needToPostData = _csc.onNewValues(cumulativeWheelRevolutions, lastWheelEventTime, cumulativeCrankRevolutions, lastCrankEventTime);
+
+        if (needToPostData && crankRevolutionDataPresent) {
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setCyclingCadence((int) _csc.getCrankRpm());
+            _bus.post(sensorData);
+        }
+        if (needToPostData && wheelRevolutionDataPresent) {
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setCyclingWheelRpm(_csc.getWheelRpm());
+            _bus.post(sensorData);
+        }
+        return needToPostData;
+    }
+
     private String decodeCharacteristic(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
         String res = "";
         //if (debug) Log.d(TAG, "decodeCharacteristic() "+display(gatt, characteristic));
@@ -505,6 +524,104 @@ public class Ble implements IBle, ITimerHandler {
             sensorData.setHeartRate(heartRate);
             //sensorData.setCyclingWheelRpm(3 * heartRate); // fake values to debug csc
             _bus.post(sensorData);
+        } else if (UUID_POWER_MEASUREMENT.equals(characteristic.getUuid())) {
+	    int offset = 0;
+
+	    int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+
+	    boolean pedalPowerBalancePresent = (flags & 1) == 1;
+	    boolean accumulatedTorquePresent = (flags & 4) == 4;
+	    boolean accumulatedTorqueSource = (flags & 8) == 8; // true = crank based , false = wheel based
+	    boolean wheelRevolutionDataPresent = (flags & 16) == 16;
+	    boolean crankRevolutionDataPresent = (flags & 32) == 32;
+	    boolean extremeForceMagnitudesPresent = (flags & 64) == 64;
+	    boolean extremeTorqueMagnitudesPresent = (flags & 128) == 128;
+	    boolean extremeAnglesPresent = (flags & 256) == 256;
+	    boolean topDeadSpotAnglePresent = (flags & 512) == 512;
+	    boolean bottomDeadSpotAnglePresent = (flags & 1024) == 1024;
+	    boolean accumulatedEnergyPresent = (flags & 2048) == 2048;
+	    boolean offsetCompensationIndicator = (flags & 4096) == 4096;
+	    offset += 2;
+            int wheelRevolutions = 0;
+            int wheelRevolutionsEventTime = 0;
+            int crankRevolutions = 0;
+            int crankRevolutionsEventTime = 0;
+
+            int instantaneousPower = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
+            Log.d(TAG, String.format("instantaneousPower: %i",instantaneousPower));
+	    offset += 2;
+
+	    if (pedalPowerBalancePresent) {
+		//float pedalPowerBalance = (float)characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, offset) / 2;
+		offset ++;
+	    }
+
+	    if (accumulatedTorquePresent) {
+		//float accumulatedTorque = (float)characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset) / 32;
+		offset += 2;
+	    }
+
+	    if (wheelRevolutionDataPresent) {
+		wheelRevolutions = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, offset);
+		offset += 4;
+		wheelRevolutionsEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset) / 1024;
+		offset += 2;
+	    }
+
+	    if (crankRevolutionDataPresent) {
+		crankRevolutions = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+		offset += 2;
+		crankRevolutionsEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset) / 1024;
+		offset += 2;
+	    }
+
+	    if (extremeForceMagnitudesPresent) {
+	        //int maximumForce = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
+		offset += 2;
+		//int minimumForce = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
+		offset += 2;
+	    }
+
+	    if (extremeTorqueMagnitudesPresent) {
+		//int maximumTorque = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset) / 32;
+		offset += 2;
+		//int minimumTorque = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset) / 32;
+		offset += 2;
+	    }
+
+	    if (extremeAnglesPresent) {
+		offset += 3;
+
+		//TODO : decode UINT_12 values
+		/*
+		int maximumTorque = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT12, offset);
+		offset += 1.5;
+		int minimumTorque = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT12, offset);
+		offset += 1.5;*/
+	    }
+
+	    if (topDeadSpotAnglePresent) {
+		//int topDeadSpotAngle = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+		offset += 2;
+	    }
+
+	    if (bottomDeadSpotAnglePresent) {
+		//int bottomDeadSpotAngle = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+		offset += 2;
+	    }
+            /*
+	    if (accumulatedEnergyPresent) {
+		int accumulatedEnergy = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset) * 1000;
+	    }
+            */
+
+            boolean needToPostData = postCsc(gatt, wheelRevolutionDataPresent, wheelRevolutions, wheelRevolutionsEventTime, crankRevolutionDataPresent, crankRevolutions, crankRevolutionsEventTime);
+
+            res = String.format("Received cadence: %d, wheelRpm: %d %s, power: %d", (int) _csc.getCrankRpm(), (int) _csc.getWheelRpm(), needToPostData ? "[NEW]" : "", instantaneousPower);
+
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setPower(instantaneousPower);
+            _bus.post(sensorData);
         } else if (UUID_CSC_MEASUREMENT.equals(characteristic.getUuid())) {
             int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             Log.d(TAG, String.format("flags: %d|%s", flags, Integer.toBinaryString(flags)));
@@ -535,20 +652,11 @@ public class Ble implements IBle, ITimerHandler {
                 crankRevolutionDataPresent = true;
                 Log.d(TAG, "Received crankRevolutionData");
             }
-            boolean needToPostData = _csc.onNewValues(cumulativeWheelRevolutions, lastWheelEventTime, cumulativeCrankRevolutions, lastCrankEventTime);
+
+            boolean needToPostData = postCsc(gatt, wheelRevolutionDataPresent, cumulativeWheelRevolutions, lastWheelEventTime, crankRevolutionDataPresent, cumulativeCrankRevolutions, lastCrankEventTime);
 
             res = String.format("Received cadence: %d, wheelRpm: %d %s", (int) _csc.getCrankRpm(), (int) _csc.getWheelRpm(), needToPostData ? "[NEW]" : "");
 
-            if (needToPostData && crankRevolutionDataPresent) {
-                BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
-                sensorData.setCyclingCadence((int) _csc.getCrankRpm());
-                _bus.post(sensorData);
-            }
-            if (needToPostData && wheelRevolutionDataPresent) {
-                BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
-                sensorData.setCyclingWheelRpm(_csc.getWheelRpm());
-                _bus.post(sensorData);
-            }
         } else if (UUID_BATTERY_LEVEL.equals(characteristic.getUuid())) {
             final int battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             res = String.format("Received battery: %d", battery);
@@ -632,6 +740,7 @@ public class Ble implements IBle, ITimerHandler {
                         || UUID_RSC_MEASUREMENT.equals(gattCharacteristic.getUuid())
                         || UUID_BATTERY_LEVEL.equals(gattCharacteristic.getUuid())
                         || UUID_TEMPERATURE_MEASUREMENT.equals(gattCharacteristic.getUuid())
+                        || UUID_POWER_MEASUREMENT.equals(gattCharacteristic.getUuid())
 
                 ) {
                     if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {

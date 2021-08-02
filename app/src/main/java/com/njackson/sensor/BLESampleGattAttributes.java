@@ -23,6 +23,9 @@ public class BLESampleGattAttributes {
     //https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.temperature_measurement.xml
     public static String BATTERY_LEVEL = "00002A19-0000-1000-8000-00805f9b34fb";
 
+    //https://os.mbed.com/users/p3miya/code/BLE_CyclingPower/file/d9d7edb1ddfc/CyclingPowerService.h/
+    public static String POWER_MEASUREMENT = "00002a63-0000-1000-8000-00805f9b34fb";
+
     static {
         // Sample Services.
         // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
@@ -62,6 +65,8 @@ public class BLESampleGattAttributes {
         attributes.put("00002a5b-0000-1000-8000-00805f9b34fb", "CSC Measurement");
         attributes.put("00002a5c-0000-1000-8000-00805f9b34fb", "CSC Feature");
         attributes.put("00002a5d-0000-1000-8000-00805f9b34fb", "Sensor Location");
+
+        attributes.put("00002a63-0000-1000-8000-00805f9b34fb", "Cycling Power Measurement");
     }
 
     public static String lookup(String uuid, String defaultName) {
