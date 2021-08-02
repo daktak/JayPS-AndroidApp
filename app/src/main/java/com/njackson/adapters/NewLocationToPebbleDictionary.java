@@ -49,7 +49,8 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
     public static final short BYTE_MAXSPEED1 = 21;
     public static final short BYTE_MAXSPEED2 = 22;
     public static final short BYTE_CADENCE = 23;
-    public static final short BYTE_POWER = 24;
+    public static final short BYTE_POWER1 = 24;
+    public static final short BYTE_POWER2 = 25;
 
     public static final short NAV_BYTE_DISTANCE1 = 0;
     public static final short NAV_BYTE_DISTANCE2 = 1;
@@ -80,7 +81,7 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         }
         //Log.d(TAG, "watchfaceVersion=" + watchfaceVersion + " location_data_version=" + location_data_version);
 
-        byte[] data = new byte[25];
+        byte[] data = new byte[26];
 
         data[BYTE_SETTINGS] = (byte) ((event.getUnits() % 8) * (1<<POS_UNITS)); // set the units
 
@@ -110,20 +111,20 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         putDataUInt16(data, BYTE_SPEED1, (int) Math.floor(10 * event.getSpeed()));
         putDataUInt8(data, BYTE_BEARING, (int)  (event.getBearing() / 360 * 256));
 
-        putDataUInt8(data, BYTE_HEARTRATE, event.getHeartRate());
+        putDataUInt8(data, BYTE_HEARTRATE, (int) event.getHeartRate());
         if (location_data_version >= Constants.PEBBLE_LOCATION_DATA_V3) {
-            putDataUInt8(data, BYTE_CADENCE, event.getCyclingCadence());
+            putDataUInt8(data, BYTE_CADENCE, (int) event.getCyclingCadence());
         } else {
             // old protocol, only one field (BYTE_HEARTRATE) for both hr and cadence
             if (event.getCyclingCadence() < 255) {
                 // CSC sensor is configured and cadence is received, sent it instead of hr (both are not supported yet at the same time)
-                putDataUInt8(data, BYTE_HEARTRATE, event.getCyclingCadence());
+                putDataUInt8(data, BYTE_HEARTRATE, (int) event.getCyclingCadence());
             }
         }
 
         putDataUInt16(data, BYTE_MAXSPEED1, (int) (Math.floor(10 * event.getMaxSpeed())));
         if (event.getPower() >= 0) {
-            putDataUInt8(data, BYTE_POWER, event.getPower());
+            putDataInt16(data, BYTE_POWER1, (int) event.getPower());
         }
 
         this.addBytes(location_data_version, data);
