@@ -223,4 +223,15 @@
     <string name="parse_server_url">http://s.jayps.fr/index.php</string>
     <string name="parse_app_id">413475423</string>
 
+    <string name="update_already_latest">No update found</string>
+    <string name="update_new_seg1">Version</string>
+    <string name="checking_new_version">Checking for new vesion……</string>
+    <string name="update_new_seg3">Cancel update</string>
+    <string name="update_new_seg2">Ready to download</string>
+    <string name="update_error">Error fetching update</string>
+    <string name="avail_update_found">Update found：</string>
+    <string name="do_update">Download update？</string>
+    <string name="download_and_update">Download and update</string>
+    <string name="cancel_update">Cancel Update</string>
+    <string name="view_update_log">View update log</string>
 </resources>
