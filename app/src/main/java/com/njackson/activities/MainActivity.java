@@ -157,7 +157,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 	}
 
         //TODO if pref
-        new UpdateTask(MainActivity.this, true).update();
+        new UpdateTask(MainActivity.this, false).update();
     }
 
     private boolean hasPermissions(String[] permissions) {

@@ -22,9 +22,10 @@
         <activity android:name=".activities.SettingsActivity"/>
         <activity android:name=".activities.HRMScanActivity"/>
         <activity android:name=".activities.UploadActivity"/>
-        <service android:name=".service.MainService" android:label="MainService" android:foregroundServiceType="location|dataSync|connectedDevice" />
-/>
-        <service android:name=".activityrecognition.ActivityRecognitionIntentService" android:label="ActivityRecognitionIntentService" android:foregroundServiceType="location|dataSync|connectedDevice"/>
+        <service android:name=".service.MainService" android:label="MainService"
+            android:foregroundServiceType="location|dataSync|connectedDevice" />
+        <service android:name=".activityrecognition.ActivityRecognitionIntentService"
+            android:label="ActivityRecognitionIntentService" android:foregroundServiceType="location|dataSync|connectedDevice"/>
         <receiver android:name=".pebble.PebbleDataReceiver">
             <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE"/>

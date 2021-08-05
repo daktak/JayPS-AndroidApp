@@ -1,9 +1,7 @@
 package com.njackson.utils;
 
 import android.util.Log;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.net.Uri;
@@ -11,6 +9,9 @@ import android.os.AsyncTask;
 import android.widget.Toast;
 import com.njackson.R;
 import com.github.zafarkhaja.semver.Version;
+import android.app.PendingIntent;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -27,8 +28,10 @@ public class UpdateTask extends AsyncTask<String, String, String> {
 
     private Context context;
     private boolean toShowToast;
-    public static final String updateUrl = "https://api.github.com/repos/team-mount-ventoux/JayPS-AndroidApp/releases/latest";
-    public static final String releaseURL = "https://api.github.com/team-mount-ventoux/JayPS-AndroidApp/releases/latest";
+   // public static final String updateUrl = "https://api.github.com/repos/team-mount-ventoux/JayPS-AndroidApp/releases/latest";
+   // public static final String releaseURL = "https://api.github.com/team-mount-ventoux/JayPS-AndroidApp/releases/latest";
+    public static final String updateUrl = "https://api.github.com/repos/daktak/JayPS-AndroidApp/releases/latest";
+    public static final String releaseURL = "https://api.github.com/daktak/JayPS-AndroidApp/releases/latest";
 
     public UpdateTask(Context context, boolean showToast) {
         this.context = context;
@@ -93,33 +96,29 @@ public class UpdateTask extends AsyncTask<String, String, String> {
                 if (toShowToast)
                     Toast.makeText(context, R.string.update_already_latest, Toast.LENGTH_SHORT).show();
             } else {
-                if (toShowToast) {
-                    Toast.makeText(context, context.getString(R.string.update_new_seg1) + latestVersion + context.getString(R.string.update_new_seg3), Toast.LENGTH_LONG).show();
-                    return;
-                }
-                final JSONObject frelease = release;
-                final String flatestVersion = latestVersion;
-                new AlertDialog.Builder(context).setTitle(context.getResources().getString(R.string.avail_update_found) + latestVersion).setMessage(R.string.do_update).setPositiveButton(R.string.download_and_update, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // Need update.
-                        try {
-                            String downloadUrl = frelease.getJSONArray("assets").getJSONObject(0).getString("browser_download_url");
+                String downloadUrl = release.getJSONArray("assets").getJSONObject(0).getString("browser_download_url");
 
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
-                            browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            Toast.makeText(context, context.getString(R.string.update_new_seg1) + flatestVersion + context.getString(R.string.update_new_seg2), Toast.LENGTH_LONG).show();
-                            context.startActivity(browserIntent);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).setNegativeButton(R.string.cancel_update, null).setNeutralButton(R.string.view_update_log, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(releaseURL)));
-                    }
-                }).show();
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
+                final PendingIntent pendingIntent
+                        = PendingIntent.getActivity(context, 0, intent, 0);
+
+                //final String channelId = "JayPS-Channel";
+                final NotificationCompat.Builder notificationBuilder
+                        = new NotificationCompat.Builder(context)//, channelId)
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true)
+                        .setContentTitle(context
+                                .getString(R.string.app_update_notification_content_title))
+                        .setContentText(context
+                                .getString(R.string.app_update_notification_content_text)
+                                + " " + latestVersion);
+
+                final NotificationManagerCompat notificationManager
+                        = NotificationManagerCompat.from(context);
+                notificationManager.notify(1000, notificationBuilder.build());
+
             }
         } catch (Exception e) {
             e.printStackTrace();
