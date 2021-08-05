@@ -37,6 +37,7 @@ import com.njackson.upload.StravaUpload;
 import com.njackson.utils.googleplay.IGooglePlayServices;
 import com.njackson.utils.gpx.GpxExport;
 import com.njackson.utils.services.IServiceStarter;
+import com.njackson.utils.UpdateTask;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -128,6 +129,9 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 	if (!hasPermissions(perms)){
 		ActivityCompat.requestPermissions(this, perms, 1);
 	}
+
+        //TODO if pref
+        new UpdateTask(MainActivity.this, false).update();
     }
 
     private boolean hasPermissions(String[] permissions) {

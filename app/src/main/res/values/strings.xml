@@ -333,4 +333,10 @@
     <string name="parse_server_url">http://s.jayps.fr/index.php</string>
     <string name="parse_app_id">413475423</string>
 
+    <string name="update_already_latest">No update found</string>
+    <string name="checking_new_version">Checking for new vesion……</string>
+    <string name="update_error">Error fetching update</string>
+    <string name="app_update_notification_content_title">JayPS update is available!</string>
+    <string name="app_update_notification_content_text">Tap to download</string>
+
 </resources>
