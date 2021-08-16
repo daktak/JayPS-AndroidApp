@@ -146,24 +146,20 @@ public class AltitudeFragment extends BaseFragment {
         Log.d(TAG, "calculatePercentages " + s + " //" + minValue + " " + maxValue);
 */
         for(int v = 0; v < values.length;v++) {
-            try {
-                float currentHeight = views[v].getHeight();
-                if (values[v] != 0) {
-                    float sizePercentage = maxValue != minValue ? ((float) (values[v] - minValue) / (float) (maxValue - minValue)) : 0.5f;
-                    float newHeight = sizePercentage * frameHeight;
-                    if (newHeight < currentHeight) {
-                        newHeight = currentHeight;
-                    }
-
-                    percentages[v] = newHeight / currentHeight;
-
-                    //Log.d(TAG, "views["+v+"]:" + views[v].getHeight() + "sizePercent:" + sizePercentage+ ", newHeight:" + newHeight + ",percent:" + percentages[v]);
-                } else {
-                    // 0: not yet used
-                    percentages[v] = 1;
+            float currentHeight = views[v].getHeight();
+            if (values[v] != 0) {
+                float sizePercentage = maxValue != minValue ? ((float) (values[v] - minValue) / (float) (maxValue - minValue)) : 0.5f;
+                float newHeight = sizePercentage * frameHeight;
+                if (newHeight < currentHeight) {
+                    newHeight = currentHeight;
                 }
-            } catch (Exception e) {
-                Log.w(TAG, e);
+
+                percentages[v] = newHeight / currentHeight;
+
+                //Log.d(TAG, "views["+v+"]:" + views[v].getHeight() + "sizePercent:" + sizePercentage+ ", newHeight:" + newHeight + ",percent:" + percentages[v]);
+            } else {
+                // 0: not yet used
+                percentages[v] = 1;
             }
         }
 /*
@@ -185,7 +181,7 @@ public class AltitudeFragment extends BaseFragment {
         for(int c=0; c< layout.getChildCount(); c++) {
 
             View tempView = layout.getChildAt(c);
-            if(tempView.getClass().getName() == ImageView.class.getName()) {
+            if(tempView.getClass().getName().equals(ImageView.class.getName())) {
                 altitudeViews.add((ImageView)tempView);
             }
 
