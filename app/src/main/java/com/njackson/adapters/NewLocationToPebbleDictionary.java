@@ -51,6 +51,13 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
     public static final short BYTE_CADENCE = 23;
     public static final short BYTE_POWER1 = 24;
     public static final short BYTE_POWER2 = 25;
+    public static final short BYTE_AVGPOWER = 26;
+    public static final short BYTE_MAXPOWER1 = 27;
+    public static final short BYTE_MAXPOWER2 = 28;
+    public static final short BYTE_AVGPWR5 = 29;
+    public static final short BYTE_AVGPWR10 = 30;
+    public static final short BYTE_AVGPWR30 = 31;
+    public static final short BYTE_NPPWR30 = 32;
 
     public static final short NAV_BYTE_DISTANCE1 = 0;
     public static final short NAV_BYTE_DISTANCE2 = 1;
@@ -126,6 +133,12 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         if (event.getPower() >= 0) {
             putDataInt16(data, BYTE_POWER1, (int) event.getPower());
         }
+        putDataInt16(data, BYTE_MAXPOWER1, (int) event.getMaxPower());
+        putDataUInt8(data, BYTE_AVGPOWER, (int) event.getAvgPower(0));
+        putDataUInt8(data, BYTE_AVGPWR5, (int) event.getAvgPower(5));
+        putDataUInt8(data, BYTE_AVGPWR10, (int) event.getAvgPower(10));
+        putDataUInt8(data, BYTE_AVGPWR30, (int) event.getAvgPower(30));
+        putDataUint8(data, BYTE_NPPWR30, (int event.getNormalizedPower(30));
 
         this.addBytes(location_data_version, data);
 
