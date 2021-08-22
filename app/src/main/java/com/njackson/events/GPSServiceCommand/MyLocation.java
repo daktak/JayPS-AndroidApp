@@ -178,4 +178,38 @@ public abstract class MyLocation {
     private int _power = 0;
     public int getPower() { return this._power; }
     public void setPower(int power) { this._power = power;}
+
+    private int _maxPower = 0;
+    public int getMaxPower() { return this._maxPower; }
+    public void setMaxPower(int maxPower) { this._maxPower = maxPower;}
+
+    private int getIndx(int seconds) {
+        int i = 0;
+        switch (seconds) {
+            case 0:
+                i = 0;
+                break;
+            case 5:
+                i = 1;
+                break;
+            case 10:
+                i = 2;
+                break;
+            case 30:
+                i = 3;
+                break;
+        }
+        return i;
+    }
+    private float[] _avgPower = {0,0,0,0};
+    public float getAvgPower(int seconds) {
+        return _avgPower[getIndx(seconds)];
+    }
+    public void setAvgPower(int seconds, float avgPower) {
+        this._avgPower[getIndx(seconds)] = avgPower;
+    }
+
+    private float _NPPower30 = 0;
+    public float getNormalizedPower(int placeHolder) { return this._NPPower30;};
+    public void setNormalizedPower(int placeHolder, float NPPower) { this._NPPower30 = NPPower;}
 }

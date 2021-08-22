@@ -138,7 +138,7 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         putDataUInt8(data, BYTE_AVGPWR5, (int) event.getAvgPower(5));
         putDataUInt8(data, BYTE_AVGPWR10, (int) event.getAvgPower(10));
         putDataUInt8(data, BYTE_AVGPWR30, (int) event.getAvgPower(30));
-        putDataUint8(data, BYTE_NPPWR30, (int event.getNormalizedPower(30));
+        putDataUInt8(data, BYTE_NPPWR30, (int) event.getNormalizedPower(30));
 
         this.addBytes(location_data_version, data);
 

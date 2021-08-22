@@ -463,6 +463,12 @@ public class GPSServiceCommand implements IServiceCommand {
         }
         if (_power > 0) {
             event.setPower(_power);
+            event.setMaxPower(_advancedLocation.getMaxPower());
+            int[] seconds = {0,5,10,30};
+            for (int i=0; i<seconds.length; i++) {
+                event.setAvgPower(i, _advancedLocation.getAvgPower(i));
+            }
+            event.setNormalizedPower(30, _advancedLocation.getNormalizedPower(30));
         }
         if (_temperature != 0 && _time.getCurrentTimeMilliseconds() - _last_post_temperature > 60 * 1000) {
             // only send temperature if available and once every X seconds
