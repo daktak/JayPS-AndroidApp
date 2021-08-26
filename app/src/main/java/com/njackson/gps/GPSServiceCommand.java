@@ -466,7 +466,7 @@ public class GPSServiceCommand implements IServiceCommand {
             event.setMaxPower(_advancedLocation.getMaxPower());
             int[] seconds = {0,5,10,30};
             for (int i=0; i<seconds.length; i++) {
-                event.setAvgPower(i, _advancedLocation.getAvgPower(i));
+                event.setAvgPower(i, _advancedLocation.getAvgPower(seconds[i]));
             }
             event.setNormalizedPower(30, _advancedLocation.getNormalizedPower(30));
         }

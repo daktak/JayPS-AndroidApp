@@ -88,7 +88,7 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         }
         //Log.d(TAG, "watchfaceVersion=" + watchfaceVersion + " location_data_version=" + location_data_version);
 
-        byte[] data = new byte[26];
+        byte[] data = new byte[33];
 
         data[BYTE_SETTINGS] = (byte) ((event.getUnits() % 8) * (1<<POS_UNITS)); // set the units
 
