@@ -142,6 +142,8 @@
     <string name="PREF_TRACKS_CATEGORY_TITLE">Tracks</string>
     <string name="PREF_ENABLE_TRACKS_TITLE">Enable tracks</string>
     <string name="PREF_ENABLE_TRACKS_SUMMARY">Auto save locations when gps is started</string>
+    <string name="PREF_ENABLE_P2HR_TITLE">Enable HR from P2 watch</string>
+    <string name="PREF_ENABLE_P2HR_SUMMARY">Collect HR reading from watch</string>
     <string name="PREF_EXPORT_GPX_TITLE">Export as GPX</string>
     <string name="PREF_EXPORT_GPX_SUMMARY" />
     <string name="PREF_EXPORT_TCX_TITLE">Export as TCX</string>

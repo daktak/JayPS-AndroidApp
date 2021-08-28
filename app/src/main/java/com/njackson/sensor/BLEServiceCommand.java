@@ -54,7 +54,7 @@ public class BLEServiceCommand implements IServiceCommand {
     }
 
     private boolean isHrmActivated() {
-        Boolean ble_set = false;
+        Boolean ble_set = _sharedPreferences.getBoolean("ENABLE_P2HR");
         for (int i = 1; i<=max_ble_devices; i++) {
             String ble_address = _sharedPreferences.getString("hrm_address"+i, "");
             if (!ble_address.equals("")) {

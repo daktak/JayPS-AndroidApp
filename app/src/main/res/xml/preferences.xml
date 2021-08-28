@@ -130,6 +130,12 @@
             android:entryValues="@array/REFRESH_INTERVAL_ENTRY_VALUES"
             android:defaultValue="@string/REFRESH_INTERVAL_DEFAULT" />
 
+        <CheckBoxPreference
+            android:key="ENABLE_P2HR"
+            android:title="@string/PREF_ENABLE_P2HR_TITLE"
+            android:summary="@string/PREF_ENABLE_P2HR_SUMMARY"
+            android:defaultValue="false"
+            />
         <PreferenceCategory
             android:title="@string/PREF_BLE_CATEGORY_TITLE"
             >
