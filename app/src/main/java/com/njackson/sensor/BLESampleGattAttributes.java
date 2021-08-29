@@ -31,6 +31,8 @@ public class BLESampleGattAttributes {
     public static String LIGHT_MODE = "71261001-3692-ae93-e711-472ba41689c9";
     //https://github.com/dobos/LightRemote/blob/master/src/LightRemote/Assets/Config.xml
     public static String LIGHT_MODES_JSON = "{\"Flare RT\": {\"Off\": 0, \"Day Steady\": 1, \"Night Steady\": 5, \"Day Flash\": 7, \"All Day Flash\": 8, \"Night Flash\": 63}, \"ION PRO RT\": {\"Off\": 0, \"High\": 1, \"Medium\": 2, \"Low\": 5, \"Night Flash\": 62, \"Day Flash\": 63}, \"ION 200 RT\": {\"Off\": 0, \"High\": 1, \"Medium\": 2, \"Low\": 5, \"Night Flash\": 62, \"Day Flash\": 63}}";
+    //https://os.mbed.com/users/p3miya/code/BLE_CyclingPower/file/d9d7edb1ddfc/CyclingPowerService.h/
+    public static String POWER_MEASUREMENT = "00002a63-0000-1000-8000-00805f9b34fb";
 
     static {
         // Sample Services.
@@ -73,6 +75,7 @@ public class BLESampleGattAttributes {
         attributes.put("00002a5d-0000-1000-8000-00805f9b34fb", "Sensor Location");
 
         attributes.put("71261001-3692-ae93-e711-472ba41689c9", "Light Mode");
+        attributes.put("00002a63-0000-1000-8000-00805f9b34fb", "Cycling Power Measurement");
     }
 
     public static String lookup(String uuid, String defaultName) {

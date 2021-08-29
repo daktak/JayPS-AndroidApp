@@ -83,5 +83,10 @@ public class NewLocationToCanvasPluginGPSData extends GPSData {
         } else {
             this.temperature = "-";
         }
+        if (event.getPower() >= 0) {
+            this.power = String.format("%d", event.getPower());
+        } else {
+            this.power = "-";
+        }
     }
 }

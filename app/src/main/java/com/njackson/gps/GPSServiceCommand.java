@@ -164,7 +164,10 @@ public class GPSServiceCommand implements IServiceCommand {
                 _runningCadence = event.getRunningCadence();
                 Log.d(TAG, "onNewBleSensorData _runningCadence:" + _runningCadence);
                 break;
-
+            case BleSensorData.SENSOR_POWER:
+                _power = event.getPower();
+                Log.d(TAG, "onNewBleSensorData _power:" + _power);
+                break;
             case BleSensorData.SENSOR_TEMPERATURE:
                 _temperature = event.getTemperature();
                 Log.d(TAG, "onNewBleSensorData _temperature:" + _temperature);
@@ -458,6 +461,15 @@ public class GPSServiceCommand implements IServiceCommand {
         }
         if (_runningCadence > 0) {
             event.setRunningCadence(_runningCadence);
+        }
+        if (_power > 0) {
+            event.setPower(_power);
+            event.setMaxPower(_advancedLocation.getMaxPower());
+            int[] seconds = {0,5,10,30};
+            for (int i=0; i<seconds.length; i++) {
+                event.setAvgPower(i, _advancedLocation.getAvgPower(seconds[i]));
+            }
+            event.setNormalizedPower(30, _advancedLocation.getNormalizedPower(30));
         }
         if (_temperature != 0 && _time.getCurrentTimeMilliseconds() - _last_post_temperature > 60 * 1000) {
             // only send temperature if available and once every X seconds
