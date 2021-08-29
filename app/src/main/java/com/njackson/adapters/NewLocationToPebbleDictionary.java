@@ -132,13 +132,15 @@ public class NewLocationToPebbleDictionary extends PebbleDictionary{
         putDataUInt16(data, BYTE_MAXSPEED1, (int) (Math.floor(10 * event.getMaxSpeed())));
         if (event.getPower() >= 0) {
             putDataInt16(data, BYTE_POWER1, (int) event.getPower());
+            if (event.getPower() > 0) {
+                putDataInt16(data, BYTE_MAXPOWER1, (int) event.getMaxPower());
+                putDataUInt8(data, BYTE_AVGPOWER, (int) event.getAvgPower(0));
+                putDataUInt8(data, BYTE_AVGPWR5, (int) event.getAvgPower(5));
+                putDataUInt8(data, BYTE_AVGPWR10, (int) event.getAvgPower(10));
+                putDataUInt8(data, BYTE_AVGPWR30, (int) event.getAvgPower(30));
+                putDataUInt8(data, BYTE_NPPWR30, (int) event.getNormalizedPower(30));
+            }
         }
-        putDataInt16(data, BYTE_MAXPOWER1, (int) event.getMaxPower());
-        putDataUInt8(data, BYTE_AVGPOWER, (int) event.getAvgPower(0));
-        putDataUInt8(data, BYTE_AVGPWR5, (int) event.getAvgPower(5));
-        putDataUInt8(data, BYTE_AVGPWR10, (int) event.getAvgPower(10));
-        putDataUInt8(data, BYTE_AVGPWR30, (int) event.getAvgPower(30));
-        putDataUInt8(data, BYTE_NPPWR30, (int) event.getNormalizedPower(30));
 
         this.addBytes(location_data_version, data);
 
