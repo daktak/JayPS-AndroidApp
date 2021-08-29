@@ -4,6 +4,7 @@
         <change>Ask permissions on load</change>
         <change>TCX file export for power field support</change>
         <change>[Pebble 2 HR] Save HR to export file (requires 21.7.28 watchface></change>
+        <change>Check for new release upon load</change>
     </release>
     <release version="21.07.25" versioncode="210001" >
         <change>Support up to 6 BLE devices</change>
