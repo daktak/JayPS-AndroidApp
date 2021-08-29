@@ -53,7 +53,7 @@ public class PebbleDataReceiver extends com.getpebble.android.kit.PebbleKit.Pebb
         if (data.contains(Constants.MSG_CONFIG)) {
             handleConfig(context, data);
         }
-        if (data.contains(Constants.MSG_P2HR)) {
+        if (data.contains(Constants.MSG_P2HR) && (_sharedPreferences.getBoolean("ENABLE_P2HR", false))) {
             int heartRate = data.getInteger(Constants.MSG_P2HR).intValue();
             BleSensorData sensorData = new BleSensorData("FF:FF:FF:FF:FF:FF");
             sensorData.setHeartRate(heartRate);
