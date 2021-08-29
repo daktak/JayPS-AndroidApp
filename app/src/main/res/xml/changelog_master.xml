@@ -3,8 +3,14 @@
     <release version="21.8.29" versioncode="210002" >
         <change>Ask permissions on load</change>
         <change>TCX file export for power field support</change>
-        <change>[Pebble 2 HR] Save HR to export file (requires 21.7.28 watchface></change>
         <change>Check for new release upon load</change>
+        <change><![CDATA[[Pebble 2 HR] Save HR to export file (requires <a href="https://github.com/daktak/JayPS-WatchFace/releases">watchface v21.8.28</a> or above<br/>]]></change>
+        <change><![CDATA[<b>Power meter support</b><br/>
+            - Should export correctly if TCX export is set<br/>
+            - Instantaneous Power and Max power should be okay<br/>
+            - Method for calculating Average and Normalised Power probably inacurate
+            - Requires <a href="https://github.com/daktak/JayPS-WatchFace/releases">watchface v21.8.28</a> or above<br/>
+            - I do not have a power meter]]></change>
     </release>
     <release version="21.07.25" versioncode="210001" >
         <change>Support up to 6 BLE devices</change>
