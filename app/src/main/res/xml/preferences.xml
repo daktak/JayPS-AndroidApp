@@ -13,10 +13,7 @@
                 android:key="INSTALL_WATCHFACE_DEEPLINK"
                 android:title="@string/PREF_INSTALL_WATCHFACE_DEEPLINK"
                 android:summary="@string/PREF_INSTALL_WATCHFACE_DEEPLINK_SUMMARY"
-                >
-                <intent android:action="android.intent.action.VIEW"
-                    android:data="@string/PREF_INSTALL_WATCHFACE_DEEPLINK_URL" />
-            </Preference>
+                />
         </PreferenceCategory>
         <PreferenceCategory
             android:title="@string/PREF_INSTALL_OTHERS_CATEGORY_TITLE"
@@ -226,10 +223,7 @@
             android:key="PREF_NAV_HELP"
             android:title="Online help"
             android:summary="Learn how to use navigation - JayPS blog"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="http://pebblebike.com/navigation-help/?utm_source=JayPSApp" />
-        </Preference>
+            />
 
     </PreferenceScreen>
 
@@ -310,7 +304,6 @@
             android:key="orux_screen"
             android:title="OruxMaps Integration"
             android:persistent="false">
-            >
             <ListPreference
                 android:key="ORUXMAPS_AUTO"
                 android:title="@string/ORUXMAPS_AUTO_TITLE"
@@ -322,10 +315,7 @@
                 android:key="ORUXMAPS_URL"
                 android:title="@string/PREF_ORUXMAPS"
                 android:summary="@string/PREF_ORUXMAPS_SUMMARY"
-                >
-                <intent android:action="android.intent.action.VIEW"
-                    android:data="@string/PREF_ORUXMAPS_URL" />
-            </Preference>
+                />
         </PreferenceScreen>
 
         <PreferenceScreen
@@ -348,10 +338,7 @@
                 android:key="CANVAS_URL"
                 android:title="@string/PREF_CANVAS"
                 android:summary="@string/PREF_CANVAS_SUMMARY"
-                >
-                <intent android:action="android.intent.action.VIEW"
-                    android:data="@string/PREF_CANVAS_URL" />
-            </Preference>
+                />
         </PreferenceScreen>
 
     </PreferenceScreen>
@@ -389,44 +376,29 @@
             android:key="about"
             android:title="@string/PREF_ABOUT_TITLE"
             android:summary="@string/PREF_ABOUT_SUMMARY"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="@string/PREF_ABOUT_URL" />
-        </Preference>
+            />
         <Preference
             android:key="uservoice"
             android:title="@string/PREF_USERVOICE"
             android:summary="@string/PREF_USERVOICE_SUMMARY"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="@string/PREF_USERVOICE_URL" />
-        </Preference>
+            />
         <Preference
             android:key="googleplus"
             android:title="@string/PREF_GOOGLEPLUS"
             android:summary="@string/PREF_GOOGLEPLUS_SUMMARY"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="@string/PREF_GOOGLEPLUS_URL" />
-        </Preference>
+            />
 
         <Preference
             android:key="pebble_store"
             android:title="@string/PREF_PEBBLE_STORE"
             android:summary="@string/PREF_PEBBLE_STORE_SUMMARY"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="@string/PREF_PEBBLE_STORE_URL" />
-        </Preference>
+            />
 
         <Preference
             android:key="twitter"
             android:title="@string/PREF_TWITTER"
             android:summary="@string/PREF_TWITTER_SUMMARY"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="@string/PREF_TWITTER_URL" />
-        </Preference>
+            />
         <Preference
             android:key="CHANGE_LOG"
             android:title="@string/PREF_CHANGE_LOG_TITLE"
