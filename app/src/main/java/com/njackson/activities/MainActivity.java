@@ -9,7 +9,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import com.njackson.Constants;
 import com.njackson.R;
-import com.njackson.analytics.IAnalytics;
 import com.njackson.application.PebbleBikeApplication;
 import com.njackson.changelog.IChangeLog;
 import com.njackson.changelog.IChangeLogBuilder;
@@ -26,13 +25,9 @@ import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.events.UI.StartButtonTouchedEvent;
 import com.njackson.events.UI.StopButtonTouchedEvent;
-import com.njackson.events.GoogleFitCommand.GoogleFitStatus;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
-import com.njackson.upload.RunkeeperUpload;
-import com.njackson.upload.StravaUpload;
-import com.njackson.utils.googleplay.IGooglePlayServices;
 import com.njackson.utils.gpx.GpxExport;
 import com.njackson.utils.services.IServiceStarter;
 import com.squareup.otto.Bus;
@@ -49,9 +44,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
     private static final String TAG = "PB-MainActivity";
     @Inject Bus _bus;
-    @Inject IAnalytics _analytics;
     @Inject IServiceStarter _serviceStarter;
-    @Inject IGooglePlayServices _playServices;
     @Inject SharedPreferences _sharedPreferences;
     @Inject IChangeLogBuilder _changeLogBuilder;
     @Inject IGPSDataStore _dataStore;
@@ -78,17 +71,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     }
 
     @Subscribe
-    public void onGoogleFitStatusChanged(GoogleFitStatus event) {
-        if(event.getStatus() == BaseStatus.Status.UNABLE_TO_START) {
-            if(!_playServices.connectionResultHasResolution(event.getConnectionResult())) {
-                _playServices.showConnectionResultErrorDialog(event.getConnectionResult(), this);
-                return;
-            }
-
-            handleGoogleFitFailure(event);
-        }
-    }
-    @Subscribe
     public void onGPSServiceState(GPSStatus event) {
         if (event.getStatus() == BaseStatus.Status.DISABLED) {
 
@@ -114,18 +96,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         }
     }
 
-    private void handleGoogleFitFailure(GoogleFitStatus event) {
-        if (!_authInProgress) {
-            try {
-                Log.i(TAG, "Attempting to resolve failed connection");
-                _authInProgress = true;
-                _playServices.startConnectionResultResolution(event.getConnectionResult(),this);
-            } catch (IntentSender.SendIntentException e) {
-                Log.e(TAG,"Exception while starting resolution activity", e);
-            }
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -133,7 +103,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
         ((PebbleBikeApplication) getApplication()).inject(this);
 
-        _analytics.trackAppOpened(getIntent());
         boolean activity_start = _sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
         if(activity_start) {
             _serviceStarter.startActivityService();
@@ -229,30 +198,6 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                 Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the export", Toast.LENGTH_SHORT).show();
             }
         }
-        if (id == R.id.action_upload_strava) {
-            if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                if (!_sharedPreferences.getString("strava_token", "").isEmpty()) {
-                    StravaUpload strava_upload = new StravaUpload(this);
-                    strava_upload.upload(_sharedPreferences.getString("strava_token", ""));
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please configure Strava in the settings before using the upload", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Strava", Toast.LENGTH_SHORT).show();
-            }
-        }
-        if (id == R.id.action_upload_runkeeper) {
-            if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                if (!_sharedPreferences.getString("runkeeper_token", "").isEmpty()) {
-                    RunkeeperUpload runkeeper_upload = new RunkeeperUpload(this);
-                    runkeeper_upload.upload(_sharedPreferences.getString("runkeeper_token", ""));
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please configure Runkeeper in the settings before using the upload", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Runkeeper", Toast.LENGTH_SHORT).show();
-            }
-        }
         if (id == R.id.action_load_route) {
             Toast.makeText(getApplicationContext(), "Open a GPX file", Toast.LENGTH_SHORT).show();
 
@@ -290,7 +235,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.compareTo("ACTIVITY_RECOGNITION") == 0 || key.compareTo("GOOGLE_FIT") == 0) {
+        if(key.compareTo("ACTIVITY_RECOGNITION") == 0) {
             boolean activity_start = sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
             boolean fit_start = sharedPreferences.getBoolean("GOOGLE_FIT",false);
             if(activity_start || fit_start) {

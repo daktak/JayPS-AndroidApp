@@ -5,8 +5,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
-import com.getpebble.android.kit.PebbleKit;
-
 /**
  * Created by jay on 28/12/14.
  */

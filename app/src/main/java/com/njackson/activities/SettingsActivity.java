@@ -25,8 +25,6 @@ import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
-import com.njackson.upload.RunkeeperUpload;
-import com.njackson.upload.StravaUpload;
 import com.njackson.utils.gpx.GpxExport;
 import com.njackson.utils.services.IServiceStarter;
 import com.njackson.utils.watchface.IInstallWatchFace;
@@ -290,64 +288,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             }
         });
 
-        Preference pref_strava = findPreference("PREF_STRAVA");
-        pref_strava.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (preference.getKey().equals("PREF_STRAVA")) {
-                    Intent mIntent = new Intent(getApplicationContext(), UploadActivity.class);
-                    mIntent.putExtra("type", "strava");
-                    startActivity(mIntent);
-                }
-                return false;
-            }
-        });
-        Preference pref_runkeeper = findPreference("PREF_RUNKEEPER");
-        pref_runkeeper.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (preference.getKey().equals("PREF_RUNKEEPER")) {
-                    Intent mIntent = new Intent(getApplicationContext(), UploadActivity.class);
-                    mIntent.putExtra("type", "runkeeper");
-                    startActivity(mIntent);
-                }
-                return false;
-            }
-        });
-        Preference pref_upload_strava = findPreference("PREF_UPLOAD_STRAVA");
-        pref_upload_strava.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                    if (!_sharedPreferences.getString("strava_token", "").isEmpty()) {
-                        StravaUpload strava_upload = new StravaUpload(_activity);
-                        strava_upload.upload(_sharedPreferences.getString("strava_token", ""));
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Please configure Strava in the settings before using the upload", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Strava", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            }
-        });
-        Preference pref_upload_runkeeper = findPreference("PREF_UPLOAD_RUNKEEPER");
-        pref_upload_runkeeper.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                    if (!_sharedPreferences.getString("runkeeper_token", "").isEmpty()) {
-                        RunkeeperUpload runkeeper_upload = new RunkeeperUpload(_activity);
-                        runkeeper_upload.upload(_sharedPreferences.getString("runkeeper_token", ""));
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Please configure Runkeeper in the settings before using the upload", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the upload to Runkeeper", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            }
-        });
     }
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == Constants.CODE_LOAD_GPX) {
@@ -435,8 +375,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         setLoginJaypsSummary();
         setLoginMmtSummary();
         setLiveSummary();
-        setStravaSummary();
-        setRunkeeperSummary();
         setOruxMapsSummary();
         setCanvasSummary();
         setHrmSummary();
@@ -480,12 +418,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         if (s.equals("LIVE_TRACKING_PASSWORD") || s.equals("LIVE_TRACKING_MMT_PASSWORD")) {
             setLiveSummary();
-        }
-        if (s.equals("STRAVA_AUTO")) {
-            setStravaSummary();
-        }
-        if (s.equals("RUNKEEPER_AUTO") || s.equals("RUNKEEPER_ACTIVITY_TYPE")) {
-            setRunkeeperSummary();
         }
         if (s.equals("ORUXMAPS_AUTO")) {
             setOruxMapsSummary();
@@ -568,44 +500,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             live = "Enable";
         }
         live_mmt_screen.setSummary(live);
-    }
-
-    private void setStravaSummary() {
-        ListPreference strava_auto = (ListPreference) findPreference("STRAVA_AUTO");
-        CharSequence listDesc = strava_auto.getEntry();
-        strava_auto.setSummary(listDesc);
-
-        Preference strava_screen = findPreference("strava_screen");
-        String strava = "Disable";
-        if (!_sharedPreferences.getString("strava_token", "").isEmpty()) {
-            if (_sharedPreferences.getString("STRAVA_AUTO", "disable").equals("disable")) {
-                strava = "Manual upload";
-            } else {
-                strava = "Automatic upload";
-            }
-        }
-        strava_screen.setSummary(strava);
-    }
-
-    private void setRunkeeperSummary() {
-        ListPreference runkeeper_auto = (ListPreference) findPreference("RUNKEEPER_AUTO");
-        CharSequence listDesc = runkeeper_auto.getEntry();
-        runkeeper_auto.setSummary(listDesc);
-
-        ListPreference runkeeper_activity_type = (ListPreference) findPreference("RUNKEEPER_ACTIVITY_TYPE");
-        listDesc = runkeeper_activity_type.getEntry();
-        runkeeper_activity_type.setSummary(listDesc);
-
-        Preference runkeeper_screen = findPreference("runkeeper_screen");
-        String runkeeper = "Disable";
-        if (!_sharedPreferences.getString("runkeeper_token", "").isEmpty()) {
-            if (_sharedPreferences.getString("RUNKEEPER_AUTO", "disable").equals("disable")) {
-                runkeeper = "Manual upload";
-            } else {
-                runkeeper = "Automatic upload";
-            }
-        }
-        runkeeper_screen.setSummary(runkeeper);
     }
 
     private void setOruxMapsSummary() {

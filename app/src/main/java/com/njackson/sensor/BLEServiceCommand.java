@@ -14,6 +14,7 @@ import com.njackson.service.IServiceCommand;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
+import androidx.annotation.Nullable;
 import javax.inject.Inject;
 
 
@@ -25,6 +26,7 @@ public class BLEServiceCommand implements IServiceCommand {
     @Inject Bus _bus;
     @Inject SharedPreferences _sharedPreferences;
     @Inject
+    @Nullable
     IBle _hrm;
     IInjectionContainer _container;
     private BaseStatus.Status _currentStatus= BaseStatus.Status.NOT_INITIALIZED;

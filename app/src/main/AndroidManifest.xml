@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.njackson">
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         tools:replace="android:allowBackup"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:name=".application.PebbleBikeApplication">
-        <meta-data android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
         <activity
             android:name=".activities.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.TestActivity"></activity>
-        <activity android:name=".activities.SettingsActivity"/>
-        <activity android:name=".activities.HRMScanActivity"/>
-        <activity android:name=".activities.UploadActivity"/>
+        <activity android:name=".activities.TestActivity" android:exported="false"></activity>
+        <activity android:name=".activities.SettingsActivity" android:exported="false"/>
+        <activity android:name=".activities.HRMScanActivity" android:exported="false"/>
         <service android:name=".service.MainService" android:label="MainService"/>
         <service android:name=".activityrecognition.ActivityRecognitionIntentService" android:label="ActivityRecognitionIntentService"/>
-        <receiver android:name=".pebble.PebbleDataReceiver">
+        <service
+            android:name=".pebble.PebbleListenerService"
+            android:exported="true"
+            tools:ignore="ExportedService">
             <intent-filter>
-                <action android:name="com.getpebble.action.app.RECEIVE"/>
+                <action android:name="io.rebble.pebblekit2.RECEIVE_DATA_FROM_WATCH"/>
             </intent-filter>
-        </receiver>
+        </service>
 
         <receiver android:exported="true" android:name=".pebble.canvas.CanvasPlugin">
             <intent-filter>
@@ -45,7 +45,7 @@
         </receiver>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.njackson.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -53,12 +53,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
         </provider>
-        <meta-data
-            android:name="com.parse.SERVER_URL"
-            android:value="@string/parse_server_url" />
-        <meta-data
-            android:name="com.parse.APPLICATION_ID"
-            android:value="@string/parse_app_id" />
     </application>
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -66,8 +60,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" tools:targetApi="s" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

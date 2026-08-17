@@ -10,7 +10,6 @@ import com.njackson.Constants;
 import com.njackson.events.ActivityRecognitionCommand.ActivityRecognitionChangeState;
 import com.njackson.events.GPSServiceCommand.GPSChangeState;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
-import com.njackson.events.GoogleFitCommand.GoogleFitChangeState;
 import com.njackson.events.LiveServiceCommand.LiveChangeState;
 import com.njackson.events.base.BaseChangeState;
 import com.njackson.events.base.BaseStatus;
@@ -66,7 +65,6 @@ public class ServiceStarter implements IServiceStarter {
                 startGPSService();
                 startLiveService();
                 startActivityServiceIfEnabled();
-                startGoogleFitServiceIfEnabled();
             }
         });
     }
@@ -75,7 +73,6 @@ public class ServiceStarter implements IServiceStarter {
     public void stopLocationServices() {
         stopGPSService();
         stopLiveService();
-        stopGoogleFitService();
         stopActivityServiceIfNotSticky();
     }
 
@@ -101,19 +98,9 @@ public class ServiceStarter implements IServiceStarter {
         return false;
     }
 
-    private void startGoogleFitServiceIfEnabled() {
-        /* Disable Google Fit for v2 (shifted to v2.1+)
-        boolean fit_start = _sharedPreferences.getBoolean("GOOGLE_FIT",false);
-        if(fit_start) {
-            startGoogleFitService();
-        }
-        */
-    }
-
     private void startActivityServiceIfEnabled() {
         boolean activity_start = _sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
-        boolean fit_start = _sharedPreferences.getBoolean("GOOGLE_FIT",false);
-        if(activity_start || fit_start) {
+        if(activity_start) {
             startActivityService();
         }
     }
@@ -162,11 +149,4 @@ public class ServiceStarter implements IServiceStarter {
         _bus.post(new LiveChangeState(BaseChangeState.State.STOP));
     }
 
-    private void startGoogleFitService() {
-        _bus.post(new GoogleFitChangeState(BaseChangeState.State.START));
-    }
-
-    private void stopGoogleFitService() {
-        _bus.post(new GoogleFitChangeState(BaseChangeState.State.STOP));
-    }
 }

@@ -11,14 +11,6 @@
         android:title="Export GPX"
         android:orderInCategory="101" />
 
-    <item android:id="@+id/action_upload_strava"
-        android:title="Upload to Strava"
-        android:orderInCategory="102" />
-
-    <item android:id="@+id/action_upload_runkeeper"
-        android:title="Upload to Runkeeper"
-        android:orderInCategory="103" />
-
     <item android:id="@+id/action_load_route"
         android:title="Load route to follow"
         android:orderInCategory="104" />
