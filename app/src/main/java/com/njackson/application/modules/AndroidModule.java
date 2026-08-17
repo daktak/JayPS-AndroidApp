@@ -31,6 +31,8 @@ import com.njackson.live.LiveTracking;
 import com.njackson.oruxmaps.IOruxMaps;
 import com.njackson.oruxmaps.OruxMaps;
 import com.njackson.oruxmaps.OruxMapsServiceCommand;
+import com.njackson.pebble.IMessageManager;
+import com.njackson.pebble.MessageManager;
 import com.njackson.pebble.PebbleServiceCommand;
 import com.njackson.pebble.canvas.CanvasWrapper;
 import com.njackson.pebble.canvas.ICanvasWrapper;
@@ -164,6 +166,9 @@ public class AndroidModule {
 
     @Provides
     IChangeLogBuilder providesChangeLogBuilder() { return new ChangeLogBuilder(); }
+
+    @Provides @Singleton
+    IMessageManager providesMessageManager(MessageManager messageManager) { return messageManager; }
 
     @Provides
     List<IServiceCommand> providesServiceCommands() {

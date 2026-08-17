@@ -136,9 +136,9 @@ fun buildLocationDictionary(
     if (event.sendNavigation) {
         val nav = ByteArray(NAV_NB_BYTES)
         putUInt16(nav, NAV_BYTE_DISTANCE1, Math.floor(navigator.getNextDistance(event.units).toDouble()).toInt())
-        putUInt16(nav, NAV_BYTE_DTD1, Math.floor(navigator.getDistanceToDestination(event.units) * 100).toInt())
+        putUInt16(nav, NAV_BYTE_DTD1, Math.floor((navigator.getDistanceToDestination(event.units) * 100).toDouble()).toInt())
         putUInt8(nav, NAV_BYTE_BEARING, (navigator.getNextBearing() / 360 * 256).toInt())
-        putUInt8(nav, NAV_BYTE_ERROR, Math.floor(Math.abs(navigator.getError()) / 10).toInt())
+        putUInt8(nav, NAV_BYTE_ERROR, Math.floor((Math.abs(navigator.getError()) / 10).toDouble()).toInt())
 
         val curPageNumber = Math.floor(navigator.getNextIndex() / NB_POINTS_PER_PAGE.toDouble()).toInt()
         val firstPageNumberSent = Math.max(0, curPageNumber - 1)

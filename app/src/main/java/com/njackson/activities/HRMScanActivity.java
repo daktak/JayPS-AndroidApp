@@ -97,14 +97,12 @@ public class HRMScanActivity extends ListActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.ble_scan:
-                mLeDeviceListAdapter.clear();
-                scanLeDevice(true);
-                break;
-            case R.id.ble_stop:
-                scanLeDevice(false);
-                break;
+        int id = item.getItemId();
+        if (id == R.id.ble_scan) {
+            mLeDeviceListAdapter.clear();
+            scanLeDevice(true);
+        } else if (id == R.id.ble_stop) {
+            scanLeDevice(false);
         }
         return true;
     }

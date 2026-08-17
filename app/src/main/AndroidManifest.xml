@@ -36,7 +36,7 @@
                 <action android:name="com.pennas.pebblecanvas.plugin.REQUEST_UPDATE" />
             </intent-filter>
         </receiver>
-        <receiver android:enabled="true" android:name=".utils.BootUpReceiver"
+        <receiver android:enabled="true" android:exported="true" android:name=".utils.BootUpReceiver"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

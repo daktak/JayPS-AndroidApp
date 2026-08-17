@@ -22,6 +22,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Singleton
 class MessageManager @Inject constructor(
@@ -35,7 +37,7 @@ class MessageManager @Inject constructor(
     private val uuid = Constants.WATCH_UUID
     private val sender = DefaultPebbleSender(context)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val queue = java.util.LinkedBlockingQueue<PebbleDictionary>()
+    private val queue = LinkedBlockingQueue<PebbleDictionary>()
     private val connected = java.util.concurrent.atomic.AtomicBoolean(false)
     private var skipped = 0
 
@@ -109,7 +111,7 @@ class MessageManager @Inject constructor(
         val advancedLocation = AdvancedLocation().apply {
             setDistance(distance)
             setElapsedTime(elapsedTime)
-            setAscent(ascent)
+            setAscent(ascent.toDouble())
             setMaxSpeed(maxSpeed)
         }
         val newLocation = AdvancedLocationToNewLocation(advancedLocation, 0.0, 0.0, units).apply {
