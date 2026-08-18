@@ -306,8 +306,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if(key.compareTo("ACTIVITY_RECOGNITION") == 0) {
             boolean activity_start = sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
-            boolean fit_start = sharedPreferences.getBoolean("GOOGLE_FIT",false);
-            if(activity_start || fit_start) {
+            if(activity_start) {
                 _serviceStarter.startActivityService();
             } else {
                 _serviceStarter.stopActivityService();

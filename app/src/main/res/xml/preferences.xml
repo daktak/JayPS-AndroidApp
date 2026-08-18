@@ -312,19 +312,6 @@
             </PreferenceCategory>
         </PreferenceScreen>
 
-<!-- Disable Google Fit for v2 (shifted to v2.1+)
-        <PreferenceScreen
-            android:key="googlefit_screen"
-            android:title="Google Fit"
-            android:persistent="false">
-            >
-            <CheckBoxPreference
-                android:key="GOOGLE_FIT"
-                android:title="@string/PREF_GOOGLE_FIT_TITLE"
-                android:summary="@string/PREF_GOOGLE_FIT_SUMMARY"
-                android:defaultValue="false" />
-        </PreferenceScreen>
--->
         <PreferenceScreen
             android:key="orux_screen"
             android:title="OruxMaps Integration"
