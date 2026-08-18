@@ -15,6 +15,7 @@ import com.njackson.pebble.PebbleServiceCommand;
 import com.njackson.sensor.BLEServiceCommand;
 import com.njackson.sensor.Ble;
 import com.njackson.service.MainService;
+import com.njackson.upload.StravaUpload;
 import com.njackson.utils.BootUpReceiver;
 
 import dagger.Component;
@@ -41,4 +42,5 @@ public interface AppComponent {
     void inject(GPSServiceCommand a);
     void inject(ActivityRecognitionServiceCommand a);
     void inject(PebbleBikeApplication a);
+    void inject(StravaUpload a);
 }

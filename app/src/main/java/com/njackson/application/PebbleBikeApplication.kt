@@ -19,6 +19,7 @@ import com.njackson.pebble.PebbleServiceCommand
 import com.njackson.sensor.BLEServiceCommand
 import com.njackson.sensor.Ble
 import com.njackson.service.MainService
+import com.njackson.upload.StravaUpload
 import com.njackson.utils.BootUpReceiver
 import javax.inject.Inject
 
@@ -60,6 +61,7 @@ class PebbleBikeApplication : Application(), IInjectionContainer {
             is PebbleServiceCommand -> component.inject(obj)
             is PebbleListenerService -> component.inject(obj)
             is GPSServiceCommand -> component.inject(obj)
+            is StravaUpload -> component.inject(obj)
             is ActivityRecognitionServiceCommand -> component.inject(obj)
             is PebbleBikeApplication -> component.inject(obj)
             else -> throw IllegalArgumentException("Cannot inject ${obj.javaClass}")
