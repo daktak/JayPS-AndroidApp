@@ -272,7 +272,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         });
 
         setupLinkPreference("INSTALL_WATCHFACE_DEEPLINK", getString(R.string.PREF_INSTALL_WATCHFACE_DEEPLINK_URL), getString(R.string.PREF_INSTALL_WATCHFACE_URL));
-        setupLinkPreference("PREF_NAV_HELP", "http://pebblebike.com/navigation-help/?utm_source=JayPSApp", null);
         setupLinkPreference("ORUXMAPS_URL", getString(R.string.PREF_ORUXMAPS_URL), null);
         setupLinkPreference("CANVAS_URL", getString(R.string.PREF_CANVAS_URL), null);
         setupLinkPreference("about", getString(R.string.PREF_ABOUT_URL), null);
