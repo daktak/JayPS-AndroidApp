@@ -251,7 +251,7 @@
     <PreferenceScreen
         android:key="integration_screen"
         android:title="Integration"
-        android:summary="Strava, Runkeeper, Live Tracking, OruxMaps, Canvas"
+        android:summary="Strava, Live Tracking, OruxMaps, Canvas"
         android:persistent="false">
 
         <PreferenceScreen
