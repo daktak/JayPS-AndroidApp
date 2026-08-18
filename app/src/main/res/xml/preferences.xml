@@ -23,12 +23,6 @@
                 android:title="@string/PREF_INSTALL_WATCHFACE_WEBSITE"
                 android:summary="@string/PREF_INSTALL_WATCHFACE_WEBSITE_SUMMARY"
                 />
-            <Preference
-                android:key="INSTALL_WATCHFACE_NL"
-                android:title="@string/PREF_INSTALL_WATCHFACE_NL"
-                android:summary="@string/PREF_INSTALL_WATCHFACE_NL_SUMMARY"
-                >
-            </Preference>
         </PreferenceCategory>
     </PreferenceScreen>
     <Preference

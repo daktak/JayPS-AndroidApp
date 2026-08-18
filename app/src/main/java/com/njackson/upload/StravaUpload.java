@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,11 +28,26 @@ import javax.inject.Inject;
 
 import fr.jayps.android.AdvancedLocation;
 
+/**
+ * Strava upload using a session cookie (no OAuth).
+ *
+ * Flow (mirrors ~/git/StravaUploaderPy):
+ *   1) GET https://www.strava.com/upload/select  with Cookie _strava4_session=
+ *      -> validates the session and scrapes the csrf-token.
+ *   2) POST https://www.strava.com/upload/files
+ *      multipart: _method=post, authenticity_token=csrf, files[]=gpx
+ *      -> checks "workflow" == "success"
+ *
+ * Does NOT use the /activities/{id} or /activities/{id}/edit endpoints.
+ */
 public class StravaUpload {
 
     private static final String TAG = "PB-StravaUpload";
+    private static final String UA = "Mozilla/5.0 (Linux; Android) JayPS";
     private static final String SELECT_URL = "https://www.strava.com/upload/select";
     private static final String UPLOAD_URL = "https://www.strava.com/upload/files";
+    private static final int TIMEOUT_CONNECT_MS = 15000;
+    private static final int TIMEOUT_READ_MS = 60000;
 
     @Inject IMessageManager _messageManager;
     @Inject SharedPreferences _sharedPreferences;
@@ -54,20 +70,22 @@ public class StravaUpload {
             public void run() {
                 String message;
                 try {
+                    Log.i(TAG, "upload start (sessionLen=" + session.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                     String gpx = advancedLocation.getGPX(false);
                     message = _upload(session.trim(), gpx);
                 } catch (Exception e) {
-                    Log.e(TAG, "Exception:" + e);
-                    message = "Error - " + e.getMessage();
+                    Log.e(TAG, "Exception:" + e, e);
+                    message = "Error - " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
                 }
                 final String result = message;
+                Log.i(TAG, "RESULT: " + result);
                 toast("Strava: " + result);
                 if (_sharedPreferences.getBoolean("STRAVA_NOTIFICATION", false)) {
                     try {
                         _messageManager.sendMessageToPebble("JayPS - Strava", result);
                     } catch (Exception e) {
-                        Log.e(TAG, "sendMessageToPebble Exception:" + e);
+                        Log.e(TAG, "sendMessageToPebble Exception:" + e, e);
                     }
                 }
             }
@@ -86,54 +104,59 @@ public class StravaUpload {
     private String _upload(String session, String gpx) throws Exception {
         String cookie = "_strava4_session=" + session;
 
+        // 1) GET the upload page: validate session + fetch csrf token
         String selectHtml = httpGet(SELECT_URL, cookie);
-        if (selectHtml == null || !selectHtml.contains("Upload and Sync Your Activities")) {
+        Log.i(TAG, "GET select -> len=" + (selectHtml == null ? "null" : selectHtml.length()));
+        if (selectHtml == null) {
+            return "Error - cannot reach Strava (/upload/select failed)";
+        }
+        if (!selectHtml.contains("Upload and Sync Your Activities")) {
             return "Error - invalid session cookie";
         }
         String token = scrapeCsrf(selectHtml);
         if (token == null) {
-            return "Error - cannot read upload form";
+            return "Error - cannot read Strava upload form";
         }
 
-        String boundary = "===pb" + System.currentTimeMillis() + "===";
+        // 2) POST the GPX file as a fixed-length multipart body (no chunked encoding)
         byte[] gpxBytes = gpx.getBytes("UTF-8");
-        String crlf = "\r\n";
-        String hyphens = "--";
+        String boundary = "===pb" + System.currentTimeMillis() + "===";
+        byte[] body = buildMultipart(boundary, token, "activity.gpx", gpxBytes);
 
         URL url = new URL(UPLOAD_URL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) JayPS");
+        conn.setRequestProperty("User-Agent", UA);
         conn.setRequestProperty("Cookie", cookie);
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
+        conn.setConnectTimeout(TIMEOUT_CONNECT_MS);
+        conn.setReadTimeout(TIMEOUT_READ_MS);
+        conn.setFixedLengthStreamingMode(body.length);
 
         DataOutputStream out = new DataOutputStream(conn.getOutputStream());
-        out.writeBytes(hyphens + boundary + crlf);
-        out.writeBytes("Content-Disposition: form-data; name=\"_method\"" + crlf + crlf);
-        out.writeBytes("post" + crlf);
-
-        out.writeBytes(hyphens + boundary + crlf);
-        out.writeBytes("Content-Disposition: form-data; name=\"authenticity_token\"" + crlf + crlf);
-        out.writeBytes(token + crlf);
-
-        out.writeBytes(hyphens + boundary + crlf);
-        out.writeBytes("Content-Disposition: form-data; name=\"files[]\"; filename=\"activity.gpx\"" + crlf);
-        out.writeBytes("Content-Type: text/xml" + crlf + crlf);
-        out.write(gpxBytes);
-        out.writeBytes(crlf + hyphens + boundary + hyphens + crlf);
+        out.write(body);
         out.flush();
         out.close();
 
         int code = conn.getResponseCode();
-        String body = readStream(code == 200 ? conn.getInputStream() : conn.getErrorStream());
+        String resp = readStream(code == 200 ? conn.getInputStream() : conn.getErrorStream());
         conn.disconnect();
 
-        if (code != 200 || body == null || !body.contains("workflow")) {
+        Log.d(TAG, "POST /upload/files -> code=" + code + " resp=" + (resp == null ? "<null>" : resp.length()));
+
+        if (code != 200 || resp == null) {
             return "Error - upload failed (" + code + ")";
         }
+        return parseUploadResponse(resp);
+    }
+
+    private String parseUploadResponse(String body) {
+        if (!body.contains("workflow")) {
+            return "Error - upload failed (no workflow in response)";
+        }
         try {
-            String workflow = null;
+            String workflow;
             String error = "";
             if (body.trim().startsWith("[")) {
                 JSONArray arr = new JSONArray(body);
@@ -141,6 +164,8 @@ public class StravaUpload {
                     JSONObject first = arr.getJSONObject(0);
                     workflow = first.optString("workflow");
                     error = first.optString("error");
+                } else {
+                    return "Error - empty upload response";
                 }
             } else {
                 JSONObject j = new JSONObject(body);
@@ -152,9 +177,30 @@ public class StravaUpload {
             }
             return "Error - " + (error.isEmpty() ? body : error);
         } catch (JSONException e) {
-            Log.e(TAG, "JSONException:" + e);
-            return "Error - bad response";
+            Log.e(TAG, "JSONException:" + e, e);
+            return "Error - bad Strava response";
         }
+    }
+
+    private byte[] buildMultipart(String boundary, String token, String filename, byte[] fileBytes) throws java.io.IOException {
+        String crlf = "\r\n";
+        String hyphens = "--";
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(baos);
+        out.writeBytes(hyphens + boundary + crlf);
+        out.writeBytes("Content-Disposition: form-data; name=\"_method\"" + crlf + crlf);
+        out.writeBytes("post" + crlf);
+        out.writeBytes(hyphens + boundary + crlf);
+        out.writeBytes("Content-Disposition: form-data; name=\"authenticity_token\"" + crlf + crlf);
+        out.writeBytes(token + crlf);
+        out.writeBytes(hyphens + boundary + crlf);
+        out.writeBytes("Content-Disposition: form-data; name=\"files[]\"; filename=\"" + filename + "\"" + crlf);
+        out.writeBytes("Content-Type: text/xml" + crlf + crlf);
+        out.write(fileBytes);
+        out.writeBytes(crlf + hyphens + boundary + hyphens + crlf);
+        out.flush();
+        out.close();
+        return baos.toByteArray();
     }
 
     private String scrapeCsrf(String html) {
@@ -169,16 +215,18 @@ public class StravaUpload {
         try {
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) JayPS");
+            conn.setRequestProperty("User-Agent", UA);
             conn.setRequestProperty("Cookie", cookie);
             conn.setRequestMethod("GET");
+            conn.setConnectTimeout(TIMEOUT_CONNECT_MS);
+            conn.setReadTimeout(TIMEOUT_READ_MS);
             conn.connect();
             int code = conn.getResponseCode();
             String body = readStream(code == 200 ? conn.getInputStream() : conn.getErrorStream());
             conn.disconnect();
             return body;
         } catch (Exception e) {
-            Log.e(TAG, "httpGet Exception:" + e);
+            Log.e(TAG, "httpGet Exception:" + e, e);
             return null;
         }
     }
@@ -192,6 +240,7 @@ public class StravaUpload {
             while ((line = reader.readLine()) != null) sb.append(line).append("\n");
             return sb.toString();
         } catch (Exception e) {
+            Log.e(TAG, "readStream Exception:" + e, e);
             return null;
         }
     }
