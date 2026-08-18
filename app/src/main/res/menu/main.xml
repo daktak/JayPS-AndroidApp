@@ -15,6 +15,10 @@
         android:title="@string/MAIN_EXPORT_TCX"
         android:orderInCategory="102" />
 
+    <item android:id="@+id/action_upload_strava"
+        android:title="@string/action_upload_strava"
+        android:orderInCategory="103" />
+
     <item android:id="@+id/action_load_route"
         android:title="@string/action_load_route"
         android:orderInCategory="104" />

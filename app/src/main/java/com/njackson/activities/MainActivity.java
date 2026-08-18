@@ -31,6 +31,7 @@ import com.njackson.events.UI.StopButtonTouchedEvent;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
+import com.njackson.upload.StravaUpload;
 import com.njackson.utils.gpx.GpxExport;
 import com.njackson.utils.services.IServiceStarter;
 import com.squareup.otto.Bus;
@@ -284,6 +285,18 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
             if ((lat!=0.0)&&(lon!=0.0)) {
                 String uri = "geo:" + lat + ","+ lon + "?q=" + lat + "," + lon;
                 startActivity(new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(uri)));
+            }
+        }
+        if (id == R.id.action_upload_strava) {
+            if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
+                String session = _sharedPreferences.getString("STRAVA_SESSION", "");
+                if (!session.isEmpty()) {
+                    new StravaUpload(getApplicationContext()).upload(session);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Please set the Strava session cookie in the settings", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before uploading to Strava", Toast.LENGTH_SHORT).show();
             }
         }
         return super.onOptionsItemSelected(item);

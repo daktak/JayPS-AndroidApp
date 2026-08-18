@@ -129,6 +129,8 @@
     <string name="PREF_STRAVA_CATEGORIE_TITLE">Strava Integration</string>
     <string name="PREF_STRAVA_CATEGORIE_SUMMARY" />
     <string name="PREF_STRAVA_TITLE">Strava</string>
+    <string name="PREF_STRAVA_SESSION_TITLE">Strava session cookie</string>
+    <string name="PREF_STRAVA_SESSION_SUMMARY">Paste the value of the _strava4_session cookie from a logged-in Strava session</string>
     <string name="PREF_STRAVA_DELETE_IF_EXISTS_DURING_UPLOAD_TITLE">Delete if already exists</string>
     <string name="PREF_STRAVA_DELETE_IF_EXISTS_DURING_UPLOAD_SUMMARY">During upload, delete a previously uploaded track (this will avoid error if you try to upload a track, continue the record and upload it again)</string>
     <string name="PREF_STRAVA_NOTIFICATION_TITLE">Notification</string>

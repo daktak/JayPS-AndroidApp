@@ -396,6 +396,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         setLiveSummary();
         setOruxMapsSummary();
         setCanvasSummary();
+        setStravaSummary();
         setHrmSummary();
     }
 
@@ -451,6 +452,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         if (s.equals("CANVAS_MODE")) {
             setCanvasSummary();
+        }
+        if (s.equals("STRAVA_SESSION") || s.equals("STRAVA_AUTO")) {
+            setStravaSummary();
         }
         if (s.equals("PREF_BLE_HRM_HRMAX")) {
             setHrmSummary();
@@ -545,6 +549,25 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         canvasPref.setSummary(listDesc);
         Preference canvas_screen = findPreference("canvas_screen");
         canvas_screen.setSummary(listDesc);
+    }
+    private void setStravaSummary() {
+        String session = _sharedPreferences.getString("STRAVA_SESSION", "");
+        Preference sessionPref = findPreference("STRAVA_SESSION");
+        if (sessionPref != null) {
+            sessionPref.setSummary(session.isEmpty() ? getString(R.string.PREF_STRAVA_SESSION_SUMMARY) : "Session set (length " + session.length() + ")");
+        }
+        ListPreference autoPref = (ListPreference) findPreference("STRAVA_AUTO");
+        if (autoPref != null) {
+            CharSequence desc = autoPref.getEntry();
+            if (desc != null) autoPref.setSummary(desc);
+        }
+        Preference stravaScreen = findPreference("strava_screen");
+        if (stravaScreen != null) {
+            boolean auto = !_sharedPreferences.getString("STRAVA_AUTO", "disable").equals("disable");
+            String summary = "Session " + (session.isEmpty() ? "not set" : "set");
+            if (auto) summary += " - Auto upload enabled";
+            stravaScreen.setSummary(summary);
+        }
     }
     private void setBleTitle(String title, String key) {
         Preference blePref = findPreference(key);

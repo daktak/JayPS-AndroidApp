@@ -11,6 +11,7 @@ import android.location.LocationManager;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ import com.njackson.events.GPSServiceCommand.SavedLocation;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.pebble.IMessageManager;
 import com.njackson.service.IServiceCommand;
+import com.njackson.upload.StravaUpload;
 import com.njackson.state.IGPSDataStore;
 import com.njackson.utils.AltitudeGraphReduce;
 import com.njackson.utils.BatteryStatus;
@@ -54,6 +56,8 @@ import fr.jayps.android.AdvancedLocation;
 public class GPSServiceCommand implements IServiceCommand {
 
     private static final String TAG = "PB-GPSServiceCommand";
+
+    private static final int TIMEOUT_STRAVA = 30 * 1000;
 
     @Inject @ForApplication
     Context _applicationContext;
@@ -216,6 +220,27 @@ public class GPSServiceCommand implements IServiceCommand {
         stopLocationUpdates();
 
         _currentStatus = BaseStatus.Status.STOPPED;
+
+        autoUploadToStrava();
+    }
+
+    private void autoUploadToStrava() {
+        if (_sharedPreferences.getString("STRAVA_AUTO", "disable").equals("disable")) {
+            return;
+        }
+        final String session = _sharedPreferences.getString("STRAVA_SESSION", "");
+        if (session.isEmpty()) {
+            return;
+        }
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (_serviceStarter.isLocationServicesRunning()) {
+                    return;
+                }
+                new StravaUpload(_applicationContext).upload(session);
+            }
+        }, TIMEOUT_STRAVA);
     }
 
     private void setGPSStartTime() {
