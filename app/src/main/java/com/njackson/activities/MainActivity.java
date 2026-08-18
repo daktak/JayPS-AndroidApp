@@ -192,8 +192,8 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                 _dataStore.setAscent((float) settings.getFloat("GPS_ASCENT", 0));
                 _dataStore.commit();
 
-                editor.putString("hrm_name", settings.getString("hrm_name", ""));
-                editor.putString("hrm_address", settings.getString("hrm_address", ""));
+                editor.putString("hrm_name1", settings.getString("hrm_name", ""));
+                editor.putString("hrm_address1", settings.getString("hrm_address", ""));
             }
             // save new version code
             editor.putInt("VERSION_CODE", mCurrentVersionCode);
