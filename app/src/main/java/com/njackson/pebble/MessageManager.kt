@@ -16,6 +16,7 @@ import fr.jayps.android.AdvancedLocation
 import io.rebble.pebblekit2.client.DefaultPebbleSender
 import io.rebble.pebblekit2.common.model.PebbleDictionary
 import io.rebble.pebblekit2.common.model.PebbleDictionaryItem
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,7 +37,10 @@ class MessageManager @Inject constructor(
     private val debug = prefs.getBoolean("PREF_DEBUG", false)
     private val uuid = Constants.WATCH_UUID
     private val sender = DefaultPebbleSender(context)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val handler = CoroutineExceptionHandler { _, e ->
+        Log.e(tag, "pebble communication failed", e)
+    }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
     private val queue = LinkedBlockingQueue<PebbleDictionary>()
     private val connected = java.util.concurrent.atomic.AtomicBoolean(false)
     private var skipped = 0

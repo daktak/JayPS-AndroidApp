@@ -1,11 +1,13 @@
 package com.njackson.gps;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
@@ -19,8 +21,21 @@ public class MainServiceForegroundStarter implements IForegroundServiceStarter {
 
     private String TAG = "PB-MainServiceForegroundStarter";
 
+    private static final String CHANNEL_ID = "jayps_location_channel";
     private NotificationCompat.Builder builder = null;
     private final int myID = 1000;
+
+    private void ensureChannel(Context context, int priority) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager mgr = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (mgr.getNotificationChannel(CHANNEL_ID) != null) return;
+        int importance = priority >= NotificationCompat.PRIORITY_HIGH
+                ? NotificationManager.IMPORTANCE_HIGH
+                : NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "JayPS Location", importance);
+        channel.setShowBadge(false);
+        mgr.createNotificationChannel(channel);
+    }
 
     @Override
     public void startServiceForeground(Service service, String title, String contentText, int priority) {
@@ -30,7 +45,9 @@ public class MainServiceForegroundStarter implements IForegroundServiceStarter {
 
         PendingIntent pendIntent = PendingIntent.getActivity(service, 0, i, PendingIntent.FLAG_IMMUTABLE);
 
-        builder = new NotificationCompat.Builder(service);
+        ensureChannel(service, priority);
+
+        builder = new NotificationCompat.Builder(service, CHANNEL_ID);
 
         builder.setContentTitle(title).setContentText(contentText)
                 .setSmallIcon(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_notification : R.drawable.ic_launcher)
