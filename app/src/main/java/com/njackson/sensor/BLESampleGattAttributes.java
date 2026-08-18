@@ -29,6 +29,10 @@ public class BLESampleGattAttributes {
     //https://github.com/dobos/LightRemote/blob/master/src/LightRemote/Assets/Config.xml
     public static String LIGHT_MODES_JSON = "{\"Flare RT\": {\"Off\": 0, \"Day Steady\": 1, \"Night Steady\": 5, \"Day Flash\": 7, \"All Day Flash\": 8, \"Night Flash\": 63}, \"ION PRO RT\": {\"Off\": 0, \"High\": 1, \"Medium\": 2, \"Low\": 5, \"Night Flash\": 62, \"Day Flash\": 63}, \"ION 200 RT\": {\"Off\": 0, \"High\": 1, \"Medium\": 2, \"Low\": 5, \"Night Flash\": 62, \"Day Flash\": 63}}";
 
+    //https://gopro.github.io/OpenGoPro/tutorials/bash/bluez
+    public static String GOPRO_COMMAND = "b5f90072-aa8d-11e3-9046-0002a5d5c51b";
+    public static String GOPRO_SERVICE = "0000fea6-0000-1000-8000-00805f9b34fb";
+
     static {
         // Sample Services.
         // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
