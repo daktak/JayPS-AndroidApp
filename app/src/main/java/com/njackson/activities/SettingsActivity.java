@@ -73,14 +73,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 return true;
             }
         });
-        Preference installPreferenceNl = findPreference("INSTALL_WATCHFACE_NL");
-        installPreferenceNl.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                _installWatchFace.execute(getApplicationContext(), new ToastMessageMaker(), getApplicationContext().getString(R.string.PREF_INSTALL_WATCHFACE_NL_URL));
-                return true;
-            }
-        });
 
         Preference resetPreference = findPreference("RESET_DATA");
         resetPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

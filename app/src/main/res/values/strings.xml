@@ -4,7 +4,6 @@
     <string name="MAIN_TITLE">JayPS v3.0.0</string>
     <string name="MAIN_EXPORT_TCX">Export TCX</string>
     <string name="PREF_INSTALL_WATCHFACE_URL">http://dl.pebblebike.com/p/jayps-3.0.0.pbw</string>
-    <string name="PREF_INSTALL_WATCHFACE_NL_URL">http://dl.pebblebike.com/p/ventoo-2.8.0-nl.pbw</string>
 
     <string name="app_name">JayPS</string>
     <string name="action_settings">Settings</string>
@@ -38,8 +37,6 @@
     <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_URL">pebble://appstore/529289cee07df1fa76000009</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE">Installation from the developers website</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE_SUMMARY" />
-    <string name="PREF_INSTALL_WATCHFACE_NL">Dutch version</string>
-    <string name="PREF_INSTALL_WATCHFACE_NL_SUMMARY">Specific version with Dutch locale</string>
     <string name="PREF_RESET_DATA">Reset data &amp; GPX</string>
     <string name="PREF_RESET_DATA_SUMMARY">Distance, time, speed and ascent</string>
     <string name="ALERT_RESET_DATA_TITLE">Reset data and GPX</string>
