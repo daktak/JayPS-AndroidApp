@@ -114,4 +114,15 @@
         <item>2</item>
     </string-array>
 
+    <string-array name="TCX_ACTIVITY_TYPE_ENTRIES">
+        <item>Biking</item>
+        <item>Running</item>
+        <item>Other</item>
+    </string-array>
+    <string-array name="TCX_ACTIVITY_TYPE_VALUES">
+        <item>Biking</item>
+        <item>Running</item>
+        <item>Other</item>
+    </string-array>
+
 </resources>

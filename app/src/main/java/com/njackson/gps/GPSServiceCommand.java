@@ -332,7 +332,7 @@ public class GPSServiceCommand implements IServiceCommand {
     private LocationListener _locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            _advancedLocation.onLocationChanged(location, _heartRate, _cyclingCadence);
+            _advancedLocation.onLocationChanged(location, _heartRate, _cyclingCadence, 0);
             _navigator.onLocationChanged(location);
             String[] resultClimb = _navigator.messageClimb(location);
             if (resultClimb[0] != "") {

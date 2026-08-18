@@ -108,7 +108,15 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         exportGPXPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false));
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), "gpx", "");
+                return true;
+            }
+        });
+        Preference exportTCXPreference = findPreference("EXPORT_TCX");
+        exportTCXPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking"));
                 return true;
             }
         });
@@ -407,6 +415,11 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         _dataStore.reloadPreferencesFromSettings();
         if (s.equals("UNITS_OF_MEASURE")) {
             setUnitsSummary();
+        }
+        if (s.equals("TCX_ACTIVITY_TYPE")) {
+            ListPreference tcx_activity = (ListPreference) findPreference("TCX_ACTIVITY_TYPE");
+            CharSequence listDesc = tcx_activity.getEntry();
+            tcx_activity.setSummary(listDesc);
         }
         if (s.equals("REFRESH_INTERVAL")) {
             int refresh_interval = 0;
