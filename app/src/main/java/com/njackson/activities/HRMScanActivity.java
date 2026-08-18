@@ -120,15 +120,22 @@ public class HRMScanActivity extends ListActivity {
     }
 
     private boolean ensureBluetoothPermissions() {
+        ArrayList<String> needed = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED
-                    || checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{
-                        android.Manifest.permission.BLUETOOTH_SCAN,
-                        android.Manifest.permission.BLUETOOTH_CONNECT
-                }, REQUEST_BT_PERMISSIONS);
-                return false;
+            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_SCAN);
             }
+            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_CONNECT);
+            }
+        } else {
+            if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+        }
+        if (!needed.isEmpty()) {
+            requestPermissions(needed.toArray(new String[0]), REQUEST_BT_PERMISSIONS);
+            return false;
         }
         return true;
     }

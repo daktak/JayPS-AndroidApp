@@ -8,7 +8,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -35,6 +38,7 @@ import com.squareup.otto.Subscribe;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
@@ -51,6 +55,8 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     @Inject Navigator _navigator;
 
     private boolean _authInProgress;
+
+    private static final int REQUEST_REQUIRED_PERMISSIONS = 100;
 
     @Subscribe
     public void onStartButtonTouched(StartButtonTouchedEvent event) {
@@ -103,6 +109,8 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
         ((PebbleBikeApplication) getApplication()).inject(this);
 
+        requestRequiredPermissions();
+
         boolean activity_start = _sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
         if(activity_start) {
             _serviceStarter.startActivityService();
@@ -120,6 +128,39 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         IChangeLog changeLog = _changeLogBuilder.setActivity(this).build();
         if (changeLog.isFirstRun()) {
             changeLog.getDialog().show();
+        }
+    }
+
+    private void requestRequiredPermissions() {
+        ArrayList<String> needed = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_SCAN)
+                    != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_SCAN);
+            }
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_CONNECT);
+            }
+        }
+        if (!needed.isEmpty()) {
+            ActivityCompat.requestPermissions(this, needed.toArray(new String[0]), REQUEST_REQUIRED_PERMISSIONS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_REQUIRED_PERMISSIONS) {
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "permission denied: " + permissions[i]);
+                }
+            }
         }
     }
     private void detectNewVersion() {
