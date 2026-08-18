@@ -148,38 +148,43 @@ public class StravaUpload {
         if (code != 200 || resp == null) {
             return "Error - upload failed (" + code + ")";
         }
-        return parseUploadResponse(resp);
+        return parseUploadResponse(code, resp);
     }
 
-    private String parseUploadResponse(String body) {
+    private String parseUploadResponse(int code, String body) {
+        if (code != 200 || body == null) {
+            return "Error - upload failed (" + code + ")";
+        }
+        // StravaUploaderPy treats the mere presence of "workflow" in the response
+        // as a successful (accepted) upload. Avoid optString("error"), which would
+        // turn Strava's JSON "error":null into the literal string "null".
         if (!body.contains("workflow")) {
-            return "Error - upload failed (no workflow in response)";
+            return "Error - upload not confirmed by Strava";
         }
         try {
-            String workflow;
-            String error = "";
+            JSONObject j = null;
             if (body.trim().startsWith("[")) {
                 JSONArray arr = new JSONArray(body);
-                if (arr.length() > 0) {
-                    JSONObject first = arr.getJSONObject(0);
-                    workflow = first.optString("workflow");
-                    error = first.optString("error");
-                } else {
-                    return "Error - empty upload response";
-                }
+                if (arr.length() > 0) j = arr.getJSONObject(0);
             } else {
-                JSONObject j = new JSONObject(body);
-                workflow = j.optString("workflow");
-                error = j.optString("error");
+                j = new JSONObject(body);
             }
+            String workflow = (j == null) ? null : optStr(j, "workflow");
             if ("success".equals(workflow)) {
                 return "Your activity has been created";
             }
-            return "Error - " + (error.isEmpty() ? body : error);
+            // workflow present (Strava accepted) but not yet "success"
+            return "Activity uploaded to Strava" + (workflow != null ? " (status=" + workflow + ")" : "");
         } catch (JSONException e) {
             Log.e(TAG, "JSONException:" + e, e);
-            return "Error - bad Strava response";
+            return "Activity uploaded to Strava";
         }
+    }
+
+    private static String optStr(JSONObject j, String key) {
+        Object o = j.opt(key);
+        if (o == null || JSONObject.NULL.equals(o)) return null;
+        return o.toString();
     }
 
     private byte[] buildMultipart(String boundary, String token, String filename, byte[] fileBytes) throws java.io.IOException {
