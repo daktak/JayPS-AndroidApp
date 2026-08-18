@@ -413,14 +413,6 @@
             android:title="@string/PREF_ABOUT_TITLE"
             android:summary="@string/PREF_ABOUT_SUMMARY"
             />
-        <Preference
-            android:key="uservoice"
-            android:title="@string/PREF_USERVOICE"
-            android:summary="@string/PREF_USERVOICE_SUMMARY"
-            >
-            <intent android:action="android.intent.action.VIEW"
-                android:data="@string/PREF_USERVOICE_URL" />
-        </Preference>
 
         <Preference
             android:key="pebble_store"
@@ -428,11 +420,6 @@
             android:summary="@string/PREF_PEBBLE_STORE_SUMMARY"
             />
 
-        <Preference
-            android:key="twitter"
-            android:title="@string/PREF_TWITTER"
-            android:summary="@string/PREF_TWITTER_SUMMARY"
-            />
         <Preference
             android:key="CHANGE_LOG"
             android:title="@string/PREF_CHANGE_LOG_TITLE"

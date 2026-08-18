@@ -284,9 +284,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         setupLinkPreference("ORUXMAPS_URL", getString(R.string.PREF_ORUXMAPS_URL), null);
         setupLinkPreference("CANVAS_URL", getString(R.string.PREF_CANVAS_URL), null);
         setupLinkPreference("about", getString(R.string.PREF_ABOUT_URL), null);
-        setupLinkPreference("uservoice", getString(R.string.PREF_USERVOICE_URL), null);
         setupLinkPreference("pebble_store", getString(R.string.PREF_PEBBLE_STORE_URL), "http://www.pebblebike.com");
-        setupLinkPreference("twitter", getString(R.string.PREF_TWITTER_URL), null);
 
     }
     private void setupLinkPreference(String key, String url, String fallback) {
