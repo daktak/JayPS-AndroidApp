@@ -448,6 +448,8 @@ public class GPSServiceCommand implements IServiceCommand {
                 _last_post_navigator = _time.getCurrentTimeMilliseconds();
             }
 
+            _dataStore.setLastLocationLatitude((float) _advancedLocation.getLatitude());
+            _dataStore.setLastLocationLongitude((float) _advancedLocation.getLongitude());
             //event.setAscentRate(nbSent);
             _bus.post(event);
         }
