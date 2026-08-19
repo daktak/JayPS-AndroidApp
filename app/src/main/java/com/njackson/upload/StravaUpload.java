@@ -70,11 +70,20 @@ public class StravaUpload {
             @Override
             public void run() {
                 String message;
-                try {
+                 try {
                     Log.i(TAG, "upload start (sessionLen=" + session.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
-                    String gpx = advancedLocation.getGPX(false);
-                    message = _upload(session.trim(), gpx);
+                    String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
+                    String filename;
+                    String data;
+                    if (advancedLocation.hasPowerData()) {
+                        data = advancedLocation.getTCX(activityType);
+                        filename = "activity.tcx";
+                    } else {
+                        data = advancedLocation.getGPX(false);
+                        filename = "activity.gpx";
+                    }
+                    message = _upload(session.trim(), data, filename);
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e, e);
                     message = "Error - " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
@@ -102,7 +111,7 @@ public class StravaUpload {
         });
     }
 
-    private String _upload(String session, String gpx) throws Exception {
+    private String _upload(String session, String data, String filename) throws Exception {
         String cookie = "_strava4_session=" + session;
 
         // 1) GET the upload page: validate session + fetch csrf token
@@ -119,10 +128,10 @@ public class StravaUpload {
             return "Error - cannot read Strava upload form";
         }
 
-        // 2) POST the GPX file as a fixed-length multipart body (no chunked encoding)
-        byte[] gpxBytes = gpx.getBytes("UTF-8");
+        // 2) POST the GPX/TCX file as a fixed-length multipart body (no chunked encoding)
+        byte[] fileBytes = data.getBytes("UTF-8");
         String boundary = "===pb" + System.currentTimeMillis() + "===";
-        byte[] body = buildMultipart(boundary, token, "activity.gpx", gpxBytes);
+        byte[] body = buildMultipart(boundary, token, filename, fileBytes);
 
         URL url = new URL(UPLOAD_URL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
