@@ -12,5 +12,5 @@ KayPS has a Live Tracking function that sends your position every 30 seconds to 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
 ## Watchface
-See also the [JayPS Watch Face](https://github.com/daktak/JayPS-WatchFace).
+See also the [KayPS Watch Face](https://github.com/daktak/JayPS-WatchFace).
 
