@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
-    <release version="4.0.0" versioncode="500" >
+    <release version="26.8.1" versioncode="500" >
         <change><![CDATA[<b>Update to use new libpebble</b><br/>
             - Migrate from the abandoned com.getpebble:pebblekit to the Rebble pebblekit2 client for modern Pebble communication]]></change>
         <change><![CDATA[<b>Strava upload</b><br/>

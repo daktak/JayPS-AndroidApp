@@ -33,6 +33,7 @@ import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
 import com.njackson.upload.StravaUpload;
 import com.njackson.utils.gpx.GpxExport;
+import com.njackson.utils.UpdateTask;
 import com.njackson.utils.services.IServiceStarter;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
@@ -119,6 +120,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
         detectNewVersion();
         showChangeLog();
+        new UpdateTask(this, false).update();
 
         if (getIntent().getExtras() != null) {
             onNewIntent(getIntent());
