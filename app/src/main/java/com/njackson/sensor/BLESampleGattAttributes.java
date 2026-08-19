@@ -14,6 +14,9 @@ public class BLESampleGattAttributes {
 
     // 0X2A5B https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.csc_measurement.xml
     public static String CSC_MEASUREMENT = "00002a5b-0000-1000-8000-00805f9b34fb";
+    // 0x2a63 https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
+    public static String CYCLING_POWER_SERVICE = "00001818-0000-1000-8000-00805f9b34fb";
+    public static String CYCLING_POWER_MEASUREMENT = "00002a63-0000-1000-8000-00805f9b34fb";
     // 0x2a53 https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.rsc_measurement.xml
     public static String RSC_MEASUREMENT = "00002a53-0000-1000-8000-00805f9b34fb";
 
@@ -40,6 +43,7 @@ public class BLESampleGattAttributes {
         attributes.put("00001801-0000-1000-8000-00805f9b34fb", "Generic Attribute");
         attributes.put("00001814-0000-1000-8000-00805f9b34fb", "Running Speed and Cadence");
         attributes.put("00001816-0000-1000-8000-00805f9b34fb", "Cycling Speed and Cadence");
+        attributes.put("00001818-0000-1000-8000-00805f9b34fb", "Cycling Power");
         attributes.put("0000180a-0000-1000-8000-00805f9b34fb", "Device Information Service");
         attributes.put("0000180d-0000-1000-8000-00805f9b34fb", "Heart Rate Service");
         attributes.put("0000180f-0000-1000-8000-00805f9b34fb", "Battery Service");
@@ -70,6 +74,7 @@ public class BLESampleGattAttributes {
         attributes.put("00002a54-0000-1000-8000-00805f9b34fb", "RSC Feature");
         attributes.put("00002a55-0000-1000-8000-00805f9b34fb", "SC Control Point");
         attributes.put("00002a5b-0000-1000-8000-00805f9b34fb", "CSC Measurement");
+        attributes.put("00002a63-0000-1000-8000-00805f9b34fb", "Cycling Power Measurement");
         attributes.put("00002a5c-0000-1000-8000-00805f9b34fb", "CSC Feature");
         attributes.put("00002a5d-0000-1000-8000-00805f9b34fb", "Sensor Location");
 

@@ -80,6 +80,8 @@ public class GPSServiceCommand implements IServiceCommand {
 	private int _heartRate = 0;
     private int _cyclingCadence = 0;
     private int _runningCadence = 0;
+    private int _power = 0;
+    private boolean _powerOverride = false;
     private double _temperature = 0;
     private int _batteryLevel = 0;
     private BaseStatus.Status _currentStatus= BaseStatus.Status.NOT_INITIALIZED;
@@ -159,6 +161,14 @@ public class GPSServiceCommand implements IServiceCommand {
                 _runningCadence = event.getRunningCadence();
                 Log.d(TAG, "onNewBleSensorData _runningCadence:" + _runningCadence);
                 break;
+            case BleSensorData.SENSOR_POWER:
+                _power = event.getPower();
+                Log.d(TAG, "onNewBleSensorData _power:" + _power);
+                if (!_powerOverride && _power >= 0) {
+                    _powerOverride = true;
+                    changeRefreshInterval(Math.min(_refresh_interval, 1000));
+                }
+                break;
 
             case BleSensorData.SENSOR_TEMPERATURE:
                 _temperature = event.getTemperature();
@@ -218,6 +228,9 @@ public class GPSServiceCommand implements IServiceCommand {
         saveGPSStats();
 
         stopLocationUpdates();
+
+        _power = 0;
+        _powerOverride = false;
 
         _currentStatus = BaseStatus.Status.STOPPED;
 
@@ -357,7 +370,7 @@ public class GPSServiceCommand implements IServiceCommand {
     private LocationListener _locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            _advancedLocation.onLocationChanged(location, _heartRate, _cyclingCadence, 0);
+            _advancedLocation.onLocationChanged(location, _heartRate, _cyclingCadence, _power);
             _navigator.onLocationChanged(location);
             String[] resultClimb = _navigator.messageClimb(location);
             if (resultClimb[0] != "") {
@@ -438,6 +451,13 @@ public class GPSServiceCommand implements IServiceCommand {
         }
         if (_runningCadence > 0) {
             event.setRunningCadence(_runningCadence);
+        }
+        if (_power >= 0) {
+            event.setPower(_power);
+            event.setMaxPower(_advancedLocation.getMaxPower());
+            event.setAvgPower(_advancedLocation.getAvgPower(0));
+            event.setAvgPower3(_advancedLocation.getAvgPower(3));
+            event.setNormalizedPower(_advancedLocation.getNormalizedPower(30));
         }
         if (_temperature != 0 && _time.getCurrentTimeMilliseconds() - _last_post_temperature > 60 * 1000) {
             // only send temperature if available and once every X seconds

@@ -62,6 +62,13 @@ fun buildLocationDictionary(
     val BYTE_HEARTRATE = 20
     val BYTE_MAXSPEED1 = 21
     val BYTE_CADENCE = 23
+    val BYTE_POWER1 = 24
+    val BYTE_POWER2 = 25
+    val BYTE_AVGPOWER = 26
+    val BYTE_MAXPOWER1 = 27
+    val BYTE_MAXPOWER2 = 28
+    val BYTE_AVGPWR3 = 29
+    val BYTE_NPPWR30 = 30
 
     val NAV_BYTE_DISTANCE1 = 0
     val NAV_BYTE_DTD1 = 2
@@ -83,7 +90,7 @@ fun buildLocationDictionary(
         locationDataVersion = Constants.PEBBLE_LOCATION_DATA_V3
     }
 
-    val data = ByteArray(24)
+    val data = ByteArray(33)
 
     data[BYTE_SETTINGS] = ((event.units % 8) shl POS_UNITS).toByte()
     data[BYTE_SETTINGS] = (data[BYTE_SETTINGS] + ((if (serviceRunning) 1 else 0) shl POS_SERVICE_RUNNING)).toByte()
@@ -116,6 +123,14 @@ fun buildLocationDictionary(
     }
 
     putUInt16(data, BYTE_MAXSPEED1, Math.floor(10 * event.maxSpeed.toDouble()).toInt())
+
+    if (event.power >= 0) {
+        putUInt16(data, BYTE_POWER1, event.power)
+        putUInt8(data, BYTE_AVGPOWER, event.avgPower)
+        putUInt16(data, BYTE_MAXPOWER1, event.maxPower)
+        putUInt8(data, BYTE_AVGPWR3, event.avgPower3)
+        putUInt8(data, BYTE_NPPWR30, event.normalizedPower)
+    }
 
     val dict = mutableMapOf<UInt, PebbleDictionaryItem>()
     dict[locationDataVersion.toUInt()] = PebbleDictionaryItem.Bytes(data)

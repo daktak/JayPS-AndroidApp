@@ -163,6 +163,26 @@ public abstract class MyLocation {
     public double getTemperature() { return this._temperature; }
     public void setTemperature(double temperature) { this._temperature = temperature;}
 
+    private int _power = -1;
+    public int getPower() { return this._power; }
+    public void setPower(int power) { this._power = power;}
+
+    private int _maxPower = 0;
+    public int getMaxPower() { return this._maxPower; }
+    public void setMaxPower(int maxPower) { this._maxPower = maxPower;}
+
+    private int _avgPower = 0;
+    public int getAvgPower() { return this._avgPower; }
+    public void setAvgPower(int avgPower) { this._avgPower = avgPower;}
+
+    private int _avgPower3 = 0;
+    public int getAvgPower3() { return this._avgPower3; }
+    public void setAvgPower3(int avgPower3) { this._avgPower3 = avgPower3;}
+
+    private int _normalizedPower = 0;
+    public int getNormalizedPower() { return this._normalizedPower; }
+    public void setNormalizedPower(int normalizedPower) { this._normalizedPower = normalizedPower;}
+
     private int _batteryLevel = 0;
     public int getBatteryLevel() { return this._batteryLevel; }
     public void setBatteryLevel(int batteryLevel) { this._batteryLevel = batteryLevel;}

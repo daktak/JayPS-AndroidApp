@@ -53,12 +53,16 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_RSC_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.RSC_MEASUREMENT);
     public final static UUID UUID_BATTERY_LEVEL = UUID.fromString(BLESampleGattAttributes.BATTERY_LEVEL);
     public final static UUID UUID_TEMPERATURE_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.TEMPERATURE_MEASUREMENT);
+    public final static UUID UUID_CYCLING_POWER_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.CYCLING_POWER_MEASUREMENT);
     public final static UUID UUID_LIGHT_MODE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE);
     public final static UUID UUID_LIGHT_MODE_SERVICE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE);
     public final static UUID UUID_GOPRO_SERVICE = UUID.fromString(BLESampleGattAttributes.GOPRO_SERVICE);
     public final static UUID UUID_GOPRO_COMMAND = UUID.fromString(BLESampleGattAttributes.GOPRO_COMMAND);
 
     private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
+
+    private int _cpsCrankRevolutions = 0;
+    private long _cpsLastCrankEventTime = 0;
 
     private boolean debug = true;
     private boolean _bleStarted = false;
@@ -638,6 +642,42 @@ public class Ble implements IBle, ITimerHandler {
             sensorData.setRunningCadence((int) cadence);
             _bus.post(sensorData);
 
+        } else if (UUID_CYCLING_POWER_MEASUREMENT.equals(characteristic.getUuid())) {
+            int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+            int offset = 2;
+            if ((flags & 0x01) != 0) offset += 1; // pedal power balance present
+            if ((flags & 0x02) != 0) offset += 2; // accumulated torque present
+            if ((flags & 0x04) != 0) offset += 6; // wheel revolution data present
+            boolean crankPresent = (flags & 0x08) != 0;
+            int cumulativeCrankRevolutions = 0;
+            int lastCrankEventTime = 0;
+            if (crankPresent) {
+                cumulativeCrankRevolutions = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+                lastCrankEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset + 2);
+                offset += 4;
+            }
+            final int instantaneousPower = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
+
+            BleSensorData powerData = new BleSensorData(gatt.getDevice().getAddress());
+            powerData.setPower(instantaneousPower);
+            _bus.post(powerData);
+
+            if (crankPresent) {
+                if (_cpsLastCrankEventTime != 0 && cumulativeCrankRevolutions >= _cpsCrankRevolutions) {
+                    int dRev = cumulativeCrankRevolutions - _cpsCrankRevolutions;
+                    int dTime = lastCrankEventTime - (int) _cpsLastCrankEventTime; // in 1/1024 s
+                    if (dTime > 0) {
+                        int rpm = (int) Math.round(dRev * 60.0 * 1024.0 / dTime);
+                        BleSensorData cadenceData = new BleSensorData(gatt.getDevice().getAddress());
+                        cadenceData.setCyclingCadence(rpm);
+                        _bus.post(cadenceData);
+                    }
+                }
+                _cpsCrankRevolutions = cumulativeCrankRevolutions;
+                _cpsLastCrankEventTime = lastCrankEventTime;
+            }
+            res = String.format("Received power: %d", instantaneousPower);
+
         } else if (UUID_LIGHT_MODE.equals(characteristic.getUuid())) {
             //store light address and mode
             int lm = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
@@ -689,6 +729,7 @@ public class Ble implements IBle, ITimerHandler {
                         || UUID_RSC_MEASUREMENT.equals(gattCharacteristic.getUuid())
                         || UUID_BATTERY_LEVEL.equals(gattCharacteristic.getUuid())
                         || UUID_TEMPERATURE_MEASUREMENT.equals(gattCharacteristic.getUuid())
+                        || UUID_CYCLING_POWER_MEASUREMENT.equals(gattCharacteristic.getUuid())
                         || UUID_LIGHT_MODE.equals(gattCharacteristic.getUuid())
 
                 ) {

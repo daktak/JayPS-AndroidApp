@@ -7,6 +7,7 @@ public class BleSensorData {
     public static final int SENSOR_CSC_WHEEL_RPM = 3;
     public static final int SENSOR_RSC = 4;
     public static final int SENSOR_TEMPERATURE = 5;
+    public static final int SENSOR_POWER = 6;
 
     private String _bleAddress = "";
     public BleSensorData(String bleAddress) {
@@ -64,5 +65,14 @@ public class BleSensorData {
     public void setTemperature(double temperature) {
         this._type = SENSOR_TEMPERATURE;
         this._temperature = temperature;
+    }
+
+    private int _power = 0;
+    public int getPower() {
+        return _power;
+    }
+    public void setPower(int power) {
+        this._type = SENSOR_POWER;
+        this._power = power;
     }
 }
