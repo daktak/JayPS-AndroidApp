@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="MAIN_TITLE">JayPS v3.0.0</string>
+    <string name="MAIN_TITLE">JayPS</string>
     <string name="MAIN_EXPORT_TCX">Export TCX</string>
-    <string name="PREF_INSTALL_WATCHFACE_URL">http://dl.pebblebike.com/p/jayps-3.0.0.pbw</string>
+    <string name="PREF_INSTALL_WATCHFACE_URL">https://github.com/daktak/JayPS-WatchFace/releases</string>
 
     <string name="app_name">JayPS</string>
     <string name="action_settings">Settings</string>
@@ -110,8 +110,8 @@
     <string name="PREF_BLE_CSC_WHEEL_SIZE_SUMMARY">Example: 700x23C => 2133mm</string>
 
     <string name="PREF_ABOUT_TITLE">@string/MAIN_TITLE</string>
-    <string name="PREF_ABOUT_SUMMARY">http://www.pebblebike.com</string>
-    <string name="PREF_ABOUT_URL">http://www.pebblebike.com/?utm_source=JayPSApp</string>
+    <string name="PREF_ABOUT_SUMMARY"></string>
+    <string name="PREF_ABOUT_URL">https://github.com/daktak/jayps-AndroidApp</string>
 
     <string name="PREF_PEBBLE_STORE">Pebble Store</string>
     <string name="PREF_PEBBLE_STORE_SUMMARY">Please vote for the app</string>
