@@ -11,6 +11,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -444,6 +445,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         if (s.equals("PREF_BLE_HRM_HRMAX")) {
             setHrmSummary();
+        }
+        if (s.equals("PREF_BLE_CSC_WHEEL_PRESET")) {
+            String preset = sharedPreferences.getString("PREF_BLE_CSC_WHEEL_PRESET", "");
+            if (!preset.isEmpty()) {
+                EditTextPreference wheelSize = (EditTextPreference) findPreference("PREF_BLE_CSC_WHEEL_SIZE");
+                if (wheelSize != null) {
+                    wheelSize.setText(preset);
+                    wheelSize.setSummary(preset + " mm");
+                }
+            }
         }
     }
 

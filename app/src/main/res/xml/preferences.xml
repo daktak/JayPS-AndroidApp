@@ -159,6 +159,14 @@
                 android:entryValues="@array/PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_ENTRY_VALUES"
                 android:defaultValue="@string/PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT" />
 
+            <ListPreference
+                android:key="PREF_BLE_CSC_WHEEL_PRESET"
+                android:title="@string/PREF_BLE_CSC_WHEEL_PRESET_TITLE"
+                android:dialogTitle="@string/PREF_BLE_CSC_WHEEL_PRESET_TITLE"
+                android:entries="@array/CSC_WHEEL_PRESET_ENTRIES"
+                android:entryValues="@array/CSC_WHEEL_PRESET_ENTRY_VALUES"
+                android:defaultValue="" />
+
             <EditTextPreference
                 android:key="PREF_BLE_CSC_WHEEL_SIZE"
                 android:title="@string/PREF_BLE_CSC_WHEEL_SIZE"

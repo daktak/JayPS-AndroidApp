@@ -98,6 +98,7 @@
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT">0</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: Wheel circumference (mm)</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE_SUMMARY">Example: 700x23C => 2133mm</string>
+    <string name="PREF_BLE_CSC_WHEEL_PRESET_TITLE">CSC: Wheel size preset</string>
 
     <string name="PREF_ABOUT_TITLE">@string/MAIN_TITLE</string>
     <string name="PREF_ABOUT_SUMMARY"></string>
