@@ -39,7 +39,7 @@
     <string name="PREF_INSTALL_OTHERS_CATEGORY_TITLE">Other versions</string>
     <string name="PREF_INSTALL_WATCHFACE_DEEPLINK">Installation from the Pebble Store [default]</string>
     <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_SUMMARY">Please vote for the app</string>
-    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_URL">pebble://appstore/529289cee07df1fa76000009</string>
+    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_URL">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE">Installation from the developers website</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE_SUMMARY" />
     <string name="PREF_RESET_DATA">Reset data &amp; GPX</string>
@@ -112,7 +112,7 @@
 
     <string name="PREF_PEBBLE_STORE">Pebble Store</string>
     <string name="PREF_PEBBLE_STORE_SUMMARY">Please vote for the app</string>
-    <string name="PREF_PEBBLE_STORE_URL">pebble://appstore/529289cee07df1fa76000009</string>
+    <string name="PREF_PEBBLE_STORE_URL">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
 
     <string name="PREF_DEBUG_TITLE">Debug</string>
     <string name="PREF_DEBUG_SUMMARY">More logs for developers</string>

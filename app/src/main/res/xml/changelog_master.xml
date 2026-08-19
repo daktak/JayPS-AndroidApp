@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
-    <release version="26.8.1" versioncode="500" >
+    <release version="26.8.0" versioncode="500" >
         <change><![CDATA[<b>Update to use new libpebble</b><br/>
             - Migrate from the abandoned com.getpebble:pebblekit to the Rebble pebblekit2 client for modern Pebble communication]]></change>
         <change><![CDATA[<b>Strava upload</b><br/>
             - go in the settings to grant the access to Strava via session cookie<br/>
             - upload manually from the menu or automatically at the end of the track]]></change>
-        <change>TCX export (with heart rate and cadence)</change>
         <change><![CDATA[<b>Nextcloud PhoneTrack live tracking</b><br/>
             - share your live location with a Nextcloud PhoneTrack instance<br/>
             - share your tracking link]]></change>
