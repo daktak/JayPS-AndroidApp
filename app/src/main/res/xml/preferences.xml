@@ -246,7 +246,7 @@
     <PreferenceScreen
         android:key="integration_screen"
         android:title="Integration"
-        android:summary="Strava, Live Tracking, OruxMaps, Canvas"
+        android:summary="Strava, Live Tracking, OruxMaps"
         android:persistent="false">
 
         <PreferenceScreen
@@ -327,29 +327,6 @@
                 android:key="ORUXMAPS_URL"
                 android:title="@string/PREF_ORUXMAPS"
                 android:summary="@string/PREF_ORUXMAPS_SUMMARY"
-                />
-        </PreferenceScreen>
-
-        <PreferenceScreen
-            android:key="canvas_screen"
-            android:title="Canvas Integration"
-            android:persistent="false">
-            <ListPreference
-                android:key="CANVAS_MODE"
-                android:title="@string/CANVAS_MODE_TITLE"
-                android:dialogTitle="@string/CANVAS_MODE_DIALOG_TITLE"
-                android:entries="@array/CANVAS_MODE_ENTRIES"
-                android:entryValues="@array/CANVAS_MODE_ENTRY_VALUES"
-                android:defaultValue="@string/CANVAS_MODE_DEFAULT" />
-            <CheckBoxPreference
-                android:key="CANVAS_DISPLAY_UNITS"
-                android:title="@string/CANVAS_DISPLAY_UNITS_TITLE"
-                android:summary="@string/CANVAS_DISPLAY_UNITS_SUMMARY"
-                android:defaultValue="true" />
-            <Preference
-                android:key="CANVAS_URL"
-                android:title="@string/PREF_CANVAS"
-                android:summary="@string/PREF_CANVAS_SUMMARY"
                 />
         </PreferenceScreen>
 

@@ -34,8 +34,6 @@ import com.njackson.oruxmaps.OruxMapsServiceCommand;
 import com.njackson.pebble.IMessageManager;
 import com.njackson.pebble.MessageManager;
 import com.njackson.pebble.PebbleServiceCommand;
-import com.njackson.pebble.canvas.CanvasWrapper;
-import com.njackson.pebble.canvas.ICanvasWrapper;
 import com.njackson.service.IServiceCommand;
 import com.njackson.service.MainService;
 import com.njackson.state.GPSDataStore;
@@ -160,9 +158,6 @@ public class AndroidModule {
 
     @Provides
     IForegroundServiceStarter providesForegroundServiceStarter() { return new MainServiceForegroundStarter(); }
-
-    @Provides
-    ICanvasWrapper providesCanvasWrapper() { return new CanvasWrapper(); }
 
     @Provides
     IChangeLogBuilder providesChangeLogBuilder() { return new ChangeLogBuilder(); }

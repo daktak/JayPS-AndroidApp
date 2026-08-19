@@ -273,7 +273,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         setupLinkPreference("INSTALL_WATCHFACE_DEEPLINK", getString(R.string.PREF_INSTALL_WATCHFACE_DEEPLINK_URL), getString(R.string.PREF_INSTALL_WATCHFACE_URL));
         setupLinkPreference("ORUXMAPS_URL", getString(R.string.PREF_ORUXMAPS_URL), null);
-        setupLinkPreference("CANVAS_URL", getString(R.string.PREF_CANVAS_URL), null);
         setupLinkPreference("about", getString(R.string.PREF_ABOUT_URL), null);
         setupLinkPreference("pebble_store", getString(R.string.PREF_PEBBLE_STORE_URL), "http://www.pebblebike.com");
 
@@ -386,7 +385,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         setLoginMmtSummary();
         setLiveSummary();
         setOruxMapsSummary();
-        setCanvasSummary();
         setStravaSummary();
         setHrmSummary();
     }
@@ -440,9 +438,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         if (s.equals("ORUXMAPS_AUTO")) {
             setOruxMapsSummary();
-        }
-        if (s.equals("CANVAS_MODE")) {
-            setCanvasSummary();
         }
         if (s.equals("STRAVA_SESSION") || s.equals("STRAVA_AUTO")) {
             setStravaSummary();
@@ -534,13 +529,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         orux_screen.setSummary(listDesc);
     }
 
-    private void setCanvasSummary() {
-        ListPreference canvasPref = (ListPreference) findPreference("CANVAS_MODE");
-        CharSequence listDesc = canvasPref.getEntry();
-        canvasPref.setSummary(listDesc);
-        Preference canvas_screen = findPreference("canvas_screen");
-        canvas_screen.setSummary(listDesc);
-    }
     private void setStravaSummary() {
         String session = _sharedPreferences.getString("STRAVA_SESSION", "");
         Preference sessionPref = findPreference("STRAVA_SESSION");

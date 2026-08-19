@@ -84,16 +84,6 @@
     <string name="PREF_ORUXMAPS_SUMMARY">Install app from Google Play</string>
     <string name="PREF_ORUXMAPS_URL">https://play.google.com/store/apps/details?id=com.orux.oruxmaps</string>
 
-    <string name="CANVAS_MODE_TITLE">Canvas mode</string>
-    <string name="CANVAS_MODE_DIALOG_TITLE">Canvas Mode</string>
-    <string name="CANVAS_MODE_DEFAULT">disable</string>
-    <string name="CANVAS_DISPLAY_UNITS_TITLE">Display units</string>
-    <string name="CANVAS_DISPLAY_UNITS_SUMMARY">Display units in Canvas</string>
-
-    <string name="PREF_CANVAS">Install Canvas</string>
-    <string name="PREF_CANVAS_SUMMARY">Install app from Google Play</string>
-    <string name="PREF_CANVAS_URL">https://play.google.com/store/apps/details?id=com.pennas.pebblecanvas</string>
-
     <string name="PREF_BLE_CATEGORY_TITLE">BLE Heart Rate Monitor (HRM), Cycling Speed and Cadence (CSC), Lights and GoPro</string>
     <string name="PREF_BLE_TITLE">Sensor</string>
     <string name="PREF_BLE_TITLE1">Sensor 1</string>
@@ -185,28 +175,6 @@
     <string name="ble_stop">Stop</string>
     <string name="ble_unknown_characteristic">Unknown characteristic</string>
     <string name="ble_unknown_service">Unknown service</string>
-
-    <!-- Canvas Plugin -->
-    <string-array name="canvas_format_mask_descs">
-        <item>Distance</item>
-        <item>Altitude</item>
-        <item>Ascent</item>
-        <item>Bearing</item>
-        <item>Elapsed time</item>
-        <item>Average speed</item>
-        <item>Speed</item>
-        <item>Max speed</item>
-        <item>Latitude</item>
-        <item>Longitude</item>
-        <item>Ascent rate</item>
-        <item>Number of ascents</item>
-        <item>Slope</item>
-        <item>Accuracy</item>
-        <item>Heart rate</item>
-        <item>Cycling Cadence</item>
-        <item>Running Cadence</item>
-        <item>Temperature</item>
-    </string-array>
 
     <!-- messages -->
     <string name="message_pebble_new_watchapp">A new watchapp is available. Please install it from the KayPS android application settings</string>

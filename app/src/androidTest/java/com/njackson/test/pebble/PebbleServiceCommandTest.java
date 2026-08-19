@@ -11,8 +11,6 @@ import com.njackson.events.GPSServiceCommand.NewLocation;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.live.LiveTracking;
 import com.njackson.pebble.PebbleServiceCommand;
-import com.njackson.pebble.canvas.GPSData;
-import com.njackson.pebble.canvas.ICanvasWrapper;
 import com.njackson.test.application.TestApplication;
 import com.njackson.pebble.IMessageManager;
 
@@ -46,7 +44,6 @@ public class PebbleServiceCommandTest extends AndroidTestCase {
     private GPSStatus _pebbleStatusEvent;
     private CountDownLatch _stateLatch;
     private PebbleServiceCommand _command;
-    private static ICanvasWrapper _mockCanvasWrapper;
     private static TestApplication _app;
 
     @Module(
@@ -67,9 +64,6 @@ public class PebbleServiceCommandTest extends AndroidTestCase {
         SharedPreferences provideSharedPreferences() {
             return mock(SharedPreferences.class);
         }
-
-        @Provides
-        ICanvasWrapper providesCanvasWrapper() { return _mockCanvasWrapper; }
 
         @Provides @Singleton @ForApplication
         Context provideApplicationContext() {
@@ -110,11 +104,9 @@ public class PebbleServiceCommandTest extends AndroidTestCase {
         super.tearDown();
     }
     private void setupMocks() {
-        _mockCanvasWrapper = mock(ICanvasWrapper.class);
         when(_mockPreferences.getBoolean("PREF_DEBUG", false)).thenReturn(true);
         when(_mockPreferences.getBoolean("LIVE_TRACKING", false)).thenReturn(true);
         when(_mockPreferences.getString("REFRESH_INTERVAL", "1000")).thenReturn("1000");
-        when(_mockPreferences.getString("CANVAS_MODE", "disable")).thenReturn("canvas_and_pbw");
     }
 
 /*
@@ -154,9 +146,7 @@ public class PebbleServiceCommandTest extends AndroidTestCase {
     }
 
     @SmallTest
-    public void testSendsLocationToPebbleWhenNotCanvasOnly() throws InterruptedException {
-        when(_mockPreferences.getString("CANVAS_MODE", "disable")).thenReturn("stuff");
-
+    public void testSendsLocationToPebble() throws InterruptedException {
         _command.execute(_app);
 
         ArgumentCaptor<PebbleDictionary> captor = new ArgumentCaptor<PebbleDictionary>();
@@ -169,60 +159,6 @@ public class PebbleServiceCommandTest extends AndroidTestCase {
         _bus.post(event);
 
         verify(_mockMessageManager, timeout(2000).times(1)).offerIfLow(any(PebbleDictionary.class), anyInt());
-    }
-
-    @SmallTest
-    public void testDoesNotSendsLocationToPebbleWhenCanvasOnly() throws InterruptedException {
-        when(_mockPreferences.getString("CANVAS_MODE", "disable")).thenReturn("canvas_only");
-
-        _command.execute(_app);
-
-        ArgumentCaptor<PebbleDictionary> captor = new ArgumentCaptor<PebbleDictionary>();
-
-        NewLocation event = new NewLocation();
-        event.setUnits(0);
-        event.setSpeed(45.4f);
-        event.setTime(1420988759);
-
-        _bus.post(event);
-
-        verify(_mockMessageManager, timeout(2000).times(0)).offer(any(PebbleDictionary.class));
-    }
-
-    @SmallTest
-    public void testSendsLocationToCanvasWhenNotCanvasDisabled() throws InterruptedException {
-        when(_mockPreferences.getString("CANVAS_MODE", "disable")).thenReturn("stuff");
-
-        _command.execute(_app);
-
-        ArgumentCaptor<PebbleDictionary> captor = new ArgumentCaptor<PebbleDictionary>();
-
-        NewLocation event = new NewLocation();
-        event.setUnits(0);
-        event.setSpeed(45.4f);
-        event.setTime(1420988759);
-
-        _bus.post(event);
-
-        verify(_mockCanvasWrapper, timeout(2000).times(1)).set_gpsdata_details(any(GPSData.class), any(Context.class));
-    }
-
-    @SmallTest
-    public void testDoesNotSendsLocationToCanvasWhenCanvasDisable() throws InterruptedException {
-        when(_mockPreferences.getString("CANVAS_MODE", "disable")).thenReturn("disable");
-
-        _command.execute(_app);
-
-        ArgumentCaptor<PebbleDictionary> captor = new ArgumentCaptor<PebbleDictionary>();
-
-        NewLocation event = new NewLocation();
-        event.setUnits(0);
-        event.setSpeed(45.4f);
-        event.setTime(1420988759);
-
-        _bus.post(event);
-
-        verify(_mockCanvasWrapper, timeout(2000).times(0)).set_gpsdata_details(any(GPSData.class), any(Context.class));
     }
 
     @SmallTest

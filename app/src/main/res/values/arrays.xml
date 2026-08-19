@@ -64,17 +64,6 @@
         <item>auto</item>
     </string-array>
 
-    <string-array name="CANVAS_MODE_ENTRIES">
-        <item>Disable</item>
-        <item>Canvas only</item>
-        <item>Canvas + KayPS Watchapp</item>
-    </string-array>
-    <string-array name="CANVAS_MODE_ENTRY_VALUES">
-        <item>disable</item>
-        <item>canvas_only</item>
-        <item>canvas_and_pbw</item>
-    </string-array>
-
     <string-array name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_ENTRIES">
         <item>Disable</item>
         <item>Vibrate at every zone change (at least 30s in the previous zone)</item>

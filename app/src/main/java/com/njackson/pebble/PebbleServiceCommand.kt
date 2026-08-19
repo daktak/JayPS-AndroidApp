@@ -1,7 +1,6 @@
 package com.njackson.pebble
 
 import com.njackson.Constants
-import com.njackson.adapters.NewLocationToCanvasPluginGPSData
 import com.njackson.adapters.buildLiveDictionary
 import com.njackson.adapters.buildLocationDictionary
 import com.njackson.application.IInjectionContainer
@@ -11,7 +10,6 @@ import com.njackson.events.LiveServiceCommand.LiveMessage
 import com.njackson.events.PebbleServiceCommand.NewMessage
 import com.njackson.events.base.BaseStatus
 import com.njackson.gps.Navigator
-import com.njackson.pebble.canvas.ICanvasWrapper
 import com.njackson.application.modules.ForApplication
 import com.njackson.service.IServiceCommand
 import com.squareup.otto.Bus
@@ -22,7 +20,6 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
 
     @Inject @ForApplication lateinit var context: android.content.Context
     @Inject lateinit var messageManager: IMessageManager
-    @Inject lateinit var canvasWrapper: ICanvasWrapper
     @Inject lateinit var prefs: android.content.SharedPreferences
     @Inject lateinit var bus: Bus
     @Inject lateinit var navigator: Navigator
@@ -32,21 +29,14 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
 
     @Subscribe
     fun onNewLocationEvent(newLocation: NewLocation) {
-        if (prefs.getString("CANVAS_MODE", "disable") != "canvas_only") {
-            sendLocationToPebble(newLocation)
-        }
-        if (prefs.getString("CANVAS_MODE", "disable") != "disable") {
-            sendLocationToCanvas(newLocation)
-        }
+        sendLocationToPebble(newLocation)
     }
 
     @Subscribe
     fun onGPSServiceState(event: GPSStatus) {
         when (event.status) {
             BaseStatus.Status.STARTED -> {
-                if (prefs.getString("CANVAS_MODE", "disable") != "canvas_only") {
-                    messageManager.showWatchFace()
-                }
+                messageManager.showWatchFace()
                 notifyPebbleGPSStarted()
             }
             BaseStatus.Status.STOPPED -> notifyPebbleGPSStopped()
@@ -100,14 +90,6 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
         val result = buildLiveDictionary(message)
         if (result.forceSend) messageManager.offer(result.data)
         else messageManager.offerIfLow(result.data, 5)
-    }
-
-    private fun sendLocationToCanvas(newLocation: NewLocation) {
-        val data = NewLocationToCanvasPluginGPSData(
-            newLocation,
-            prefs.getBoolean("CANVAS_DISPLAY_UNITS", true)
-        )
-        canvasWrapper.set_gpsdata_details(data, context)
     }
 
     private fun sendLocationToPebble(newLocation: NewLocation) {

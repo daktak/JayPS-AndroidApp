@@ -49,7 +49,6 @@ public class SettingsActivityTest extends ActivityUnitTestCase<SettingsActivity>
     private Preference _loginPref;
     private Preference _loginMntPref;
     private ListPreference _oruxMaps;
-    private ListPreference _canvas;
     private static IChangeLogBuilder _mockChangeLogBuilder;
 
     public SettingsActivityTest() {
@@ -129,9 +128,6 @@ public class SettingsActivityTest extends ActivityUnitTestCase<SettingsActivity>
 
         _oruxMaps = (ListPreference) _activity.findPreference("ORUXMAPS_AUTO");
         assertNotNull(_oruxMaps);
-
-        _canvas = (ListPreference) _activity.findPreference("CANVAS_MODE");
-        assertNotNull(_canvas);
     }
 
     private void setupMocks() {
@@ -140,7 +136,6 @@ public class SettingsActivityTest extends ActivityUnitTestCase<SettingsActivity>
         when(_preferences.getString("LIVE_TRACKING_LOGIN","")).thenReturn("abcdefg");
         when(_preferences.getString("LIVE_TRACKING_MMT_LOGIN","")).thenReturn("abcdefghi");
         when(_preferences.getString("ORUXMAPS_AUTO","")).thenReturn("continue");
-        when(_preferences.getString("CANVAS_MODE","")).thenReturn("canvas_and_pbw");
         when(_preferences.getString("hrm_name1", "")).thenReturn("test");
         when(_preferences.getString("hrm_name2", "")).thenReturn("test2");
         when(_preferences.getString("hrm_name3", "")).thenReturn("test3");
@@ -209,17 +204,6 @@ public class SettingsActivityTest extends ActivityUnitTestCase<SettingsActivity>
         getInstrumentation().callActivityOnResume(_activity);
 
         assertEquals("Continue record", _oruxMaps.getSummary());
-    }
-
-    @SmallTest
-    public void testOnResumeSetsCanvas() {
-
-        _canvas.setValue("canvas_only");
-        assertNull(_canvas.getSummary());
-
-        getInstrumentation().callActivityOnResume(_activity);
-
-        assertEquals("Canvas only", _canvas.getSummary());
     }
 
     @SmallTest
@@ -293,13 +277,5 @@ public class SettingsActivityTest extends ActivityUnitTestCase<SettingsActivity>
         _activity.onSharedPreferenceChanged(_preferences, "ORUXMAPS_AUTO");
 
         assertEquals("Continue record", _oruxMaps.getSummary());
-    }
-
-    @SmallTest
-    public void testOnPreferenceChangedSetsCanvasMode(){
-        _canvas.setValue("canvas_only");
-        _activity.onSharedPreferenceChanged(_preferences, "CANVAS_MODE");
-
-        assertEquals("Canvas only", _canvas.getSummary());
     }
 }
