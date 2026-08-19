@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.ActivityNotFoundException;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -28,8 +29,6 @@ import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
 import com.njackson.utils.gpx.GpxExport;
 import com.njackson.utils.services.IServiceStarter;
-import com.njackson.utils.watchface.IInstallWatchFace;
-import com.njackson.utils.messages.ToastMessageMaker;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -49,7 +48,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     private static final String TAG = "PB-SettingsActivity";
     public  static final int max_ble_devices = 6;
 
-    @Inject IInstallWatchFace _installWatchFace;
     @Inject SharedPreferences _sharedPreferences;
     @Inject IGPSDataStore _dataStore;
     @Inject IServiceStarter _serviceStarter;
@@ -70,7 +68,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         installPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                _installWatchFace.execute(getApplicationContext(), new ToastMessageMaker(), getApplicationContext().getString(R.string.PREF_INSTALL_WATCHFACE_URL));
+                openUrl(getApplicationContext().getString(R.string.PREF_INSTALL_WATCHFACE_URL), null);
                 return true;
             }
         });
@@ -299,14 +297,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     private boolean startView(String url) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         try {
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                startActivity(intent);
-                return true;
-            }
-        } catch (Exception e) {
-            // no handler for this intent (or launch was blocked); caller may try a fallback
+            startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            // no handler for this intent; caller may try a fallback
+            return false;
         }
-        return false;
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
