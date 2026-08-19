@@ -55,6 +55,10 @@
                 android:summary="@string/PREF_ENABLE_TRACKS_SUMMARY"
                 android:defaultValue="true"
                 />
+            <EditTextPreference
+                android:key="EXPORT_EMAIL"
+                android:title="@string/PREF_EXPORT_EMAIL_TITLE"
+                android:summary="@string/PREF_EXPORT_EMAIL_SUMMARY" />
             <Preference
                 android:key="EXPORT_GPX"
                 android:title="@string/PREF_EXPORT_GPX_TITLE"

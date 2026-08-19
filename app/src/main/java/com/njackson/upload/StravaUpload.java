@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
 import com.njackson.pebble.IMessageManager;
 
@@ -171,7 +172,7 @@ public class StravaUpload {
             }
             String workflow = (j == null) ? null : optStr(j, "workflow");
             if ("success".equals(workflow)) {
-                return "Your activity has been created";
+                return _context.getString(R.string.strava_upload_success);
             }
             // workflow present (Strava accepted) but not yet "success"
             return "Activity uploaded to Strava" + (workflow != null ? " (status=" + workflow + ")" : "");

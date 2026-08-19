@@ -72,7 +72,7 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     @Subscribe
     public void onRecognitionState(ActivityRecognitionStatus event) {
         if(event.getStatus() == ActivityRecognitionStatus.Status.UNABLE_TO_START) {
-            Toast.makeText(this, "Google Play Services is not available", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.alert_google_play_not_available, Toast.LENGTH_SHORT).show();
             Log.d(TAG, "PLAY_NOT_AVAILABLE");
         }
     }
@@ -82,9 +82,9 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         if (event.getStatus() == BaseStatus.Status.DISABLED) {
 
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-            alertDialogBuilder.setMessage("GPS is disabled in your device. Would you like to enable it?")
+            alertDialogBuilder.setMessage(R.string.alert_gps_off_enable_it)
                     .setCancelable(false)
-                    .setPositiveButton("Goto Settings Page To Enable GPS",
+                    .setPositiveButton(R.string.alert_gps_go_to_settings,
                             new DialogInterface.OnClickListener(){
                                 public void onClick(DialogInterface dialog, int id){
                                     Intent callGPSSettingIntent = new Intent(
@@ -233,32 +233,32 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
         if (id == R.id.action_settings) {
             startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
         }
-        if (id == R.id.action_export_gpx) {
-            if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), "gpx", "");
-            } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the export", Toast.LENGTH_SHORT).show();
+            if (id == R.id.action_export_gpx) {
+                if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
+                    GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "gpx", "");
+                } else {
+                    Toast.makeText(getApplicationContext(), R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show();
+                }
             }
-        }
-        if (id == R.id.action_export_tcx) {
-            if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking"));
-            } else {
-                Toast.makeText(getApplicationContext(), "Please enable tracks in the settings to save GPX before using the export", Toast.LENGTH_SHORT).show();
+            if (id == R.id.action_export_tcx) {
+                if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
+                    GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking"));
+                } else {
+                Toast.makeText(getApplicationContext(), R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.action_load_route) {
-            Toast.makeText(getApplicationContext(), "Open a GPX file", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.alert_open_gpx_file, Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             //intent.setType("application/gpx+xml"); // does not work for all gpx file.... (ko: recent, dropbox...)
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             try {
-                startActivityForResult(Intent.createChooser(intent, "Select txt file"), Constants.CODE_LOAD_GPX);
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.alert_select_txt_file)), Constants.CODE_LOAD_GPX);
             } catch (android.content.ActivityNotFoundException ex) {
                 // Potentially direct the user to the Market with a Dialog
-                Toast.makeText(getApplicationContext(), "Impossible to open file", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.alert_unable_to_open_file, Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.action_reset) {

@@ -101,7 +101,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         exportGPXPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), "gpx", "");
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "gpx", "");
                 return true;
             }
         });
@@ -109,7 +109,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         exportTCXPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking"));
+                GpxExport.export(getApplicationContext(), _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", ""), "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking"));
                 return true;
             }
         });
@@ -146,9 +146,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         Preference pref = findPreference("PREF_PRESSURE_INFO");
         SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) != null){
-            pref.setSummary("Pressure sensor available");
+            pref.setSummary(R.string.PREF_PRESSURE_SENSOR_AVAILABLE);
         } else {
-            pref.setSummary("No pressure sensor");
+            pref.setSummary(R.string.PREF_PRESSURE_SENSOR_NOT_AVAILABLE);
         }
 
         pref = findPreference("PREF_GEOID_HEIGHT_INFO");
@@ -189,16 +189,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             public boolean onPreferenceClick(Preference preference) {
                 if (preference.getKey().equals("PREF_LOAD_ROUTE")) {
                     _navigator.debugLevel = _sharedPreferences.getBoolean("PREF_DEBUG", false) ? 1 : 0;
-                    Toast.makeText(getApplicationContext(), "Open a GPX file", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.alert_open_gpx_file, Toast.LENGTH_SHORT).show();
 
                     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                     intent.setType("*/*");
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     try {
-                        startActivityForResult(Intent.createChooser(intent, "Select txt file"), Constants.CODE_LOAD_GPX);
+                        startActivityForResult(Intent.createChooser(intent, getString(R.string.alert_select_txt_file)), Constants.CODE_LOAD_GPX);
                     } catch (android.content.ActivityNotFoundException ex) {
                         // Potentially direct the user to the Market with a Dialog
-                        Toast.makeText(getApplicationContext(), "Impossible to open file", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_unable_to_open_file, Toast.LENGTH_SHORT).show();
                     }
                 }
                 return false;
@@ -211,9 +211,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 if (preference.getKey().equals("PREF_NAV_STOP")) {
                     if (_navigator.getNbPoints() > 0) {
                         _navigator.clearRoute();
-                        Toast.makeText(getApplicationContext(), "Navigation was stopped", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_nav_stopped, Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getApplicationContext(), "The navigation was not started", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.alert_nav_not_started, Toast.LENGTH_SHORT).show();
                     }
                 }
                 return false;
@@ -570,7 +570,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 summary = getResources().getString(R.string.ble_not_supported);
             }
             if (summary.equals("")) {
-                summary = "Click to choose a sensor";
+                summary = getString(R.string.pref_choose_sensor);
             }
             Preference hrmPref = findPreference("PREF_BLE"+i);
             hrmPref.setSummary(summary);
