@@ -57,7 +57,7 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
 
     @Subscribe
     fun onNewMessageEvent(message: NewMessage) {
-        messageManager.showSimpleNotificationOnWatch("JayPS", message.message)
+        messageManager.showSimpleNotificationOnWatch("KayPS", message.message)
     }
 
     @Subscribe
@@ -87,7 +87,7 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
     }
 
     private fun notifyPebbleGPSDisable() {
-        messageManager.showSimpleNotificationOnWatch("JayPS", "GPS is disabled on your phone. Please enable it.")
+        messageManager.showSimpleNotificationOnWatch("KayPS", "GPS is disabled on your phone. Please enable it.")
     }
 
     private fun sendState(pair: android.util.Pair<Int, Int>) {

@@ -7,7 +7,7 @@ import java.util.UUID;
  */
 public class Constants {
 
-    public static final UUID WATCH_UUID = java.util.UUID.fromString("5dd35873-3bb6-44d6-8255-0e61bc3b97f5");
+    public static final UUID WATCH_UUID = java.util.UUID.fromString("86fe80bd-bb25-41e6-9a79-c74b5445a6b6");
 
     public static final int LAST_VERSION_PEBBLE = 332;
     public static final int MIN_VERSION_PEBBLE = 320;

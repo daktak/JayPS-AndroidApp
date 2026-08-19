@@ -110,6 +110,6 @@ class PebbleListenerService : BasePebbleListenerService() {
     }
 
     private fun sendMessageToPebble(message: String) {
-        messageManager.sendMessageToPebble("JayPS", message)
+        messageManager.sendMessageToPebble("KayPS", message)
     }
 }

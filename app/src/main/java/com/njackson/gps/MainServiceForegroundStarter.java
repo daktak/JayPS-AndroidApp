@@ -32,7 +32,7 @@ public class MainServiceForegroundStarter implements IForegroundServiceStarter {
         int importance = priority >= NotificationCompat.PRIORITY_HIGH
                 ? NotificationManager.IMPORTANCE_HIGH
                 : NotificationManager.IMPORTANCE_LOW;
-        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "JayPS Location", importance);
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "KayPS Location", importance);
         channel.setShowBadge(false);
         mgr.createNotificationChannel(channel);
     }

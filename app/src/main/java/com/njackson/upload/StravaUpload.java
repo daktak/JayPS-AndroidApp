@@ -43,7 +43,7 @@ import fr.jayps.android.AdvancedLocation;
 public class StravaUpload {
 
     private static final String TAG = "PB-StravaUpload";
-    private static final String UA = "Mozilla/5.0 (Linux; Android) JayPS";
+    private static final String UA = "Mozilla/5.0 (Linux; Android) KayPS";
     private static final String SELECT_URL = "https://www.strava.com/upload/select";
     private static final String UPLOAD_URL = "https://www.strava.com/upload/files";
     private static final int TIMEOUT_CONNECT_MS = 15000;
@@ -83,7 +83,7 @@ public class StravaUpload {
                 toast("Strava: " + result);
                 if (_sharedPreferences.getBoolean("STRAVA_NOTIFICATION", false)) {
                     try {
-                        _messageManager.sendMessageToPebble("JayPS - Strava", result);
+                        _messageManager.sendMessageToPebble("KayPS - Strava", result);
                     } catch (Exception e) {
                         Log.e(TAG, "sendMessageToPebble Exception:" + e, e);
                     }
