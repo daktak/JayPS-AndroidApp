@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -20,10 +19,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import com.njackson.Constants;
 import com.squareup.otto.Bus;
-
-import fr.jayps.android.AdvancedLocation;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -54,20 +50,12 @@ public class LiveTracking implements ILiveTracking {
     private String _password = "";
     private String _url = "";
     private int _versionCode = -1;
-    public int numberOfFriends = 0;
-    private int _numberOfFriendsSentToPebble = 0;
-
-    public final static int maxNumberOfFriend = 5;
-    public final static int sizeOfAFriend = 9;
 
     public static final int TYPE_NEXTCLOUD = 1;
     public static final int TYPE_MMT = 2;
     private int _type = TYPE_NEXTCLOUD;
 
     boolean debug = true;
-
-
-    private HashMap<String, LiveTrackingFriend> _friends = new HashMap<String, LiveTrackingFriend>();
 
     public LiveTracking(int type, Bus bus) {
         this._context = null;
@@ -320,91 +308,5 @@ public class LiveTracking implements ILiveTracking {
             Log.e(TAG, "Exception:" + e);
         }
         return false;
-    }
-
-    public byte[] getMsgLiveShort(Location firstLocation) {
-        float _distanceConversion = (float) Constants.M_TO_KM; //TODO: miles
-
-        byte[] data = new byte[1 + maxNumberOfFriend * sizeOfAFriend];
-
-        data[0] = (byte) _friends.size();
-
-        //Log.d(TAG,  "firstLocation: lat="+firstLocation.getLatitude()+"-lon="+firstLocation.getLongitude());
-
-        Iterator<Entry<String, LiveTrackingFriend>> iter = _friends.entrySet().iterator();
-        while (iter.hasNext()) {
-            LiveTrackingFriend f = iter.next().getValue();
-            if (f.number >= maxNumberOfFriend) {
-                // too many friends, skip this one
-                continue;
-            }
-
-            //Log.d(TAG, firstLocation.toString());
-            //Log.d(TAG, f.getLocation().toString());
-
-            Location tmploc = f.getLocation();
-            //Log.d(TAG,  f.number + "|lat="+firstLocation.getLatitude()+"-lon="+firstLocation.getLongitude());
-            double xpos = firstLocation.distanceTo(tmploc) * Math.sin(firstLocation.bearingTo(tmploc)/180*3.1415);
-            double ypos = firstLocation.distanceTo(tmploc) * Math.cos(firstLocation.bearingTo(tmploc)/180*3.1415);
-            xpos = Math.floor(xpos/10);
-            ypos = Math.floor(ypos/10);
-
-            long lastViewed = System.currentTimeMillis() / 1000 - f.ts;
-            //Log.d(TAG, "lastViewed="+lastViewed);
-
-            data[1 + f.number * sizeOfAFriend + 0] = (byte) (((int) Math.abs(xpos)) % 256);
-            data[1 + f.number * sizeOfAFriend + 1] = (byte) ((((int) Math.abs(xpos)) / 256) % 128);
-            if (xpos < 0) {
-                data[1 + f.number * sizeOfAFriend + 1] += 128;
-            }
-            data[1 + f.number * sizeOfAFriend + 2] = (byte) (((int) Math.abs(ypos)) % 256);
-            data[1 + f.number * sizeOfAFriend + 3] = (byte) ((((int) Math.abs(ypos)) / 256) % 128);
-            if (ypos < 0) {
-                data[1 + f.number * sizeOfAFriend + 3] += 128;
-            }
-            data[1 + f.number * sizeOfAFriend + 4] = (byte) (((int) (Math.floor(100 * f.deltaDistance * _distanceConversion) / 1)) % 256);
-            data[1 + f.number * sizeOfAFriend + 5] = (byte) (((int) (Math.floor(100 * f.deltaDistance * _distanceConversion) / 1)) / 256);
-            data[1 + f.number * sizeOfAFriend + 6] = (byte) (((int) (f.bearing / 360 * 256)) % 256);
-            data[1 + f.number * sizeOfAFriend + 7] = (byte) (((int) lastViewed) % 256);
-            data[1 + f.number * sizeOfAFriend + 8] = (byte) (((int) lastViewed) / 256);
-
-
-            String strFriend = f.number + "|" + f.nickname + " ";
-            if (f.deltaDistance > 1000) {
-                strFriend += String.format(Locale.US, "%.1f", f.deltaDistance/1000) + "km";
-            } else {
-                strFriend += String.format(Locale.US, "%.0f", f.deltaDistance) + "m";
-            }
-            strFriend += " " + String.format(Locale.US, "%.0f", f.bearing) + "°";
-            strFriend += " (" + AdvancedLocation.bearingText(f.bearing) + ")";
-            if (lastViewed >= 0) {
-                if (lastViewed < 60) {
-                    strFriend += " (" + lastViewed + "\")";
-                } else if (lastViewed < 60 * 60) {
-                    strFriend += " (" + (lastViewed / 60) + "')";
-                }
-            }
-            strFriend += " - xpos="+xpos+"-ypos="+ypos;
-            //strFriend += " - lat="+f.lat+"-lon="+f.lon;
-            if (debug) Log.d(TAG, strFriend);
-        }
-
-        return data;
-    }
-    public String[] getNames() {
-
-        String[] names = new String[maxNumberOfFriend];
-
-        Iterator<Entry<String, LiveTrackingFriend>> iter = _friends.entrySet().iterator();
-        while (iter.hasNext()) {
-            LiveTrackingFriend f = iter.next().getValue();
-            if (f.number >= maxNumberOfFriend) {
-                // too many friends, skip this one
-                continue;
-            }
-            names[f.number] = f.nickname;
-        }
-
-        return names;
     }
 }

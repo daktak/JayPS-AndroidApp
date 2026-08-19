@@ -12,7 +12,6 @@ public class Constants {
     public static final int LAST_VERSION_PEBBLE = 332;
     public static final int MIN_VERSION_PEBBLE = 320;
 
-    public static final int LIVE_TRACKING_FRIENDS = 0x10;
     public static final int PEBBLE_LOCATION_DATA = 0x13;
     public static final int PEBBLE_LOCATION_DATA_V2 = 0x25;
     public static final int PEBBLE_LOCATION_DATA_V3 = 0x26;
@@ -21,13 +20,7 @@ public class Constants {
     public static final int STATE_CHANGED = 0x14;
     public static final int MSG_VERSION_PEBBLE = 0x15;
     public static final int MSG_VERSION_ANDROID = 0x16;
-    public static final int MSG_LIVE_SHORT = 0x17;
 
-    public static final int MSG_LIVE_NAME0 = 0x19;
-    public static final int MSG_LIVE_NAME1 = 0x20;
-    public static final int MSG_LIVE_NAME2 = 0x21;
-    public static final int MSG_LIVE_NAME3 = 0x22;
-    public static final int MSG_LIVE_NAME4 = 0x23;
     public static final int MSG_BATTERY_LEVEL = 0x24;
     public static final int MSG_CONFIG = 0x28;
     public static final int MSG_HR_MAX = 0x29;

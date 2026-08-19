@@ -4,12 +4,10 @@ import android.content.Context;
 import com.getpebble.android.kit.util.PebbleDictionary;
 import com.njackson.application.modules.AndroidModule;
 import com.njackson.application.modules.ForApplication;
-import com.njackson.events.LiveServiceCommand.LiveMessage;
 import com.njackson.events.PebbleServiceCommand.NewMessage;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.GPSServiceCommand.NewLocation;
 import com.njackson.events.base.BaseStatus;
-import com.njackson.live.LiveTracking;
 import com.njackson.pebble.PebbleServiceCommand;
 import com.njackson.test.application.TestApplication;
 import com.njackson.pebble.IMessageManager;
@@ -130,18 +128,6 @@ public class PebbleServiceCommandTest extends AndroidTestCase {
         _command.execute(_app);
 
         _bus.post(new GPSStatus(BaseStatus.Status.STOPPED));
-        Mockito.verify(_mockMessageManager,timeout(1000).times(1)).offer(any(PebbleDictionary.class));
-    }
-
-    @SmallTest
-    public void testUpdatePebbleOnNewLiveMessage() throws InterruptedException {
-        _command.execute(_app);
-
-        LiveMessage message = new LiveMessage();
-        byte[] data = new byte[1 + LiveTracking.maxNumberOfFriend * LiveTracking.sizeOfAFriend];
-        data[0] = 1; // numberOfFriends
-        message.setLive(data);
-        _bus.post(message);
         Mockito.verify(_mockMessageManager,timeout(1000).times(1)).offer(any(PebbleDictionary.class));
     }
 

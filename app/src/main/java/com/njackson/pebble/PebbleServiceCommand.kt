@@ -1,12 +1,10 @@
 package com.njackson.pebble
 
 import com.njackson.Constants
-import com.njackson.adapters.buildLiveDictionary
 import com.njackson.adapters.buildLocationDictionary
 import com.njackson.application.IInjectionContainer
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.NewLocation
-import com.njackson.events.LiveServiceCommand.LiveMessage
 import com.njackson.events.PebbleServiceCommand.NewMessage
 import com.njackson.events.base.BaseStatus
 import com.njackson.gps.Navigator
@@ -50,11 +48,6 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
         messageManager.showSimpleNotificationOnWatch("KayPS", message.message)
     }
 
-    @Subscribe
-    fun onLiveMessage(msg: LiveMessage) {
-        sendLiveMessage(msg)
-    }
-
     override fun execute(container: IInjectionContainer) {
         container.inject(this)
         bus.register(this)
@@ -84,12 +77,6 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
         val data = java.util.HashMap<UInt, io.rebble.pebblekit2.common.model.PebbleDictionaryItem>()
         data[pair.first.toUInt()] = io.rebble.pebblekit2.common.model.PebbleDictionaryItem.Int32(pair.second)
         messageManager.offer(data)
-    }
-
-    private fun sendLiveMessage(message: LiveMessage) {
-        val result = buildLiveDictionary(message)
-        if (result.forceSend) messageManager.offer(result.data)
-        else messageManager.offerIfLow(result.data, 5)
     }
 
     private fun sendLocationToPebble(newLocation: NewLocation) {

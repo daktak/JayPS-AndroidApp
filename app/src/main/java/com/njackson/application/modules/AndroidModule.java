@@ -143,7 +143,7 @@ public class AndroidModule {
 
     @Provides
     @Named("LiveTrackingNextcloud")
-    ILiveTracking provideLiveTrackingJayps() {
+    ILiveTracking provideLiveTrackingNextcloud() {
         return new LiveTracking(application, LiveTracking.TYPE_NEXTCLOUD, providesBus());
     }
 
