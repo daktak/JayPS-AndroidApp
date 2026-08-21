@@ -26,6 +26,12 @@
     <string name="speedfragment_speed_value">0.0</string>
     <string name="speedfragment_avgspeed_label">AVERAGE</string>
     <string name="speedfragment_avgspeed_value">0.0</string>
+    <string name="speedfragment_hr_label">HEART RATE</string>
+    <string name="speedfragment_hr_value">-</string>
+    <string name="speedfragment_power_label">POWER</string>
+    <string name="speedfragment_power_value">-</string>
+    <string name="speedfragment_cadence_label">CADENCE</string>
+    <string name="speedfragment_cadence_value">-</string>
     <string name="startbuttonfragment_start">START</string>
     <string name="startbuttonfragment_stop">STOP</string>
     <string name="altiudefragment_altitude">ALTITUDE</string>

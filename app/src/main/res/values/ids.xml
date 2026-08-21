@@ -26,4 +26,17 @@
     <item name="altitude_title_section" type="id" />
     <item name="altitude_status_value" type="id" />
     <item name="main_altitiude" type="id" />
+
+    <item name="hr_container" type="id" />
+    <item name="hr_label" type="id" />
+    <item name="hr_text" type="id" />
+    <item name="hr_units_label" type="id" />
+    <item name="power_container" type="id" />
+    <item name="power_label" type="id" />
+    <item name="power_text" type="id" />
+    <item name="power_units_label" type="id" />
+    <item name="cadence_container" type="id" />
+    <item name="cadence_label" type="id" />
+    <item name="cadence_text" type="id" />
+    <item name="cadence_units_label" type="id" />
 </resources>

@@ -10,7 +10,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.njackson.R;
+import com.njackson.Constants;
 import com.njackson.adapters.AdvancedLocationToNewLocation;
+import com.njackson.events.BleServiceCommand.BleSensorData;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.GPSServiceCommand.MyLocation;
 import com.njackson.events.GPSServiceCommand.NewLocation;
@@ -34,6 +36,11 @@ public class SpeedFragment extends BaseFragment {
     @Inject IGPSDataStore _dataStore;
 
     private boolean _restoreInstanceState;
+
+    private boolean _hrBle = false;
+    private boolean _powerVisible = false;
+    private boolean _cadenceVisible = false;
+    private SharedPreferences.OnSharedPreferenceChangeListener _prefListener;
 
     @Subscribe
     public void onResetGPSStateEvent(ResetGPSState event) {
@@ -64,6 +71,24 @@ public class SpeedFragment extends BaseFragment {
         //Log.d(TAG, "onSavedLocation time:" + event.getElapsedTimeSeconds() + " class:"+event.getClass());
         updateFragment(event);
     }
+    @Subscribe
+    public void onBleSensorData(BleSensorData event) {
+        switch (event.getType()) {
+            case BleSensorData.SENSOR_HRM: _hrBle = true; break;
+            case BleSensorData.SENSOR_POWER: _powerVisible = true; break;
+            case BleSensorData.SENSOR_CSC_CADENCE:
+            case BleSensorData.SENSOR_RSC: _cadenceVisible = true; break;
+        }
+        applyVisibility();
+    }
+
+    private void applyVisibility() {
+        if (getActivity() == null) return;
+        boolean pebbleHrm = _sharedPreferences.getBoolean(Constants.PREF_PEBBLE_HRM, false);
+        getActivity().findViewById(R.id.hr_container).setVisibility((pebbleHrm || _hrBle) ? View.VISIBLE : View.GONE);
+        getActivity().findViewById(R.id.power_container).setVisibility(_powerVisible ? View.VISIBLE : View.GONE);
+        getActivity().findViewById(R.id.cadence_container).setVisibility(_cadenceVisible ? View.VISIBLE : View.GONE);
+    }
     private void updateFragment(MyLocation event) {
         NumberConverter converter = new NumberConverter();
 
@@ -92,6 +117,27 @@ public class SpeedFragment extends BaseFragment {
         String timeText = DateUtils.formatElapsedTime(event.getElapsedTimeSeconds());
         time.setText(timeText);
 
+        TextView hr = (TextView)getActivity().findViewById(R.id.hr_text);
+        if (event.getHeartRate() > 0 && event.getHeartRate() < 255) {
+            hr.setText(String.valueOf(event.getHeartRate()));
+        } else {
+            hr.setText("-");
+        }
+
+        TextView power = (TextView)getActivity().findViewById(R.id.power_text);
+        if (event.getPower() >= 0) {
+            power.setText(String.valueOf(event.getPower()));
+        } else {
+            power.setText("-");
+        }
+
+        TextView cadence = (TextView)getActivity().findViewById(R.id.cadence_text);
+        if (event.getCyclingCadence() > 0 && event.getCyclingCadence() < 255) {
+            cadence.setText(String.valueOf(event.getCyclingCadence()));
+        } else {
+            cadence.setText("-");
+        }
+
         //Log.d(TAG, "updateFragment time:" + event.getElapsedTimeSeconds());
     }
 
@@ -118,12 +164,26 @@ public class SpeedFragment extends BaseFragment {
         //Log.d(TAG, "onResume");
         super.onResume();
 
+        _prefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+                if (Constants.PREF_PEBBLE_HRM.equals(key)) {
+                    applyVisibility();
+                }
+            }
+        };
+        _sharedPreferences.registerOnSharedPreferenceChangeListener(_prefListener);
+
         restoreFromPreferences();
     }
 
     @Override
     public void onPause() {
         //Log.d(TAG, "onPause");
+        if (_prefListener != null) {
+            _sharedPreferences.unregisterOnSharedPreferenceChangeListener(_prefListener);
+            _prefListener = null;
+        }
         super.onPause();
     }
 
@@ -189,5 +249,16 @@ public class SpeedFragment extends BaseFragment {
         time.setText(_sharedPreferences.getString("SPEEDFRAGMENT_TIME", getString(R.string.speedfragment_time_value)));
         //Log.d(TAG, "restoreFromPreferences time:" + _sharedPreferences.getString("SPEEDFRAGMENT_TIME", getString(R.string.speedfragment_time_value)));
         //Log.d(TAG, "_dataStore.getElapsedTime():" + _dataStore.getElapsedTime());
+
+        TextView hr = (TextView)getActivity().findViewById(R.id.hr_text);
+        hr.setText(getString(R.string.speedfragment_hr_value));
+
+        TextView power = (TextView)getActivity().findViewById(R.id.power_text);
+        power.setText(getString(R.string.speedfragment_power_value));
+
+        TextView cadence = (TextView)getActivity().findViewById(R.id.cadence_text);
+        cadence.setText(getString(R.string.speedfragment_cadence_value));
+
+        applyVisibility();
     }
 }
