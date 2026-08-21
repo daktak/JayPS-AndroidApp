@@ -354,19 +354,26 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
     @Subscribe
     public void onNewBleSensorData(BleSensorData event) {
-        for (int i = 1; i<=max_ble_devices; i++) {
-            String key = "PREF_BLE"+i;
+        String address = event.getBleAddress();
+        if (address == null || address.isEmpty()) return;
+
+        for (int i = 1; i <= max_ble_devices; i++) {
+            String stored = _sharedPreferences.getString("hrm_address" + i, "");
+            if (!address.equals(stored)) continue;
+
+            String key = "PREF_BLE" + i;
             switch (event.getType()) {
                 case BleSensorData.SENSOR_HRM:
                     setBleTitle(getApplicationContext().getString(R.string.PREF_BLE_TITLE) + " " + i + " - Heart rate: " + event.getHeartRate(), key);
                     break;
                 case BleSensorData.SENSOR_CSC_CADENCE:
-                    setBleTitle(getApplicationContext().getString(R.string.PREF_BLE_TITLE) + " " + i +  " - Cadence: " + event.getCyclingCadence(), key);
+                    setBleTitle(getApplicationContext().getString(R.string.PREF_BLE_TITLE) + " " + i + " - Cadence: " + event.getCyclingCadence(), key);
                     break;
                 case BleSensorData.SENSOR_RSC:
                     setBleTitle(getApplicationContext().getString(R.string.PREF_BLE_TITLE) + " " + i + " - Cadence: " + event.getRunningCadence(), key);
                     break;
             }
+            break;
         }
     }
 
