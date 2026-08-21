@@ -645,10 +645,17 @@ public class Ble implements IBle, ITimerHandler {
         } else if (UUID_CYCLING_POWER_MEASUREMENT.equals(characteristic.getUuid())) {
             int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
             int offset = 2;
-            if ((flags & 0x01) != 0) offset += 1; // pedal power balance present
-            if ((flags & 0x02) != 0) offset += 2; // accumulated torque present
-            if ((flags & 0x04) != 0) offset += 6; // wheel revolution data present
-            boolean crankPresent = (flags & 0x08) != 0;
+            // bit 0: Pedal Power Balance Present (uint8)
+            if ((flags & 0x01) != 0) offset += 1;
+            // bit 1: Pedal Power Balance Reference (no field)
+            // bit 2: Accumulated Torque Present (uint16)
+            if ((flags & 0x04) != 0) offset += 2;
+            // bit 3: Accumulated Torque Source (no field)
+            // bit 4: Wheel Revolution Data Present (uint32 + uint16)
+            boolean wheelPresent = (flags & 0x10) != 0;
+            if (wheelPresent) offset += 6;
+            // bit 5: Crank Revolution Data Present (uint16 + uint16)
+            boolean crankPresent = (flags & 0x20) != 0;
             int cumulativeCrankRevolutions = 0;
             int lastCrankEventTime = 0;
             if (crankPresent) {
@@ -656,6 +663,20 @@ public class Ble implements IBle, ITimerHandler {
                 lastCrankEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset + 2);
                 offset += 4;
             }
+            // bit 6: Extreme Force Magnitudes Present (sint16 + sint16)
+            if ((flags & 0x40) != 0) offset += 4;
+            // bit 7: Extreme Torque Magnitudes Present (sint16 + sint16)
+            if ((flags & 0x80) != 0) offset += 4;
+            // bit 8: Extreme Angles Present (uint12 + uint12, 3 bytes)
+            if ((flags & 0x100) != 0) offset += 3;
+            // bit 9: Top Dead Spot Angle Present (uint8)
+            if ((flags & 0x200) != 0) offset += 1;
+            // bit 10: Bottom Dead Spot Angle Present (uint8)
+            if ((flags & 0x400) != 0) offset += 1;
+            // bit 11: Accumulated Energy Present (uint16)
+            if ((flags & 0x800) != 0) offset += 2;
+            // bit 12: Offset Compensation Indicator (no field); bits 13-15 reserved
+
             final int instantaneousPower = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
 
             BleSensorData powerData = new BleSensorData(gatt.getDevice().getAddress());
