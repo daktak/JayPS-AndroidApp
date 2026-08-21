@@ -143,6 +143,10 @@ public abstract class MyLocation {
     public int getHeartRate() { return this._HeartRate; }
     public void setHeartRate(int heartRate) { this._HeartRate = heartRate;}
 
+    private boolean _heartRateFromPebble = false;
+    public boolean getHeartRateFromPebble() { return this._heartRateFromPebble; }
+    public void setHeartRateFromPebble(boolean heartRateFromPebble) { this._heartRateFromPebble = heartRateFromPebble; }
+
     private int _HeartRateMax = 0;
     public int getHeartRateMax() { return this._HeartRateMax; }
     public void setHeartRateMax(int heartRateMax) { this._HeartRateMax = heartRateMax;}

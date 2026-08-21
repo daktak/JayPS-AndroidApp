@@ -25,6 +25,8 @@ public class Constants {
     public static final int MSG_CONFIG = 0x28;
     public static final int MSG_HR_MAX = 0x29;
     public static final int MSG_NAVIGATION = 0x31;
+    public static final int PEBBLE_MSG_HEART_RATE = 0x2A;
+    public static final int PEBBLE_MSG_HR_MONITOR_ENABLE = 0x2B;
 
     public static final int PLAY_PRESS = 0x0;
     public static final int STOP_PRESS = 0x1;
@@ -57,6 +59,8 @@ public class Constants {
     public static final long ACTIVITY_RECOGNITION_STILL_TIME = 30000;
 
     public static final String PREFS_NAME_V1 = "PebbleBikePrefs";
+
+    public static final String PREF_PEBBLE_HRM = "PREF_PEBBLE_HRM";
 
     public static final int CODE_LOAD_GPX = 10;
 }

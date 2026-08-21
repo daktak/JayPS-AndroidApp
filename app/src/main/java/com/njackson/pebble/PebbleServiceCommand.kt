@@ -5,6 +5,7 @@ import com.njackson.adapters.buildLocationDictionary
 import com.njackson.application.IInjectionContainer
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.NewLocation
+import com.njackson.events.PebbleServiceCommand.HrMonitorEnable
 import com.njackson.events.PebbleServiceCommand.NewMessage
 import com.njackson.events.base.BaseStatus
 import com.njackson.gps.Navigator
@@ -48,6 +49,18 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
         messageManager.showSimpleNotificationOnWatch("KayPS", message.message)
     }
 
+    @Subscribe
+    fun onHrMonitorEnable(event: HrMonitorEnable) {
+        sendHrMonitorEnable(event.getEnabled())
+    }
+
+    private fun sendHrMonitorEnable(enabled: Int) {
+        val data = java.util.HashMap<UInt, io.rebble.pebblekit2.common.model.PebbleDictionaryItem>()
+        data[Constants.PEBBLE_MSG_HR_MONITOR_ENABLE.toUInt()] =
+            io.rebble.pebblekit2.common.model.PebbleDictionaryItem.Int32(enabled)
+        messageManager.offer(data)
+    }
+
     override fun execute(container: IInjectionContainer) {
         container.inject(this)
         bus.register(this)
@@ -63,6 +76,9 @@ class PebbleServiceCommand @Inject constructor() : IServiceCommand {
     private fun notifyPebbleGPSStarted() {
         val dict = android.util.Pair(Constants.STATE_CHANGED, Constants.STATE_START)
         sendState(dict)
+        // Always (re)push the HR-monitor setting so the watch enables its sensor even if the
+        // user toggled the preference while no GPS session was running (and the bus event was missed).
+        sendHrMonitorEnable(if (prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)) 1 else 0)
     }
 
     private fun notifyPebbleGPSStopped() {

@@ -3,6 +3,7 @@ package com.njackson.pebble
 import android.util.Log
 import com.njackson.Constants
 import com.njackson.application.PebbleBikeApplication
+import com.njackson.events.BleServiceCommand.BleSensorData
 import com.njackson.events.GPSServiceCommand.ResetGPSState
 import com.njackson.events.PebbleServiceCommand.NewMessage
 import com.njackson.oruxmaps.IOruxMaps
@@ -43,6 +44,7 @@ class PebbleListenerService : BasePebbleListenerService() {
         data[Constants.CMD_BUTTON_PRESS.toUInt()]?.let { handleButtonData(intOf(it)) }
         data[Constants.MSG_VERSION_PEBBLE.toUInt()]?.let { handleVersion(intOf(it)) }
         data[Constants.MSG_CONFIG.toUInt()]?.let { handleConfig(it) }
+        data[Constants.PEBBLE_MSG_HEART_RATE.toUInt()]?.let { handlePebbleHeartRate(intOf(it)) }
         return ReceiveResult.Ack
     }
 
@@ -71,6 +73,14 @@ class PebbleListenerService : BasePebbleListenerService() {
         val sb = StringBuilder()
         for (b in config) sb.append(String.format("%02X", b))
         prefs.edit().putString("WATCHFACE_CONFIG", sb.toString()).apply()
+    }
+
+    private fun handlePebbleHeartRate(heartRate: Int) {
+        if (heartRate <= 0 || heartRate > 255) return
+        // Feed the watch's built-in HR sensor into the app exactly like a Bluetooth HRM.
+        val sensorData = BleSensorData("pebble")
+        sensorData.setHeartRate(heartRate)
+        bus.post(sensorData)
     }
 
     private fun handleButtonData(button: Int) {

@@ -115,10 +115,16 @@ fun buildLocationDictionary(
     putUInt16(data, BYTE_SPEED1, Math.floor(10 * event.speed.toDouble()).toInt())
     putUInt8(data, BYTE_BEARING, (event.bearing / 360 * 256).toInt())
 
-    putUInt8(data, BYTE_HEARTRATE, event.heartRate)
     if (locationDataVersion >= Constants.PEBBLE_LOCATION_DATA_V3) {
+        // When the HR came from the watch's own sensor, don't echo it back (255 = no HR).
+        if (event.heartRateFromPebble) {
+            putUInt8(data, BYTE_HEARTRATE, 255)
+        } else {
+            putUInt8(data, BYTE_HEARTRATE, event.heartRate)
+        }
         putUInt8(data, BYTE_CADENCE, event.cyclingCadence)
     } else if (event.cyclingCadence < 255) {
+        // On V2 the HR byte is reused for cadence; never overwrite it with the echoed HR.
         putUInt8(data, BYTE_HEARTRATE, event.cyclingCadence)
     }
 

@@ -78,6 +78,7 @@ public class GPSServiceCommand implements IServiceCommand {
     private ServiceNmeaListener _nmeaListener;
     private GPSSensorEventListener _sensorListener;
 	private int _heartRate = 0;
+	private boolean _heartRateFromPebble = false;
     private int _cyclingCadence = 0;
     private int _runningCadence = 0;
     private int _power = 0;
@@ -139,7 +140,8 @@ public class GPSServiceCommand implements IServiceCommand {
         switch (event.getType()) {
             case BleSensorData.SENSOR_HRM:
                 _heartRate = event.getHeartRate();
-                Log.d(TAG, "onNewBleSensorData _heartRate:" + _heartRate);
+                _heartRateFromPebble = "pebble".equals(event.getBleAddress());
+                Log.d(TAG, "onNewBleSensorData _heartRate:" + _heartRate + " fromPebble:" + _heartRateFromPebble);
                 break;
             case BleSensorData.SENSOR_CSC_CADENCE:
                 _cyclingCadence = event.getCyclingCadence();
@@ -433,6 +435,7 @@ public class GPSServiceCommand implements IServiceCommand {
         if (_heartRate > 0) {
             event.setHeartRate(_heartRate);
         }
+        event.setHeartRateFromPebble(_heartRateFromPebble);
 
         try {
             int heartRateMax = Integer.valueOf(_sharedPreferences.getString("PREF_BLE_HRM_HRMAX", "0"));

@@ -24,6 +24,7 @@ import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
 import com.njackson.events.BleServiceCommand.BleSensorData;
 import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval;
+import com.njackson.events.PebbleServiceCommand.HrMonitorEnable;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.gps.Navigator;
 import com.njackson.state.IGPSDataStore;
@@ -441,6 +442,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         if (s.equals("PREF_BLE_HRM_HRMAX")) {
             setHrmSummary();
+        }
+        if (s.equals(Constants.PREF_PEBBLE_HRM)) {
+            int enabled = _sharedPreferences.getBoolean(Constants.PREF_PEBBLE_HRM, false) ? 1 : 0;
+            _bus.post(new HrMonitorEnable(enabled));
         }
         if (s.equals("PREF_BLE_CSC_WHEEL_PRESET")) {
             String preset = sharedPreferences.getString("PREF_BLE_CSC_WHEEL_PRESET", "");
