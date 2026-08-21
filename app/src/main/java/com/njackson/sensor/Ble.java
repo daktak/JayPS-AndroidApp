@@ -645,6 +645,9 @@ public class Ble implements IBle, ITimerHandler {
         } else if (UUID_CYCLING_POWER_MEASUREMENT.equals(characteristic.getUuid())) {
             int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
             int offset = 2;
+            // Instantaneous Power is mandatory and sits immediately after the Flags field
+            final int instantaneousPower = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
+            offset += 2;
             // bit 0: Pedal Power Balance Present (uint8)
             if ((flags & 0x01) != 0) offset += 1;
             // bit 1: Pedal Power Balance Reference (no field)
@@ -676,8 +679,6 @@ public class Ble implements IBle, ITimerHandler {
             // bit 11: Accumulated Energy Present (uint16)
             if ((flags & 0x800) != 0) offset += 2;
             // bit 12: Offset Compensation Indicator (no field); bits 13-15 reserved
-
-            final int instantaneousPower = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
 
             BleSensorData powerData = new BleSensorData(gatt.getDevice().getAddress());
             powerData.setPower(instantaneousPower);
