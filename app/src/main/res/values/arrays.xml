@@ -91,6 +91,7 @@
         <item>29" 2.6</item>
         <item>29" 2.4</item>
         <item>29" 2.2</item>
+        <item>700c 55mm</item>
         <item>700c 50mm</item>
         <item>700c 45mm</item>
         <item>700c 40mm</item>
@@ -99,6 +100,9 @@
         <item>700c 30mm</item>
         <item>700c 28mm</item>
         <item>700c 25mm</item>
+        <item>27.5" 2.2</item>
+        <item>27.5" 2.4</item>
+        <item>27.5" 2.6</item>
         <item>650b 45mm</item>
     </string-array>
     <string-array name="CSC_WHEEL_PRESET_ENTRY_VALUES">
@@ -106,6 +110,7 @@
         <item>2366</item>
         <item>2333</item>
         <item>2302</item>
+        <item>2325</item>
         <item>2293</item>
         <item>2234</item>
         <item>2203</item>
@@ -114,6 +119,9 @@
         <item>2146</item>
         <item>2136</item>
         <item>2105</item>
+        <item>2183</item>
+        <item>2216</item>
+        <item>2246</item>
         <item>2199</item>
     </string-array>
 
