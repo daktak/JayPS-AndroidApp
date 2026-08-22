@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
-    <release version="26.9.0" versioncode="501" >
+    <release version="26.9.0" versioncode="510" >
         <change><![CDATA[<b>Cycling power meter</b><br/>
             - support for Bluetooth power meters (watts, average, max and normalized power)]]></change>
         <change><![CDATA[<b>Pebble heart rate</b><br/>
