@@ -95,6 +95,11 @@
                 android:key="ACTIVITY_RECOGNITION"
                 android:summary="@string/PREF_AUTOSTART_SUMMARY"
                 android:defaultValue="false" />
+
+            <CheckBoxPreference
+                android:key="ACTIVITY_RECOGNITION_WALKING"
+                android:summary="@string/PREF_AUTOSTART_WALKING_SUMMARY"
+                android:defaultValue="false" />
         </PreferenceCategory>
     </PreferenceScreen>
 
@@ -400,12 +405,6 @@
             android:title="@string/PREF_DEBUG_TITLE"
             android:summary="@string/PREF_DEBUG_SUMMARY"
             android:defaultValue="false" />
-
-        <CheckBoxPreference
-            android:key="PREF_REPORT_CRASH"
-            android:title="Crash reports"
-            android:summary="Send anonymous crash reports to help developers to improve the app"
-            android:defaultValue="true" />
 
     </PreferenceScreen>
 

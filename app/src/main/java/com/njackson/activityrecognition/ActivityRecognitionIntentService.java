@@ -38,35 +38,8 @@ public class ActivityRecognitionIntentService extends IntentService {
 
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-
-            switch(result.getMostProbableActivity().getType()) {
-
-                case DetectedActivity.ON_BICYCLE:
-                    Log.d(TAG, "ON_BICYCLE");
-                    sendReply(result.getMostProbableActivity().getType());
-                    break;
-                case DetectedActivity.WALKING:
-                    Log.d(TAG, "WALKING");
-                    sendReply(result.getMostProbableActivity().getType());
-                    break;
-                case DetectedActivity.RUNNING:
-                    Log.d(TAG, "RUNNING");
-                    sendReply(result.getMostProbableActivity().getType());
-                    break;
-                case DetectedActivity.ON_FOOT:
-                    Log.d(TAG, "ON_FOOT");
-                    sendReply(result.getMostProbableActivity().getType());
-                    break;
-                case DetectedActivity.TILTING:
-                    Log.d(TAG, "TILTING");
-                    break;
-                case DetectedActivity.STILL:
-                    Log.d(TAG, "STILL");
-                    sendReply(result.getMostProbableActivity().getType());
-                    break;
-                default:
-                    logActivity(result);
-            }
+            logActivity(result);
+            _bus.post(new NewActivityEvent(result));
         }
     }
 
@@ -79,10 +52,6 @@ public class ActivityRecognitionIntentService extends IntentService {
         }
         Log.d(TAG, "Most Probable: " + result.getMostProbableActivity().getType());
         Log.d(TAG, "Most Probable: " + result.getMostProbableActivity().toString());
-    }
-
-    private void sendReply(int type) {
-        _bus.post(new NewActivityEvent(type));
     }
 
 }

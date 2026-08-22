@@ -15,6 +15,7 @@ import com.njackson.application.modules.ForApplication;
 import com.njackson.events.ActivityRecognitionCommand.ActivityRecognitionChangeState;
 import com.njackson.events.ActivityRecognitionCommand.ActivityRecognitionStatus;
 import com.njackson.events.ActivityRecognitionCommand.NewActivityEvent;
+import com.njackson.events.GPSServiceCommand.GPSChangeState;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.service.IServiceCommand;
 import com.njackson.utils.services.IServiceStarter;
@@ -46,18 +47,65 @@ public class ActivityRecognitionServiceCommand implements IServiceCommand, ITime
     private ActivityRecognitionClient _recognitionClient;
     private BaseStatus.Status _currentStatus = BaseStatus.Status.NOT_INITIALIZED;
 
+    int _lastActivity = -1;
+    int _nbStart = 0;
+    int _nbStop = 0;
+    boolean _gpsStarted = false;
+
     @Subscribe
     public void onNewActivityEvent(NewActivityEvent event) {
-        boolean autoStart = _sharedPreferences.getBoolean("ACTIVITY_RECOGNITION",false);
+        boolean autoStart = _sharedPreferences.getBoolean("ACTIVITY_RECOGNITION", false);
 
-        if(autoStart) {
-            if (event.getActivityType() != DetectedActivity.STILL) {
-                _serviceStarter.startLocationServices();
-                _timer.cancel();
-            } else {
-                if (!_timer.getActive()) {
-                    _timer.setTimer(Constants.ACTIVITY_RECOGNITION_STILL_TIME, this);
+        if (autoStart) {
+            boolean start = false;
+            boolean stop = false;
+
+            switch(event.getActivity().getMostProbableActivity().getType()) {
+                case DetectedActivity.IN_VEHICLE:
+                case DetectedActivity.STILL:
+                    stop = true;
+                    break;
+                case DetectedActivity.ON_BICYCLE:
+                    start = true;
+                    break;
+                case DetectedActivity.ON_FOOT:
+                case DetectedActivity.WALKING:
+                case DetectedActivity.RUNNING:
+                    if (_sharedPreferences.getBoolean("ACTIVITY_RECOGNITION_WALKING", false)) {
+                        start = true;
+                    } else {
+                        stop = true;
+                    }
+                    break;
+
+                case DetectedActivity.UNKNOWN:
+                case DetectedActivity.TILTING:
+                default:
+                    break;
+            }
+            if (start) {
+                if (_nbStop > 0) {
+                    _timer.cancel();
                 }
+                _nbStop = 0;
+                _nbStart++;
+                if (!_timer.getActive()) {
+                    _timer.setTimer(Constants.ACTIVITY_RECOGNITION_MOVE_TIME * MILLISECONDS_PER_SECOND, this);
+                }
+            }
+            if (stop) {
+                if (_nbStart > 0) {
+                    _timer.cancel();
+                }
+                _nbStart = 0;
+                _nbStop++;
+                if (!_timer.getActive()) {
+                    _timer.setTimer(Constants.ACTIVITY_RECOGNITION_STILL_TIME * MILLISECONDS_PER_SECOND, this);
+                }
+            }
+            if (_lastActivity != event.getActivity().getMostProbableActivity().getType()) {
+                _lastActivity = event.getActivity().getMostProbableActivity().getType();
+                Log.d(TAG, "_lastActivity: " + _lastActivity);
             }
         }
     }
@@ -74,6 +122,19 @@ public class ActivityRecognitionServiceCommand implements IServiceCommand, ITime
                 if(_currentStatus != BaseStatus.Status.STOPPED) {
                     stop();
                 }
+                break;
+        }
+    }
+
+    @Subscribe
+    public void onGPSChangeState(GPSChangeState event) {
+        switch(event.getState()) {
+            case START:
+                _gpsStarted = true;
+                break;
+            case STOP:
+                _gpsStarted = false;
+                break;
         }
     }
 
@@ -123,7 +184,21 @@ public class ActivityRecognitionServiceCommand implements IServiceCommand, ITime
 
     @Override
     public void handleTimeout() {
-        Log.d(TAG,"Stopping location");
-        _serviceStarter.stopLocationServices();
+        Log.d(TAG, "_gpsStarted:" + _gpsStarted);
+
+        if (_nbStart > 0) {
+            Log.d(TAG, "Starting location + _nbStart:" + _nbStart);
+            if (!_gpsStarted) {
+                _serviceStarter.startLocationServices();
+            }
+        } else if (_nbStop > 0) {
+            Log.d(TAG, "Stopping location + _nbStop:" + _nbStop);
+            if (_gpsStarted) {
+                _serviceStarter.stopLocationServices();
+            }
+        } else {
+            Log.d(TAG, "Error handleTimeout");
+        }
+        _nbStart = _nbStop = 0;
     }
 }
