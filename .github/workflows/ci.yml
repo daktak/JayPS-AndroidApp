@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: ["*"]
-    tags: ["NOTUSING*"]
+    tags: ["v*"]
   pull_request:
     branches: ["*"]
   workflow_dispatch:
@@ -83,7 +83,7 @@ jobs:
       # No signing config exists in app/build.gradle, so this produces an
       # unsigned APK (app-release-unsigned.apk). Safe to verify/publish from CI.
       - name: Build release APK
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Locate APK artifact
         id: apk
