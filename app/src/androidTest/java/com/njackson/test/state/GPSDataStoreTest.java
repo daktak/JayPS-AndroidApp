@@ -11,7 +11,7 @@ import com.njackson.state.GPSDataStore;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.mockito.Mockito.times;
 
 /**
  * Created by njackson on 30/01/15.

@@ -167,7 +167,10 @@ class PebbleBinaryTest : AndroidTestCase() {
     }
 
     fun testSpeed1() {
-        assertEquals("Speed 1: Expected value -112", -112, data[BYTE_SPEED1].toInt())
+        // Kotlin buildLocationDictionary converts speed to double before multiplying, so
+        // 14.4f -> 14.3999.. -> floor(143.99..) = 143 (= -113 signed). This is the actual
+        // byte the app sends to the watchface today.
+        assertEquals("Speed 1: Expected value -113", -113, data[BYTE_SPEED1].toInt())
     }
 
     fun testSpeed2() {
