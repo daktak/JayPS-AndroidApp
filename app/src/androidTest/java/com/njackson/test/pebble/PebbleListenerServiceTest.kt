@@ -33,6 +33,10 @@ class PebbleListenerServiceTest : AndroidTestCase() {
         serviceStarter = mock(IServiceStarter::class.java)
         dataStore = mock(IGPSDataStore::class.java)
         prefs = mock(SharedPreferences::class.java)
+        val editor = mock(SharedPreferences.Editor::class.java)
+        `when`(editor.putInt(anyString(), anyInt())).thenReturn(editor)
+        `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
+        `when`(prefs.edit()).thenReturn(editor)
         service.oruxMaps = oruxMaps
         service.messageManager = messageManager
         service.serviceStarter = serviceStarter
@@ -83,6 +87,6 @@ class PebbleListenerServiceTest : AndroidTestCase() {
         d[Constants.MSG_VERSION_PEBBLE.toUInt()] = PebbleDictionaryItem.Int32(330)
         val result = service.onMessageReceived(Constants.WATCH_UUID, d, watch)
         assertEquals(ReceiveResult.Ack, result)
-        verify(messageManager).sendSavedDataToPebble(any(), any(), any(), any(), any(), any())
+        verify(messageManager).sendSavedDataToPebble(anyBoolean(), anyInt(), anyFloat(), anyLong(), anyFloat(), anyFloat())
     }
 }
