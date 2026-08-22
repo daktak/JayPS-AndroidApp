@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -26,13 +27,19 @@ import static org.mockito.Mockito.verify;
 public class InstallWatchFaceTest extends AndroidTestCase {
 
     InstallPebbleWatchFace _install;
+    IAndroidVersion _androidVersion;
+    IWatchFaceVersion _watchFaceVersion;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         System.setProperty("dexmaker.dexcache", getContext().getCacheDir().getPath());
 
-        _install = new InstallPebbleWatchFace(mock(IAndroidVersion.class), mock(IWatchFaceVersion.class));
+        _androidVersion = mock(IAndroidVersion.class);
+        _watchFaceVersion = mock(IWatchFaceVersion.class);
+        when(_androidVersion.getVersionCode(any(Context.class))).thenReturn("21");
+        when(_watchFaceVersion.getFirmwareVersion(any(Context.class))).thenReturn("");
+        _install = new InstallPebbleWatchFace(_androidVersion, _watchFaceVersion);
     }
 
     @SmallTest
@@ -49,12 +56,12 @@ public class InstallWatchFaceTest extends AndroidTestCase {
         assertEquals(intent.getComponent().getClassName(),"com.getpebble.android.ui.UpdateActivity");
         assertEquals(intent.getComponent().getPackageName(),"com.getpebble.android");
     }
-*/
+ */
     @SmallTest
     public void testExecuteWhenApplicationInstalledStartsActivity() {
         Context mockContext = mock(Context.class);
 
-        _install.execute(mockContext, null, "http://myurl.com/watchapp.pbw");
+        _install.execute(mockContext, mock(IMessageMaker.class), "http://myurl.com/watchapp.pbw");
 
         verify(mockContext,times(1)).startActivity(any(Intent.class));
     }

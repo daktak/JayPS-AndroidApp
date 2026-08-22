@@ -56,7 +56,7 @@ public class GPSSensorEventListenerTest extends AndroidTestCase {
         float[] data = new float[] {1.0f};
         _listener.sensorChanged(Sensor.TYPE_PRESSURE, data);
 
-        verify(_mockAdvancedLocation,times(1)).onAltitudeChanged(anyFloat());
+        verify(_mockAdvancedLocation,times(1)).onAltitudeChanged(anyDouble());
     }
 
     @SmallTest
@@ -73,7 +73,7 @@ public class GPSSensorEventListenerTest extends AndroidTestCase {
         float[] data = new float[] {1.0f};
         _listener.sensorChanged(Sensor.TYPE_ACCELEROMETER, data);
 
-        verify(_mockAdvancedLocation,times(0)).onAltitudeChanged(anyFloat());
+        verify(_mockAdvancedLocation,times(0)).onAltitudeChanged(anyDouble());
     }
 
     @SmallTest
