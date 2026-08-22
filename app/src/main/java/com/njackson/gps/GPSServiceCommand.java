@@ -154,8 +154,16 @@ public class GPSServiceCommand implements IServiceCommand {
     public void onNewBleSensorData(BleSensorData event) {
         switch (event.getType()) {
             case BleSensorData.SENSOR_HRM:
-                _heartRate = event.getHeartRate();
-                _heartRateFromPebble = "pebble".equals(event.getBleAddress());
+                if ("pebble".equals(event.getBleAddress())) {
+                    _heartRate = event.getHeartRate();
+                    _heartRateFromPebble = true;
+                } else if (!_sharedPreferences.getBoolean(Constants.PREF_PEBBLE_HRM, false)) {
+                    // Pebble HRM not selected: use the BLE sensor HRM
+                    _heartRate = event.getHeartRate();
+                    _heartRateFromPebble = false;
+                }
+                // PREF_PEBBLE_HRM selected: the Pebble HR takes precedence, ignore the BLE sensor HRM
+                // (a strap with poor contact sends 0 and would otherwise clobber the Pebble HR)
                 Log.d(TAG, "onNewBleSensorData _heartRate:" + _heartRate + " fromPebble:" + _heartRateFromPebble);
                 break;
             case BleSensorData.SENSOR_CSC_CADENCE:
