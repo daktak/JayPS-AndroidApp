@@ -9,7 +9,6 @@ import android.widget.Toast;
 
 import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
-import com.njackson.pebble.IMessageManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,7 +49,6 @@ public class StravaUpload {
     private static final int TIMEOUT_CONNECT_MS = 15000;
     private static final int TIMEOUT_READ_MS = 60000;
 
-    @Inject IMessageManager _messageManager;
     @Inject SharedPreferences _sharedPreferences;
 
     private final Context _context;
@@ -91,13 +89,6 @@ public class StravaUpload {
                 final String result = message;
                 Log.i(TAG, "RESULT: " + result);
                 toast("Strava: " + result);
-                if (_sharedPreferences.getBoolean("STRAVA_NOTIFICATION", false)) {
-                    try {
-                        _messageManager.sendMessageToPebble("KayPS - Strava", result);
-                    } catch (Exception e) {
-                        Log.e(TAG, "sendMessageToPebble Exception:" + e, e);
-                    }
-                }
             }
         }).start();
     }

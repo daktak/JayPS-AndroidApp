@@ -134,8 +134,6 @@
     <string name="PREF_STRAVA_TITLE">Strava</string>
     <string name="PREF_STRAVA_SESSION_TITLE">Strava session cookie</string>
     <string name="PREF_STRAVA_SESSION_SUMMARY">Paste the value of the _strava4_session cookie from a logged-in Strava session</string>
-    <string name="PREF_STRAVA_NOTIFICATION_TITLE">Notification</string>
-    <string name="PREF_STRAVA_NOTIFICATION_SUMMARY">Display a notification on your Pebble after each upload</string>
     <string name="STRAVA_AUTO_TITLE">Automatic upload</string>
     <string name="STRAVA_AUTO_DIALOG_TITLE">Strava automatic upload</string>
     <string name="STRAVA_AUTO_DEFAULT">disable</string>
