@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
+    <release version="26.9.0" versioncode="501" >
+        <change><![CDATA[<b>Cycling power meter</b><br/>
+            - support for Bluetooth power meters (watts, average, max and normalized power)]]></change>
+        <change><![CDATA[<b>Pebble heart rate</b><br/>
+            - use the Pebble 2 HR / Pebble Time 2 built-in heart rate sensor as the HR source]]></change>
+        <change><![CDATA[<b>Automatic activity detection</b><br/>
+            - GPS can now start and stop automatically based on your movement<br/>
+            - new option to also trigger on walking/running (Settings)]]></change>
+        <change><![CDATA[<b>Indoor mode</b><br/>
+            - track indoor sessions without GPS: time keeps running while stationary, speed and distance come from sensors]]></change>
+        <change><![CDATA[<b>Strava</b><br/>
+            - open the Ventoo Strava club from Settings]]></change>
+        <change>Removed the "send anonymous crash reports" option</change>
+    </release>
     <release version="26.8.0" versioncode="500" >
         <change><![CDATA[<b>Update to use new libpebble</b><br/>
             - Migrate from the abandoned com.getpebble:pebblekit to the Rebble pebblekit2 client for modern Pebble communication]]></change>
