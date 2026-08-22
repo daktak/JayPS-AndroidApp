@@ -1,28 +1,10 @@
 package com.njackson.test.application;
 
-import android.util.Log;
-
-import com.njackson.application.PebbleBikeApplication;
-import dagger.ObjectGraph;
+import android.app.Application;
 
 /**
- * Created by server on 30/03/2014.
+ * Minimal application used by MyInstrumentationTestRunner for instrumentation tests.
+ * Injection is handled per-test (manual or Dagger 2), so no legacy ObjectGraph wiring here.
  */
-public class TestApplication extends PebbleBikeApplication {
-
-    private static final String TAG = "PB-TestApplication";
-
-    public ObjectGraph getObjectGraph() {
-        return graph;
-    }
-    public void setObjectGraph(ObjectGraph graph) {
-        Log.d(TAG, "set object graph");
-        this.graph = graph;
-    }
-
-    public void setupAnalytics() {
-        super.setupAnalytics();
-    }
-
-
+public class TestApplication extends Application {
 }

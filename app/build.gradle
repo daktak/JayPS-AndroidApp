@@ -8,6 +8,11 @@ android {
     namespace "com.njackson"
     compileSdk 34
 
+    // Legacy instrumentation tests still use android.test.AndroidTestCase /
+    // InstrumentationTestRunner, which AGP 8 no longer puts on the compile classpath.
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.runner'
+
     defaultConfig {
         applicationId "com.njackson"
         minSdk 24
