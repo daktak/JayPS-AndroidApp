@@ -21,7 +21,6 @@
         <item>Adaptative Normal (3s-30s)</item>
         <item>Adaptative Medium (3s-30s)</item>
         <item>Adaptative Low (5s-30s)</item>
-        <item>High (500ms)</item>
         <item>Normal (1s)</item>
         <item>2s</item>
         <item>5s</item>
@@ -32,7 +31,6 @@
         <item>103000</item>
         <item>203000</item>
         <item>305000</item>
-        <item>500</item>
         <item>1000</item>
         <item>2000</item>
         <item>5000</item>

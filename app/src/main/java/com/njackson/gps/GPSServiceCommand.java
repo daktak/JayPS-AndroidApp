@@ -101,6 +101,19 @@ public class GPSServiceCommand implements IServiceCommand {
     private int _refresh_interval = 0;
 
     private Handler mHandler;
+    private Handler mIntervalSaveHandler;
+    private final Runnable mIntervalSaveRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (_advancedLocation != null) {
+                _advancedLocation.saveCurrentLocationAtInterval(_time.getCurrentTimeMilliseconds());
+                broadcastLocation(null);
+            }
+            if (isNonAdaptative() && _currentStatus == BaseStatus.Status.STARTED) {
+                mIntervalSaveHandler.postDelayed(this, _refresh_interval % 100000);
+            }
+        }
+    };
 
     @Subscribe
     public void onResetGPSStateEvent(ResetGPSState event) {
@@ -111,6 +124,8 @@ public class GPSServiceCommand implements IServiceCommand {
     @Subscribe
     public void onGPSRefreshChangeEvent(ChangeRefreshInterval event) {
         _refresh_interval = event.getRefreshInterval();
+        applySaveMode();
+        scheduleIntervalSave();
         changeRefreshInterval(event.getRefreshInterval());
     }
 
@@ -168,7 +183,10 @@ public class GPSServiceCommand implements IServiceCommand {
                 Log.d(TAG, "onNewBleSensorData _power:" + _power);
                 if (!_powerOverride && _power >= 0) {
                     _powerOverride = true;
-                    changeRefreshInterval(Math.min(_refresh_interval, 1000));
+                    _refresh_interval = Math.min(_refresh_interval, 1000);
+                    applySaveMode();
+                    scheduleIntervalSave();
+                    changeRefreshInterval(_refresh_interval);
                 }
                 break;
 
@@ -221,6 +239,7 @@ public class GPSServiceCommand implements IServiceCommand {
             // send the saved values directly to update the watch
             // TODO(jay) send xpos=0, ypos=0, it will display a "wrong" point on the map
             broadcastLocation(null);
+            scheduleIntervalSave();
         } else {
             _currentStatus = BaseStatus.Status.DISABLED;
         }
@@ -229,6 +248,7 @@ public class GPSServiceCommand implements IServiceCommand {
     public void stop (){
         saveGPSStats();
 
+        stopIntervalSave();
         stopLocationUpdates();
 
         _power = 0;
@@ -331,6 +351,34 @@ public class GPSServiceCommand implements IServiceCommand {
         _advancedLocation.debugLevel = _sharedPreferences.getBoolean("PREF_DEBUG", false) ? 1 : 0;
         _advancedLocation.debugTagPrefix = "PB-";
         _advancedLocation.setSaveLocation(_sharedPreferences.getBoolean("ENABLE_TRACKS", false));
+        applySaveMode();
+    }
+
+    private boolean isNonAdaptative() {
+        return _refresh_interval > 0 && _refresh_interval / 100000 == 0;
+    }
+
+    private void applySaveMode() {
+        if (_advancedLocation == null || _refresh_interval <= 0) {
+            return;
+        }
+        _advancedLocation.setSaveOnLocationChange(!isNonAdaptative());
+    }
+
+    private void scheduleIntervalSave() {
+        if (mIntervalSaveHandler == null) {
+            mIntervalSaveHandler = new Handler(Looper.getMainLooper());
+        }
+        mIntervalSaveHandler.removeCallbacks(mIntervalSaveRunnable);
+        if (isNonAdaptative()) {
+            mIntervalSaveHandler.postDelayed(mIntervalSaveRunnable, _refresh_interval % 100000);
+        }
+    }
+
+    private void stopIntervalSave() {
+        if (mIntervalSaveHandler != null) {
+            mIntervalSaveHandler.removeCallbacks(mIntervalSaveRunnable);
+        }
     }
 
     private void requestLocationUpdates(long refresh_interval) {
