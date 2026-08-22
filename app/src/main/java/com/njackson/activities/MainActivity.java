@@ -59,10 +59,22 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
     private boolean _authInProgress;
 
     private static final int REQUEST_REQUIRED_PERMISSIONS = 100;
+    private static final int REQUEST_START_LOCATION_PERMISSION = 101;
 
     @Subscribe
     public void onStartButtonTouched(StartButtonTouchedEvent event) {
-        _serviceStarter.startLocationServices();
+        if (_sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false)) {
+            _serviceStarter.startLocationServices();
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            _serviceStarter.startLocationServices();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_START_LOCATION_PERMISSION);
+        }
     }
 
     @Subscribe
@@ -136,8 +148,9 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
 
     private void requestRequiredPermissions() {
         ArrayList<String> needed = new ArrayList<>();
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (!_sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false)
+                && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
             needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -163,6 +176,17 @@ public class MainActivity extends FragmentActivity  implements SharedPreferences
                 if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "permission denied: " + permissions[i]);
                 }
+            }
+        } else if (requestCode == REQUEST_START_LOCATION_PERMISSION) {
+            boolean granted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (android.Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[i])
+                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    granted = true;
+                }
+            }
+            if (granted && !_sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false)) {
+                _serviceStarter.startLocationServices();
             }
         }
     }

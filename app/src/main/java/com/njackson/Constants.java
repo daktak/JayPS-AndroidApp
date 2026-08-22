@@ -62,5 +62,7 @@ public class Constants {
 
     public static final String PREF_PEBBLE_HRM = "PREF_PEBBLE_HRM";
 
+    public static final String PREF_INDOOR_MODE = "INDOOR_MODE";
+
     public static final int CODE_LOAD_GPX = 10;
 }

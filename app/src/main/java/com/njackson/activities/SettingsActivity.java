@@ -24,6 +24,7 @@ import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
 import com.njackson.events.BleServiceCommand.BleSensorData;
 import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval;
+import com.njackson.events.GPSServiceCommand.ChangeIndoorMode;
 import com.njackson.events.PebbleServiceCommand.HrMonitorEnable;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.gps.Navigator;
@@ -389,6 +390,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         setUnitsSummary();
         setRefreshSummary(_sharedPreferences.getString("REFRESH_INTERVAL", String.valueOf(Constants.REFRESH_INTERVAL_DEFAULT)));
+        filterRefreshIntervalEntries(_sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false));
         setLoginNextcloudSummary();
         setLoginMmtSummary();
         setLiveSummary();
@@ -457,6 +459,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             int enabled = _sharedPreferences.getBoolean(Constants.PREF_PEBBLE_HRM, false) ? 1 : 0;
             _bus.post(new HrMonitorEnable(enabled));
         }
+        if (s.equals(Constants.PREF_INDOOR_MODE)) {
+            boolean indoor = _sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false);
+            handleIndoorModeChange(indoor, true);
+        }
         if (s.equals("PREF_BLE_CSC_WHEEL_PRESET")) {
             String preset = sharedPreferences.getString("PREF_BLE_CSC_WHEEL_PRESET", "");
             if (!preset.isEmpty()) {
@@ -509,6 +515,65 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             }
         }
 
+    }
+
+    private void handleIndoorModeChange(boolean indoor, boolean rememberPrev) {
+        ListPreference refreshPref = (ListPreference) findPreference("REFRESH_INTERVAL");
+        String current = _sharedPreferences.getString("REFRESH_INTERVAL", String.valueOf(Constants.REFRESH_INTERVAL_DEFAULT));
+        boolean adaptive = current.equals("103000") || current.equals("203000") || current.equals("305000");
+        if (indoor) {
+            if (adaptive && rememberPrev) {
+                SharedPreferences.Editor ed = _sharedPreferences.edit();
+                ed.putString("INDOOR_MODE_PREV_REFRESH", current);
+                ed.commit();
+            }
+            if (adaptive) {
+                SharedPreferences.Editor ed = _sharedPreferences.edit();
+                ed.putString("REFRESH_INTERVAL", "1000");
+                ed.commit();
+                _bus.post(new ChangeRefreshInterval(1000));
+                setRefreshSummary("1000");
+            }
+        } else {
+            String prev = _sharedPreferences.getString("INDOOR_MODE_PREV_REFRESH", "");
+            if (!prev.isEmpty()) {
+                SharedPreferences.Editor ed = _sharedPreferences.edit();
+                ed.putString("REFRESH_INTERVAL", prev);
+                ed.remove("INDOOR_MODE_PREV_REFRESH");
+                ed.commit();
+                try {
+                    _bus.post(new ChangeRefreshInterval(Integer.valueOf(prev)));
+                } catch (NumberFormatException nfe) {
+                    // ignore
+                }
+                setRefreshSummary(prev);
+            }
+        }
+        filterRefreshIntervalEntries(indoor);
+        _bus.post(new ChangeIndoorMode(indoor));
+    }
+
+    private void filterRefreshIntervalEntries(boolean indoor) {
+        ListPreference refreshPref = (ListPreference) findPreference("REFRESH_INTERVAL");
+        if (refreshPref == null) return;
+        if (indoor) {
+            CharSequence[] allEntries = refreshPref.getEntries();
+            CharSequence[] allValues = refreshPref.getEntryValues();
+            java.util.ArrayList<CharSequence> entries = new java.util.ArrayList<CharSequence>();
+            java.util.ArrayList<CharSequence> values = new java.util.ArrayList<CharSequence>();
+            for (int i = 0; i < allValues.length; i++) {
+                String val = allValues[i].toString();
+                if (!val.equals("103000") && !val.equals("203000") && !val.equals("305000")) {
+                    entries.add(allEntries[i]);
+                    values.add(allValues[i]);
+                }
+            }
+            refreshPref.setEntries(entries.toArray(new CharSequence[0]));
+            refreshPref.setEntryValues(values.toArray(new CharSequence[0]));
+        } else {
+            refreshPref.setEntries(R.array.REFRESH_INTERVAL_ENTRIES);
+            refreshPref.setEntryValues(R.array.REFRESH_INTERVAL_ENTRY_VALUES);
+        }
     }
 
     private void setLoginNextcloudSummary() {

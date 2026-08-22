@@ -19,7 +19,7 @@
         <activity android:name=".activities.TestActivity" android:exported="false"></activity>
         <activity android:name=".activities.SettingsActivity" android:exported="true"/>
         <activity android:name=".activities.HRMScanActivity" android:exported="true"/>
-        <service android:name=".service.MainService" android:label="MainService" android:foregroundServiceType="location"/>
+        <service android:name=".service.MainService" android:label="MainService" android:foregroundServiceType="location|dataSync"/>
         <service android:name=".activityrecognition.ActivityRecognitionIntentService" android:label="ActivityRecognitionIntentService"/>
         <service
             android:name=".pebble.PebbleListenerService"
@@ -62,4 +62,5 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 </manifest>

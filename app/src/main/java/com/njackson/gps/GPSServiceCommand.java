@@ -2,6 +2,7 @@ package com.njackson.gps;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 
 import android.hardware.SensorManager;
@@ -15,6 +16,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+
 import com.njackson.Constants;
 import com.njackson.adapters.AdvancedLocationToNewLocation;
 import com.njackson.adapters.NewLocationToSavedLocation;
@@ -22,6 +25,7 @@ import com.njackson.application.IInjectionContainer;
 import com.njackson.application.modules.ForApplication;
 import com.njackson.events.BleServiceCommand.BleSensorData;
 import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval;
+import com.njackson.events.GPSServiceCommand.ChangeIndoorMode;
 import com.njackson.events.GPSServiceCommand.GPSChangeState;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.GPSServiceCommand.NewAltitude;
@@ -83,6 +87,8 @@ public class GPSServiceCommand implements IServiceCommand {
     private int _runningCadence = 0;
     private int _power = 0;
     private boolean _powerOverride = false;
+    private boolean _indoor = false;
+    private boolean _hasSpeedSensor = false;
     private double _temperature = 0;
     private int _batteryLevel = 0;
     private BaseStatus.Status _currentStatus= BaseStatus.Status.NOT_INITIALIZED;
@@ -106,11 +112,15 @@ public class GPSServiceCommand implements IServiceCommand {
         @Override
         public void run() {
             if (_advancedLocation != null) {
+                if (_indoor) {
+                    _advancedLocation.updateIndoor(_heartRate, _cyclingCadence, _power, _time.getCurrentTimeMilliseconds());
+                }
                 _advancedLocation.saveCurrentLocationAtInterval(_time.getCurrentTimeMilliseconds());
                 broadcastLocation(null);
             }
-            if (isNonAdaptative() && _currentStatus == BaseStatus.Status.STARTED) {
-                mIntervalSaveHandler.postDelayed(this, _refresh_interval % 100000);
+            if ((_indoor || isNonAdaptative()) && _currentStatus == BaseStatus.Status.STARTED) {
+                long delay = _indoor ? 1000 : _refresh_interval % 100000;
+                mIntervalSaveHandler.postDelayed(this, delay);
             }
         }
     };
@@ -127,6 +137,29 @@ public class GPSServiceCommand implements IServiceCommand {
         applySaveMode();
         scheduleIntervalSave();
         changeRefreshInterval(event.getRefreshInterval());
+    }
+
+    @Subscribe
+    public void onIndoorModeChange(ChangeIndoorMode event) {
+        _indoor = event.isIndoor();
+        if (_indoor) {
+            Log.d(TAG, "onIndoorModeChange indoor ON");
+        } else {
+            Log.d(TAG, "onIndoorModeChange indoor OFF");
+        }
+        if (_advancedLocation != null) {
+            _advancedLocation.setIndoor(_indoor);
+        }
+        _hasSpeedSensor = false;
+        if (_indoor) {
+            stopLocationUpdates();
+        } else if (_currentStatus == BaseStatus.Status.STARTED && checkGPSEnabled(_locationMgr)) {
+            requestLocationUpdates(_refresh_interval);
+            registerNmeaListener();
+            registerSensorListener();
+            setGPSStartTime();
+        }
+        scheduleIntervalSave();
     }
 
     @Subscribe
@@ -178,6 +211,7 @@ public class GPSServiceCommand implements IServiceCommand {
                     wheelSize = 0;
                 }
                 if (wheelSize > 0) {
+                    _hasSpeedSensor = true;
                     _advancedLocation.setSensorSpeed(wheelSize / 1000 * event.getCyclingWheelRpm() / 60, _time.getCurrentTimeMilliseconds());
                 }
                 Log.d(TAG, "onNewBleSensorData wheelRpm:" + event.getCyclingWheelRpm() + " wheelSize:" + wheelSize);
@@ -189,6 +223,10 @@ public class GPSServiceCommand implements IServiceCommand {
             case BleSensorData.SENSOR_POWER:
                 _power = event.getPower();
                 Log.d(TAG, "onNewBleSensorData _power:" + _power);
+                if (_indoor && !_hasSpeedSensor && _power > 0) {
+                    // no wheel sensor: estimate speed from power (aero + rolling model)
+                    _advancedLocation.setSensorSpeed(estimateSpeedFromPower(_power), _time.getCurrentTimeMilliseconds());
+                }
                 if (!_powerOverride && _power >= 0) {
                     _powerOverride = true;
                     _refresh_interval = Math.min(_refresh_interval, 1000);
@@ -207,6 +245,37 @@ public class GPSServiceCommand implements IServiceCommand {
                 break;
         }
         broadcastLocation(null);
+    }
+
+    /**
+     * Estimate ground speed (m/s) from cycling power (W) using a simple
+     * constant model: P = (Crr*m*g + 1/2*rho*CdA*v^2) * v, on flat road.
+     * Returns 0 when power is not positive.
+     */
+    private float estimateSpeedFromPower(int power) {
+        if (power <= 0) {
+            return 0f;
+        }
+        final double m = 85.0;   // rider + bike mass (kg)
+        final double g = 9.81;
+        final double Crr = 0.005;
+        final double rho = 1.225;
+        final double CdA = 0.3;
+        final double roll = Crr * m * g;            // W per (m/s)
+        final double aero = 0.5 * rho * CdA;         // W per (m/s)^3
+        double low = 0.0;
+        double high = 30.0; // 108 km/h ceiling
+        double v = 0.0;
+        for (int i = 0; i < 60; i++) {
+            v = (low + high) / 2;
+            double p = roll * v + aero * v * v * v;
+            if (p > power) {
+                high = v;
+            } else {
+                low = v;
+            }
+        }
+        return (float) v;
     }
 
     @Override
@@ -234,6 +303,14 @@ public class GPSServiceCommand implements IServiceCommand {
 
         createNewAdvancedLocation();
         loadGPSStats();
+
+        _indoor = _advancedLocation.isIndoor();
+        if (_indoor) {
+            _currentStatus = BaseStatus.Status.STARTED;
+            broadcastLocation(null);
+            scheduleIntervalSave();
+            return;
+        }
 
         // check to see if GPS is enabled
         if(checkGPSEnabled(_locationMgr)) {
@@ -359,6 +436,8 @@ public class GPSServiceCommand implements IServiceCommand {
         _advancedLocation.debugLevel = _sharedPreferences.getBoolean("PREF_DEBUG", false) ? 1 : 0;
         _advancedLocation.debugTagPrefix = "PB-";
         _advancedLocation.setSaveLocation(_sharedPreferences.getBoolean("ENABLE_TRACKS", false));
+        _indoor = _sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false);
+        _advancedLocation.setIndoor(_indoor);
         applySaveMode();
     }
 
@@ -378,8 +457,9 @@ public class GPSServiceCommand implements IServiceCommand {
             mIntervalSaveHandler = new Handler(Looper.getMainLooper());
         }
         mIntervalSaveHandler.removeCallbacks(mIntervalSaveRunnable);
-        if (isNonAdaptative()) {
-            mIntervalSaveHandler.postDelayed(mIntervalSaveRunnable, _refresh_interval % 100000);
+        if (_indoor || isNonAdaptative()) {
+            long delay = _indoor ? 1000 : _refresh_interval % 100000;
+            mIntervalSaveHandler.postDelayed(mIntervalSaveRunnable, delay);
         }
     }
 
@@ -389,7 +469,15 @@ public class GPSServiceCommand implements IServiceCommand {
         }
     }
 
+    private boolean hasLocationPermission() {
+        return ContextCompat.checkSelfPermission(_applicationContext,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
     private void requestLocationUpdates(long refresh_interval) {
+        if (_indoor || !hasLocationPermission()) {
+            return;
+        }
         if (_currentStatus == BaseStatus.Status.STARTED) {
             _locationMgr.removeUpdates(_locationListener);
         }
@@ -397,6 +485,9 @@ public class GPSServiceCommand implements IServiceCommand {
     }
 
     private void registerNmeaListener() {
+        if (_indoor || !hasLocationPermission()) {
+            return;
+        }
         _nmeaListener = new ServiceNmeaListener(_advancedLocation,_locationMgr, _dataStore);
         _locationMgr.addNmeaListener(_nmeaListener);
     }
@@ -416,9 +507,15 @@ public class GPSServiceCommand implements IServiceCommand {
     }
 
     private void stopLocationUpdates() {
-        _locationMgr.removeUpdates(_locationListener);
-        _locationMgr.removeNmeaListener(_nmeaListener);
-        _sensorManager.unregisterListener(_sensorListener);
+        if (_locationListener != null) {
+            _locationMgr.removeUpdates(_locationListener);
+        }
+        if (_nmeaListener != null) {
+            _locationMgr.removeNmeaListener(_nmeaListener);
+        }
+        if (_sensorListener != null) {
+            _sensorManager.unregisterListener(_sensorListener);
+        }
     }
 
     private void changeRefreshInterval(int refreshInterval) {

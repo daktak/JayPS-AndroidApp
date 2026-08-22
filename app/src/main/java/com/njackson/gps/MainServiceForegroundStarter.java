@@ -7,8 +7,13 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.njackson.R;
@@ -58,7 +63,28 @@ public class MainServiceForegroundStarter implements IForegroundServiceStarter {
                 .setContentIntent(pendIntent);
         Notification notification = builder.build();
 
-       service.startForeground(myID, notification);
+        // A "location" foreground service requires the location permission to be granted.
+        // In indoor mode (and whenever the permission is not granted) we use the "dataSync"
+        // type instead so the service can start without crashing.
+        int fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+        if (!isIndoor(service) && hasLocationPermission(service)) {
+            fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            service.startForeground(myID, notification, fgsType);
+        } else {
+            service.startForeground(myID, notification);
+        }
+    }
+
+    private boolean isIndoor(Service service) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(service);
+        return prefs.getBoolean("INDOOR_MODE", false);
+    }
+
+    private boolean hasLocationPermission(Service service) {
+        return ContextCompat.checkSelfPermission(service, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(service, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override

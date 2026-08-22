@@ -88,6 +88,9 @@
     <string name="REFRESH_INTERVAL_DIALOG_TITLE">GPS Minimum time</string>
     <string name="REFRESH_INTERVAL_DEFAULT">103000</string>
 
+    <string name="INDOOR_MODE_TITLE">Indoor mode</string>
+    <string name="INDOOR_MODE_SUMMARY">No GPS. Time counts while stationary; speed and distance come from sensors.</string>
+
     <string name="ORUXMAPS_AUTO_TITLE">Link OruxMaps start</string>
     <string name="ORUXMAPS_AUTO_DIALOG_TITLE">Link OruxMaps start</string>
     <string name="ORUXMAPS_AUTO_DEFAULT">disable</string>

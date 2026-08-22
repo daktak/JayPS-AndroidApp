@@ -106,6 +106,12 @@
         android:summary="GPS, HRM/CSC, Altitude, Lights, GoPro"
         android:persistent="false">
 
+        <CheckBoxPreference
+            android:key="INDOOR_MODE"
+            android:title="@string/INDOOR_MODE_TITLE"
+            android:summary="@string/INDOOR_MODE_SUMMARY"
+            android:defaultValue="false" />
+
         <ListPreference
             android:key="REFRESH_INTERVAL"
             android:title="@string/REFRESH_INTERVAL_TITLE"
