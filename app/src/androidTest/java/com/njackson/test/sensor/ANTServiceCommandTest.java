@@ -9,9 +9,13 @@ import android.test.suitebuilder.annotation.SmallTest;
 
 import com.njackson.application.IInjectionContainer;
 import com.njackson.events.AntServiceCommand.AntStatus;
+import com.njackson.events.GPSServiceCommand.GPSStatus;
+import com.njackson.events.base.BaseStatus;
 import com.njackson.sensor.ANTServiceCommand;
 import com.njackson.sensor.IAnt;
 import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
+import com.squareup.otto.ThreadEnforcer;
 
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -30,13 +34,15 @@ import static org.mockito.Mockito.when;
 
 public class ANTServiceCommandTest extends AndroidTestCase {
 
-    @Mock private Bus _mockBus;
     @Mock private SharedPreferences _mockPrefs;
     @Mock private Context _mockContext;
     @Mock private PackageManager _mockPm;
     @Mock private IAnt _mockAnt;
 
-    private IInjectionContainer _noOpContainer = new IInjectionContainer() {
+    private Bus _bus;
+    private AntStatus _lastStatus;
+
+    private final IInjectionContainer _noOpContainer = new IInjectionContainer() {
         @Override
         public void inject(Object object) {
         }
@@ -46,18 +52,26 @@ public class ANTServiceCommandTest extends AndroidTestCase {
     public void setUp() throws Exception {
         super.setUp();
         System.setProperty("dexmaker.dexcache", getContext().getCacheDir().toString());
-        _mockBus = mock(Bus.class);
         _mockPrefs = mock(SharedPreferences.class);
         _mockContext = mock(Context.class);
         _mockPm = mock(PackageManager.class);
         _mockAnt = mock(IAnt.class);
         when(_mockPrefs.getString(anyString(), anyString())).thenReturn("");
         when(_mockContext.getPackageManager()).thenReturn(_mockPm);
+
+        _bus = new Bus(ThreadEnforcer.ANY);
+        _lastStatus = null;
+        _bus.register(new Object() {
+            @Subscribe
+            public void onAntStatus(AntStatus status) {
+                _lastStatus = status;
+            }
+        });
     }
 
     private ANTServiceCommand buildSut() throws Exception {
         ANTServiceCommand sut = new ANTServiceCommand();
-        setField(sut, "_bus", _mockBus);
+        setField(sut, "_bus", _bus);
         setField(sut, "_sharedPreferences", _mockPrefs);
         setField(sut, "_applicationContext", _mockContext);
         setField(sut, "_ant", _mockAnt);
@@ -75,8 +89,8 @@ public class ANTServiceCommandTest extends AndroidTestCase {
         ANTServiceCommand sut = buildSut();
 
         sut.execute(_noOpContainer);
+        _bus.post(new GPSStatus(BaseStatus.Status.STARTED));
 
-        verify(_mockBus, never()).register(any(Object.class));
         verify(_mockAnt, never()).start(anySet(), any(), any());
     }
 
@@ -87,10 +101,11 @@ public class ANTServiceCommandTest extends AndroidTestCase {
         ANTServiceCommand sut = buildSut();
 
         sut.execute(_noOpContainer);
+        _bus.post(new GPSStatus(BaseStatus.Status.STARTED));
 
-        verify(_mockBus).register(sut);
-        verify(_mockAnt).start(anySet(), eq(_mockBus), eq(_noOpContainer));
-        verify(_mockBus).post(any(AntStatus.class));
+        verify(_mockAnt).start(anySet(), eq(_bus), eq(_noOpContainer));
+        assertNotNull("AntStatus should be posted when started", _lastStatus);
+        assertEquals(BaseStatus.Status.STARTED, _lastStatus.getStatus());
     }
 
     @SmallTest
@@ -100,8 +115,23 @@ public class ANTServiceCommandTest extends AndroidTestCase {
         ANTServiceCommand sut = buildSut();
 
         sut.execute(_noOpContainer);
+        _bus.post(new GPSStatus(BaseStatus.Status.STARTED));
 
-        verify(_mockBus, never()).register(any(Object.class));
         verify(_mockAnt, never()).start(anySet(), any(), any());
+    }
+
+    @SmallTest
+    public void test_start_posts_unable_to_start_when_no_ant_instance() throws Exception {
+        when(_mockPrefs.getString("ant_address1", "")).thenReturn("123");
+        when(_mockPm.getPackageInfo("com.dsi.ant", 0)).thenReturn(new PackageInfo());
+        ANTServiceCommand sut = buildSut();
+        setField(sut, "_ant", null);
+
+        sut.execute(_noOpContainer);
+        _bus.post(new GPSStatus(BaseStatus.Status.STARTED));
+
+        verify(_mockAnt, never()).start(anySet(), any(), any());
+        assertNotNull("AntStatus should be posted", _lastStatus);
+        assertEquals(BaseStatus.Status.UNABLE_TO_START, _lastStatus.getStatus());
     }
 }
