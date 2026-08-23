@@ -50,7 +50,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     private static final String TAG = "PB-SettingsActivity";
     public  static final int max_ble_devices = 6;
-    public  static final int max_ant_devices = 6;
+    public  static final int max_ant_devices = 3;
     private static final int ANT_REQUEST_BASE = 100;
 
     @Inject SharedPreferences _sharedPreferences;
