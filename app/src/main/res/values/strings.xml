@@ -122,9 +122,6 @@
     <string name="PREF_ANT_TITLE1">ANT+ Sensor 1</string>
     <string name="PREF_ANT_TITLE2">ANT+ Sensor 2</string>
     <string name="PREF_ANT_TITLE3">ANT+ Sensor 3</string>
-    <string name="PREF_ANT_TITLE4">ANT+ Sensor 4</string>
-    <string name="PREF_ANT_TITLE5">ANT+ Sensor 5</string>
-    <string name="PREF_ANT_TITLE6">ANT+ Sensor 6</string>
     <string name="ant_not_supported">ANT+ is not supported (ANT Radio Service not installed)</string>
     <string name="ant_choose_sensor">Choose ANT+ sensor</string>
 
