@@ -22,8 +22,11 @@ import com.njackson.gps.GPSServiceCommand;
 import com.njackson.gps.IForegroundServiceStarter;
 import com.njackson.gps.MainServiceForegroundStarter;
 import com.njackson.gps.Navigator;
+import com.njackson.sensor.Ant;
+import com.njackson.sensor.ANTServiceCommand;
 import com.njackson.sensor.Ble;
 import com.njackson.sensor.BLEServiceCommand;
+import com.njackson.sensor.IAnt;
 import com.njackson.sensor.IBle;
 import com.njackson.live.ILiveTracking;
 import com.njackson.live.LiveServiceCommand;
@@ -136,6 +139,12 @@ public class AndroidModule {
     }
 
     @Provides
+    @Nullable
+    IAnt providesAnt() {
+        return new Ant(application);
+    }
+
+    @Provides
     @Named("LiveTrackingMmt")
     ILiveTracking provideLiveTrackingMmt() {
         return new LiveTracking(application, LiveTracking.TYPE_MMT, providesBus());
@@ -173,7 +182,8 @@ public class AndroidModule {
                 new ActivityRecognitionServiceCommand(),
                 new OruxMapsServiceCommand(),
                 new LiveServiceCommand(),
-                new BLEServiceCommand()
+                new BLEServiceCommand(),
+                new ANTServiceCommand()
         );
     }
 }

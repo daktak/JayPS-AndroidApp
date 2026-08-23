@@ -198,6 +198,41 @@
         </PreferenceCategory>
 
         <PreferenceCategory
+            android:title="@string/PREF_ANT_CATEGORY_TITLE"
+            >
+            <Preference
+                android:key="PREF_ANT1"
+                android:title="@string/PREF_ANT_TITLE1"
+                android:summary=""
+                />
+            <Preference
+                android:key="PREF_ANT2"
+                android:title="@string/PREF_ANT_TITLE2"
+                android:summary=""
+                />
+            <Preference
+                android:key="PREF_ANT3"
+                android:title="@string/PREF_ANT_TITLE3"
+                android:summary=""
+                />
+            <Preference
+                android:key="PREF_ANT4"
+                android:title="@string/PREF_ANT_TITLE4"
+                android:summary=""
+                />
+            <Preference
+                android:key="PREF_ANT5"
+                android:title="@string/PREF_ANT_TITLE5"
+                android:summary=""
+                />
+            <Preference
+                android:key="PREF_ANT6"
+                android:title="@string/PREF_ANT_TITLE6"
+                android:summary=""
+                />
+        </PreferenceCategory>
+
+        <PreferenceCategory
             android:title="Altitude"
             >
             <Preference

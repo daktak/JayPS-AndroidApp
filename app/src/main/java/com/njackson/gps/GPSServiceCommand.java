@@ -24,6 +24,7 @@ import com.njackson.adapters.NewLocationToSavedLocation;
 import com.njackson.application.IInjectionContainer;
 import com.njackson.application.modules.ForApplication;
 import com.njackson.events.BleServiceCommand.BleSensorData;
+import com.njackson.events.AntServiceCommand.AntSensorData;
 import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval;
 import com.njackson.events.GPSServiceCommand.ChangeIndoorMode;
 import com.njackson.events.GPSServiceCommand.GPSChangeState;
@@ -242,6 +243,62 @@ public class GPSServiceCommand implements IServiceCommand {
                 break;
             default:
                 Log.d(TAG, "onNewBleSensorData type unknown:" + event.getType());
+                break;
+        }
+        broadcastLocation(null);
+    }
+
+    @Subscribe
+    public void onNewAntSensorData(AntSensorData event) {
+        switch (event.getType()) {
+            case AntSensorData.SENSOR_HRM:
+                if (!_sharedPreferences.getBoolean(Constants.PREF_PEBBLE_HRM, false)) {
+                    _heartRate = event.getHeartRate();
+                    _heartRateFromPebble = false;
+                }
+                Log.d(TAG, "onNewAntSensorData _heartRate:" + _heartRate);
+                break;
+            case AntSensorData.SENSOR_CSC_CADENCE:
+                _cyclingCadence = event.getCyclingCadence();
+                Log.d(TAG, "onNewAntSensorData _cadence:" + _cyclingCadence);
+                break;
+            case AntSensorData.SENSOR_CSC_WHEEL_RPM:
+                int wheelSize;
+                try {
+                    wheelSize = Integer.valueOf(_sharedPreferences.getString("PREF_BLE_CSC_WHEEL_SIZE", "0"));
+                } catch (Exception ex) {
+                    wheelSize = 0;
+                }
+                if (wheelSize > 0) {
+                    _hasSpeedSensor = true;
+                    _advancedLocation.setSensorSpeed(wheelSize / 1000 * event.getCyclingWheelRpm() / 60, _time.getCurrentTimeMilliseconds());
+                }
+                Log.d(TAG, "onNewAntSensorData wheelRpm:" + event.getCyclingWheelRpm() + " wheelSize:" + wheelSize);
+                break;
+            case AntSensorData.SENSOR_RSC:
+                _runningCadence = event.getRunningCadence();
+                Log.d(TAG, "onNewAntSensorData _runningCadence:" + _runningCadence);
+                break;
+            case AntSensorData.SENSOR_POWER:
+                _power = event.getPower();
+                Log.d(TAG, "onNewAntSensorData _power:" + _power);
+                if (_indoor && !_hasSpeedSensor && _power > 0) {
+                    _advancedLocation.setSensorSpeed(estimateSpeedFromPower(_power), _time.getCurrentTimeMilliseconds());
+                }
+                if (!_powerOverride && _power >= 0) {
+                    _powerOverride = true;
+                    _refresh_interval = Math.min(_refresh_interval, 1000);
+                    applySaveMode();
+                    scheduleIntervalSave();
+                    changeRefreshInterval(_refresh_interval);
+                }
+                break;
+            case AntSensorData.SENSOR_TEMPERATURE:
+                _temperature = event.getTemperature();
+                Log.d(TAG, "onNewAntSensorData _temperature:" + _temperature);
+                break;
+            default:
+                Log.d(TAG, "onNewAntSensorData type unknown:" + event.getType());
                 break;
         }
         broadcastLocation(null);

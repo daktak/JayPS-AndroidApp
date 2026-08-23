@@ -19,6 +19,7 @@
         <activity android:name=".activities.TestActivity" android:exported="false"></activity>
         <activity android:name=".activities.SettingsActivity" android:exported="true"/>
         <activity android:name=".activities.HRMScanActivity" android:exported="true"/>
+        <activity android:name=".activities.AntScanActivity" android:exported="true"/>
         <service android:name=".service.MainService" android:label="MainService" android:foregroundServiceType="location|dataSync"/>
         <service android:name=".activityrecognition.ActivityRecognitionIntentService" android:label="ActivityRecognitionIntentService"/>
         <service
@@ -47,6 +48,8 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
         </provider>
+
+        <uses-library android:name="com.dsi.ant" android:required="false" />
     </application>
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -63,4 +66,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="com.dsi.ant.permission.ANT" />
+    <queries>
+        <package android:name="com.dsi.ant" />
+        <package android:name="com.dsi.ant.plugins" />
+    </queries>
 </manifest>

@@ -23,6 +23,7 @@ import com.njackson.Constants;
 import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
 import com.njackson.events.BleServiceCommand.BleSensorData;
+import com.njackson.events.AntServiceCommand.AntSensorData;
 import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval;
 import com.njackson.events.GPSServiceCommand.ChangeIndoorMode;
 import com.njackson.events.PebbleServiceCommand.HrMonitorEnable;
@@ -49,6 +50,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     private static final String TAG = "PB-SettingsActivity";
     public  static final int max_ble_devices = 6;
+    public  static final int max_ant_devices = 6;
+    private static final int ANT_REQUEST_BASE = 100;
 
     @Inject SharedPreferences _sharedPreferences;
     @Inject IGPSDataStore _dataStore;
@@ -175,6 +178,25 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                     public boolean onPreferenceClick(Preference preference) {
                         if (preference.getKey().equals(pref_ble_string)) {
                             final Intent intent = new Intent(getApplicationContext(), HRMScanActivity.class);
+                            startActivityForResult(intent, intent_start);
+                        }
+                        return false;
+                    }
+                });
+            }
+        }
+
+        if (isAntAvailable()) {
+            for (int i = 1; i<=max_ant_devices; i++) {
+                final int intent_start = ANT_REQUEST_BASE + i;
+                final String pref_ant_string = "PREF_ANT"+i;
+                Preference pref_ant = findPreference(pref_ant_string);
+                if (pref_ant == null) continue;
+                pref_ant.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        if (preference.getKey().equals(pref_ant_string)) {
+                            final Intent intent = new Intent(getApplicationContext(), AntScanActivity.class);
                             startActivityForResult(intent, intent_start);
                         }
                         return false;
@@ -324,6 +346,33 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                     Log.e(TAG, "Exception:" + e);
                 }
             }
+        } else if (requestCode >= ANT_REQUEST_BASE && requestCode < ANT_REQUEST_BASE + max_ant_devices) {
+            int sensorNumber = requestCode - ANT_REQUEST_BASE;
+            Log.d(TAG, "onActivityResult ant sensorNumber="+sensorNumber);
+
+            String ant_name = "";
+            String ant_address = "";
+            if(resultCode == RESULT_OK && data != null) {
+                ant_name = data.getStringExtra("ant_name");
+                ant_address = data.getStringExtra("ant_address");
+            }
+
+            SharedPreferences.Editor editor = _sharedPreferences.edit();
+            for (int i = 1; i<=max_ant_devices; i++) {
+                if (sensorNumber == i) {
+                    editor.putString("ant_name"+i, ant_name);
+                    editor.putString("ant_address"+i, ant_address);
+                }
+            }
+            editor.commit();
+
+            setAntSummary();
+
+            if (!ant_address.equals("")) {
+                if (_serviceStarter.isLocationServicesRunning()) {
+                    Toast.makeText(getApplicationContext(), "Please restart GPS to display ANT+ sensor data", Toast.LENGTH_LONG).show();
+                }
+            }
         } else if (requestCode > 0) {
             int sensorNumber = requestCode;
             Log.d(TAG, "onActivityResult sensorNumber="+sensorNumber);
@@ -381,6 +430,34 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
     }
 
+    @Subscribe
+    public void onNewAntSensorData(AntSensorData event) {
+        String address = event.getAntAddress();
+        if (address == null || address.isEmpty()) return;
+
+        for (int i = 1; i <= max_ant_devices; i++) {
+            String stored = _sharedPreferences.getString("ant_address" + i, "");
+            if (!address.equals(stored)) continue;
+
+            String key = "PREF_ANT" + i;
+            switch (event.getType()) {
+                case AntSensorData.SENSOR_HRM:
+                    setAntTitle(getApplicationContext().getString(R.string.PREF_ANT_TITLE) + " " + i + " - Heart rate: " + event.getHeartRate(), key);
+                    break;
+                case AntSensorData.SENSOR_CSC_CADENCE:
+                    setAntTitle(getApplicationContext().getString(R.string.PREF_ANT_TITLE) + " " + i + " - Cadence: " + event.getCyclingCadence(), key);
+                    break;
+                case AntSensorData.SENSOR_RSC:
+                    setAntTitle(getApplicationContext().getString(R.string.PREF_ANT_TITLE) + " " + i + " - Cadence: " + event.getRunningCadence(), key);
+                    break;
+                case AntSensorData.SENSOR_POWER:
+                    setAntTitle(getApplicationContext().getString(R.string.PREF_ANT_TITLE) + " " + i + " - Power: " + event.getPower() + "W", key);
+                    break;
+            }
+            break;
+        }
+    }
+
 	@Override
     protected void onResume() {
         super.onResume();
@@ -397,6 +474,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         setOruxMapsSummary();
         setStravaSummary();
         setHrmSummary();
+        setAntSummary();
     }
 
     @Override
@@ -654,6 +732,38 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         Preference hrmMaxPref = findPreference("PREF_BLE_HRM_HRMAX");
         hrmMaxPref.setSummary(_sharedPreferences.getString("PREF_BLE_HRM_HRMAX", getString(R.string.PREF_BLE_HRM_HRMAX_SUMMARY)));
+    }
+
+    private boolean isAntAvailable() {
+        try {
+            getPackageManager().getPackageInfo("com.dsi.ant", 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private void setAntTitle(String title, String key) {
+        Preference antPref = findPreference(key);
+        if (antPref != null) {
+            antPref.setTitle(title);
+        }
+    }
+
+    private void setAntSummary() {
+        for (int i = 1; i<=max_ant_devices; i++) {
+            String summary = _sharedPreferences.getString("ant_name"+i, "");
+            if (!isAntAvailable()) {
+                summary = getResources().getString(R.string.ant_not_supported);
+            }
+            if (summary.equals("")) {
+                summary = getString(R.string.ant_choose_sensor);
+            }
+            Preference antPref = findPreference("PREF_ANT"+i);
+            if (antPref != null) {
+                antPref.setSummary(summary);
+            }
+        }
     }
     
     private void setNextcloudShareLink(Boolean live) {

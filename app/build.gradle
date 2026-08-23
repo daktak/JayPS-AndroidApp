@@ -86,4 +86,9 @@ dependencies {
     // framework to run on API 29+. Legacy dexmaker 1.x cannot write dex files on modern
     // Android, which crashed every mock-based instrumentation test.
     androidTestImplementation 'org.mockito:mockito-android:5.11.0'
+
+    // ANT+ PluginLib (thisisant). Drop antpluginlib.aar into app/libs/ (download from
+    // https://www.thisisant.com/developer/resources/downloads/). Provides the ANT+ profiles
+    // (HR, Bike Speed/Cadence, Bike Power, Stride SDM) used by the ANT+ sensor layer.
+    implementation files('libs/antpluginlib.aar')
 }

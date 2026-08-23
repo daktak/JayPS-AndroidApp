@@ -12,6 +12,8 @@ import com.njackson.live.LiveServiceCommand;
 import com.njackson.oruxmaps.OruxMapsServiceCommand;
 import com.njackson.pebble.PebbleListenerService;
 import com.njackson.pebble.PebbleServiceCommand;
+import com.njackson.sensor.ANTServiceCommand;
+import com.njackson.sensor.Ant;
 import com.njackson.sensor.BLEServiceCommand;
 import com.njackson.sensor.Ble;
 import com.njackson.service.MainService;
@@ -37,6 +39,8 @@ public interface AppComponent {
     void inject(OruxMapsServiceCommand a);
     void inject(BLEServiceCommand a);
     void inject(Ble a);
+    void inject(ANTServiceCommand a);
+    void inject(Ant a);
     void inject(PebbleServiceCommand a);
     void inject(PebbleListenerService a);
     void inject(GPSServiceCommand a);
