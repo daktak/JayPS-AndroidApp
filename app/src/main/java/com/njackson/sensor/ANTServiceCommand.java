@@ -109,7 +109,7 @@ public class ANTServiceCommand implements IServiceCommand {
             }
         }
         Log.d(TAG, deviceNumbers.size()+" ant sensors");
-        if (deviceNumbers.size()>0) {
+        if (deviceNumbers.size()>0 && _ant != null) {
             _ant.start(deviceNumbers, _bus, _container);
             _currentStatus = BaseStatus.Status.STARTED;
         } else {
@@ -124,7 +124,9 @@ public class ANTServiceCommand implements IServiceCommand {
             Log.d(TAG, "not started, unable to stop");
             return;
         }
-        _ant.stop();
+        if (_ant != null) {
+            _ant.stop();
+        }
         _currentStatus = BaseStatus.Status.STOPPED;
         _bus.post(new AntStatus(_currentStatus));
     }

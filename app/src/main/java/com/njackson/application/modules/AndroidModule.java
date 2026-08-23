@@ -141,7 +141,18 @@ public class AndroidModule {
     @Provides
     @Nullable
     IAnt providesAnt() {
-        return new Ant(application);
+        // Only instantiate the PluginLib-backed Ant when the ANT Radio Service
+        // is present. Loading the PluginLib classes on a device without ANT
+        // support would crash the app on every start.
+        try {
+            application.getPackageManager().getPackageInfo("com.dsi.ant", 0);
+            return new Ant(application);
+        } catch (android.content.pm.PackageManager.NameNotFoundException e) {
+            return null;
+        } catch (Throwable e) {
+            Log.e(TAG, "providesAnt: " + e);
+            return null;
+        }
     }
 
     @Provides
