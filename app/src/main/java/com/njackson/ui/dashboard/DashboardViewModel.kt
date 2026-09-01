@@ -97,7 +97,7 @@ class DashboardViewModel(
             avgSpeed = e.getAverageSpeed(),
             distance = e.getDistance(),
             elapsedSec = e.getElapsedTimeSeconds(),
-            ascent = e.getAscent(),
+            ascent = if (_sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false)) 0.0 else e.getAscent(),
             maxSpeed = e.getMaxSpeed(),
             heartRate = newHr,
             power = newPower,
