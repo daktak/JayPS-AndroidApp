@@ -189,7 +189,6 @@ private fun NavigationGroup(nav: NavController, vm: SettingsViewModel, onPickGpx
             item { GroupCard(stringResource(R.string.settings_navigation_title), Icons.Filled.Map) {
                 ClickRow(stringResource(R.string.settings_nav_load_route), stringResource(R.string.settings_nav_load_route_summary)) { onPickGpx() }
                 ClickRow(stringResource(R.string.settings_nav_stop), stringResource(R.string.settings_nav_stop_summary)) { }
-                ClickRow(stringResource(R.string.settings_nav_online_planner), stringResource(R.string.settings_nav_online_summary)) { openUrl(ctx, "http://pebblebike.com/planner/?utm_source=JayPSApp") }
                 ClickRow(stringResource(R.string.settings_nav_export_orux), stringResource(R.string.settings_nav_export_summary)) { }
             } }
         }
@@ -292,7 +291,6 @@ private fun AboutGroup(nav: NavController, vm: SettingsViewModel) {
             item { GroupCard(stringResource(R.string.settings_about_title), Icons.Filled.Info) {
                 ClickRow(stringResource(R.string.PREF_ABOUT_TITLE), stringResource(R.string.PREF_ABOUT_URL)) { openUrl(ctx, aboutUrl) }
                 ClickRow(stringResource(R.string.PREF_PEBBLE_STORE), stringResource(R.string.PREF_PEBBLE_STORE_SUMMARY)) { openUrl(ctx, pebbleUrl) }
-                ClickRow(stringResource(R.string.PREF_CHANGE_LOG_TITLE), stringResource(R.string.PREF_CHANGE_LOG_SUMMARY)) { }
             } }
         }
     }
