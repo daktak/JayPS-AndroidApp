@@ -229,4 +229,67 @@
     <string name="PREF_EXPORT_EMAIL_TITLE">Export email</string>
     <string name="PREF_EXPORT_EMAIL_SUMMARY">Email address to export your gpx file</string>
 
+    <!-- Dashboard / Map (Compose) -->
+    <string name="dashboard_ready_title">Ready to ride</string>
+    <string name="dashboard_ready_subtitle">Tap START — GPS + sensors will appear here live on your watch &amp; phone</string>
+    <string name="dashboard_pace">PACE</string>
+    <string name="dashboard_speed">SPEED</string>
+    <string name="dashboard_gps_off">GPS OFF</string>
+    <string name="dashboard_elapsed">ELAPSED</string>
+    <string name="dashboard_distance">DISTANCE</string>
+    <string name="dashboard_ascent">ASCENT</string>
+    <string name="dashboard_time">TIME</string>
+    <string name="dashboard_max_speed">MAX SPEED</string>
+    <string name="dashboard_heart_rate">HEART RATE</string>
+    <string name="dashboard_cadence">CADENCE</string>
+    <string name="dashboard_power">POWER</string>
+    <string name="dashboard_elevation">ELEVATION</string>
+    <string name="dashboard_no_elevation">No elevation yet</string>
+    <string name="dashboard_avg_format">avg %1$s %2$s</string>
+    <string name="map_title">MAP</string>
+    <string name="map_no_track">No track yet</string>
+    <string name="map_one_point">1 point</string>
+    <string name="map_points">%d points</string>
+    <string name="map_center">Center</string>
+    <string name="map_placeholder">Start an activity — breadcrumb trail will appear here</string>
+    <string name="placeholder_dash">—</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <!-- Settings Compose groups (new, plus reuse existing PREF_*) -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_general_title">General</string>
+    <string name="settings_tracks_units_title">Tracks &amp; Units</string>
+    <string name="settings_tracks_units_summary">Units, GPX, autostart</string>
+    <string name="settings_sensors_title">Sensors</string>
+    <string name="settings_sensors_summary">GPS, HRM/CSC, Altitude, Lights</string>
+    <string name="settings_navigation_title">Navigation</string>
+    <string name="settings_navigation_summary">Follow a route</string>
+    <string name="settings_integration_title">Integration</string>
+    <string name="settings_integration_summary">Strava, Live Tracking, OruxMaps</string>
+    <string name="settings_advanced_title">Advanced</string>
+    <string name="settings_advanced_summary">Debug options</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_summary">More information</string>
+    <string name="settings_install_title">Install</string>
+    <string name="settings_units_title">Units</string>
+    <string name="settings_tracks_title">Tracks</string>
+    <string name="settings_autostart_title">Autostart</string>
+    <string name="settings_gps_title">GPS</string>
+    <string name="settings_ble_title">BLE Heart Rate / CSC</string>
+    <string name="settings_altitude_title">Altitude</string>
+    <string name="settings_nav_load_route">Start navigation - Load route</string>
+    <string name="settings_nav_load_route_summary">Import GPX file</string>
+    <string name="settings_nav_stop">Stop navigation</string>
+    <string name="settings_nav_stop_summary">Stop current navigation</string>
+    <string name="settings_nav_online_planner">Online planner</string>
+    <string name="settings_nav_online_summary">Create route with Google Directions</string>
+    <string name="settings_nav_export_orux">Export to OruxMaps</string>
+    <string name="settings_nav_export_summary">Export current route to OruxMaps</string>
+    <string name="settings_live_nextcloud">Nextcloud Live Tracking</string>
+    <string name="settings_live_mmt">Map My Tracks Live Tracking</string>
+    <string name="settings_orux_integration">OruxMaps Integration</string>
+    <string name="settings_strava">Strava</string>
+    <string name="settings_advanced_debug">Debug</string>
+
 </resources>

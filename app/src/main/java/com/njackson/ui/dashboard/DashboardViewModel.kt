@@ -105,7 +105,15 @@ class DashboardViewModel(
         val running = e.getStatus() == BaseStatus.Status.STARTED
         _state.value = _state.value.copy(isRunning = running)
         if (e.getStatus() == BaseStatus.Status.STOPPED) {
-            _state.value = _state.value.copy(elapsedSec = (store.getElapsedTime() / 1000).toInt(), distance = store.getDistance())
+            val raw = store.getDistance()
+            val u = store.getMeasurementUnits()
+            val converted = when (u) {
+                Constants.IMPERIAL, Constants.RUNNING_IMPERIAL -> raw * Constants.M_TO_MILES
+                Constants.METRIC, Constants.RUNNING_METRIC -> raw * Constants.M_TO_KM
+                Constants.NAUTICAL_IMPERIAL, Constants.NAUTICAL_METRIC -> raw * Constants.M_TO_NM
+                else -> raw * Constants.M_TO_KM
+            }
+            _state.value = _state.value.copy(elapsedSec = (store.getElapsedTime() / 1000).toInt(), distance = converted, units = u)
         }
     }
 

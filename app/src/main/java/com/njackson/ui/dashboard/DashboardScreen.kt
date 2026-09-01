@@ -58,6 +58,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.njackson.R
 import com.njackson.ui.theme.GpsDisabled
 import com.njackson.ui.theme.GpsExcellent
 import com.njackson.ui.theme.GpsGood
@@ -79,7 +81,7 @@ fun DashboardScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("KayPS", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
                 navigationIcon = { Icon(Icons.AutoMirrored.Filled.DirectionsBike, contentDescription = null, modifier = Modifier.padding(start = 12.dp), tint = MaterialTheme.colorScheme.primary) },
                 actions = { TopMenu(onMenu) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface, titleContentColor = MaterialTheme.colorScheme.onSurface)
@@ -91,7 +93,7 @@ fun DashboardScreen(
                 containerColor = if (state.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
                 icon = { Icon(if (state.isRunning) Icons.Filled.Timer else Icons.AutoMirrored.Filled.DirectionsBike, contentDescription = null) },
-                text = { Text(if (state.isRunning) "STOP" else "START", style = MaterialTheme.typography.titleMedium) }
+                text = { Text(stringResource(if (state.isRunning) R.string.startbuttonfragment_stop else R.string.startbuttonfragment_start), style = MaterialTheme.typography.titleMedium) }
             )
         }
     ) { pad ->
@@ -108,9 +110,9 @@ fun DashboardScreen(
             if (!state.isRunning && state.distance == 0f && state.elapsedSec == 0) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Ready to ride", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(R.string.dashboard_ready_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.height(4.dp))
-                        Text("Tap START — GPS + sensors will appear here live on your watch & phone", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.dashboard_ready_subtitle), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -124,7 +126,15 @@ private fun TopMenu(onMenu: (String) -> Unit) {
     Box {
         IconButton(onClick = { open = true }) { Icon(Icons.Filled.MoreVert, contentDescription = "menu") }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            listOf("action_settings" to "Settings", "action_export_gpx" to "Export GPX", "action_export_tcx" to "Export TCX", "action_load_route" to "Load route", "action_reset" to "Reset", "action_share_location" to "Share location", "action_upload_strava" to "Upload Strava").forEach { (id, label) ->
+            listOf(
+                "action_settings" to stringResource(R.string.action_settings),
+                "action_export_gpx" to stringResource(R.string.action_export_gpx),
+                "action_export_tcx" to stringResource(R.string.MAIN_EXPORT_TCX),
+                "action_load_route" to stringResource(R.string.action_load_route),
+                "action_reset" to stringResource(R.string.action_reset),
+                "action_share_location" to stringResource(R.string.action_share_location),
+                "action_upload_strava" to stringResource(R.string.action_upload_strava)
+            ).forEach { (id, label) ->
                 DropdownMenuItem(text = { Text(label) }, onClick = { open = false; onMenu(id) })
             }
         }
@@ -134,18 +144,18 @@ private fun TopMenu(onMenu: (String) -> Unit) {
 @Composable
 private fun GpsRow(acc: Float) {
     val (label, color) = when {
-        acc == 0f -> "GPS OFF" to GpsDisabled
-        acc <= 4f -> "EXCELLENT" to GpsExcellent
-        acc <= 6f -> "GOOD" to GpsGood
-        acc <= 10f -> "MEDIUM" to GpsMedium
-        else -> "POOR" to GpsPoor
+        acc == 0f -> stringResource(R.string.dashboard_gps_off) to GpsDisabled
+        acc <= 4f -> stringResource(R.string.altitude_status_excellent) to GpsExcellent
+        acc <= 6f -> stringResource(R.string.altitude_status_good) to GpsGood
+        acc <= 10f -> stringResource(R.string.altitude_status_medium) to GpsMedium
+        else -> stringResource(R.string.altitude_status_poor) to GpsPoor
     }
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(8.dp))
         Text(label, style = MaterialTheme.typography.labelLarge, color = color, letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified)
         Spacer(Modifier.weight(1f))
-        Text("GPS STATUS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.altiudefragment_gpsstatus), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -160,7 +170,7 @@ private fun HeroCard(s: DashboardUiState) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Speed, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(if (isPace) "PACE" else "SPEED", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(if (isPace) R.string.dashboard_pace else R.string.dashboard_speed), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -168,11 +178,11 @@ private fun HeroCard(s: DashboardUiState) {
                     Spacer(Modifier.width(6.dp))
                     Text(unitText, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 10.dp))
                 }
-                Text("avg ${if (isPace) conv.convertSpeedToPace(s.avgSpeed) else conv.convertFloatToString(s.avgSpeed, 1)} $unitText", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.dashboard_avg_format, if (isPace) conv.convertSpeedToPace(s.avgSpeed) else conv.convertFloatToString(s.avgSpeed, 1), unitText), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(DateUtils.formatElapsedTime(s.elapsedSec.toLong()), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
-                Text("ELAPSED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.dashboard_elapsed), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -182,12 +192,12 @@ private fun HeroCard(s: DashboardUiState) {
 private fun StatsGrid(s: DashboardUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            StatCard(Modifier.weight(1f), Icons.Filled.Route, "DISTANCE", conv.convertFloatToString(s.distance, 2), Units.getDistanceUnits(s.units))
-            StatCard(Modifier.weight(1f), Icons.Filled.Landscape, "ASCENT", conv.convertFloatToString(s.ascent.toFloat(), 0), Units.getAltitudeUnits(s.units))
+            StatCard(Modifier.weight(1f), Icons.Filled.Route, stringResource(R.string.dashboard_distance), conv.convertFloatToString(s.distance, 2), Units.getDistanceUnits(s.units))
+            StatCard(Modifier.weight(1f), Icons.Filled.Landscape, stringResource(R.string.dashboard_ascent), conv.convertFloatToString(s.ascent.toFloat(), 0), Units.getAltitudeUnits(s.units))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            StatCard(Modifier.weight(1f), Icons.Filled.Timer, "TIME", DateUtils.formatElapsedTime(s.elapsedSec.toLong()), "")
-            StatCard(Modifier.weight(1f), Icons.Filled.Speed, "MAX SPEED", conv.convertFloatToString(s.maxSpeed, 1), Units.getSpeedUnits(s.units))
+            StatCard(Modifier.weight(1f), Icons.Filled.Timer, stringResource(R.string.dashboard_time), DateUtils.formatElapsedTime(s.elapsedSec.toLong()), "")
+            StatCard(Modifier.weight(1f), Icons.Filled.Speed, stringResource(R.string.dashboard_max_speed), conv.convertFloatToString(s.maxSpeed, 1), Units.getSpeedUnits(s.units))
         }
     }
 }
@@ -212,10 +222,11 @@ private fun StatCard(mod: Modifier, icon: ImageVector, label: String, value: Str
 
 @Composable
 private fun SensorRow(s: DashboardUiState) {
+    val dash = stringResource(R.string.placeholder_dash)
     val items = buildList {
-        if (s.hasHrm) add(Triple(Icons.Filled.Favorite, "HEART RATE", if (s.heartRate in 1..254) "${s.heartRate}" to "bpm" else "—" to "bpm"))
-        if (s.hasCadence) add(Triple(Icons.Filled.PedalBike, "CADENCE", if (s.cadence in 1..254) "${s.cadence}" to "rpm" else "—" to "rpm"))
-        if (s.hasPower) add(Triple(Icons.Filled.Bolt, "POWER", if (s.power >= 0) "${s.power}" to "W" else "—" to "W"))
+        if (s.hasHrm) add(Triple(Icons.Filled.Favorite, stringResource(R.string.dashboard_heart_rate), if (s.heartRate in 1..254) "${s.heartRate}" to "bpm" else dash to "bpm"))
+        if (s.hasCadence) add(Triple(Icons.Filled.PedalBike, stringResource(R.string.dashboard_cadence), if (s.cadence in 1..254) "${s.cadence}" to "rpm" else dash to "rpm"))
+        if (s.hasPower) add(Triple(Icons.Filled.Bolt, stringResource(R.string.dashboard_power), if (s.power >= 0) "${s.power}" to "W" else dash to "W"))
     }
     if (items.isEmpty()) return
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
@@ -241,21 +252,22 @@ private fun SensorRow(s: DashboardUiState) {
 @Composable
 private fun ElevationCard(values: List<Int>) {
     val hasData = values.any { it != 0 }
+    val dash = stringResource(R.string.placeholder_dash)
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Filled.Landscape, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
                 Spacer(Modifier.width(6.dp))
-                Text("ELEVATION", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.dashboard_elevation), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.weight(1f))
-                Text(if (hasData) "${values.filter { it != 0 }.minOrNull()} – ${values.filter { it != 0 }.maxOrNull()} m" else "—", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(if (hasData) "${values.filter { it != 0 }.minOrNull()} – ${values.filter { it != 0 }.maxOrNull()} m" else dash, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(10.dp))
             Box(modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                 if (hasData) {
                     ElevationSparkline(values, modifier = Modifier.fillMaxSize().padding(8.dp))
                 } else {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No elevation yet", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.dashboard_no_elevation), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
         }

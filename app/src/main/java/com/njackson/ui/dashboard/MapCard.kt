@@ -28,11 +28,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.njackson.R
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -77,13 +79,13 @@ fun MapCard(trail: List<TrailPoint>, modifier: Modifier = Modifier) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(6.dp))
-                Text("MAP", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.map_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.weight(1f))
                 Text(
                     when {
-                        !hasTrail -> "No track yet"
-                        trail.size == 1 -> "1 point"
-                        else -> "${trail.size} points"
+                        !hasTrail -> stringResource(R.string.map_no_track)
+                        trail.size == 1 -> stringResource(R.string.map_one_point)
+                        else -> stringResource(R.string.map_points, trail.size)
                     },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -94,7 +96,7 @@ fun MapCard(trail: List<TrailPoint>, modifier: Modifier = Modifier) {
                             map.controller.animateTo(GeoPoint(pt.lat, pt.lon))
                         }
                     }, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Filled.GpsFixed, contentDescription = "Center", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                        Icon(Icons.Filled.GpsFixed, contentDescription = stringResource(R.string.map_center), modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
                     }
                 }
             }
@@ -136,7 +138,7 @@ fun MapCard(trail: List<TrailPoint>, modifier: Modifier = Modifier) {
                 if (!hasTrail) {
                     Box(modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "Start an activity — breadcrumb trail will appear here",
+                            stringResource(R.string.map_placeholder),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White,
                             modifier = Modifier
