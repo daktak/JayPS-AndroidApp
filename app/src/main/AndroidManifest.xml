@@ -19,7 +19,7 @@
         </activity>
         <activity android:name=".activities.TestActivity" android:exported="false"></activity>
         <activity android:name=".activities.SettingsActivity" android:exported="true"/>
-        <activity android:name=".activities.HRMScanActivity" android:exported="true"/>
+        <activity android:name=".activities.HRMScanActivity" android:theme="@style/Theme.Kayps" android:exported="true"/>
         <service android:name=".service.MainService" android:label="MainService" android:foregroundServiceType="location|dataSync"/>
         <service android:name=".activityrecognition.ActivityRecognitionIntentService" android:label="ActivityRecognitionIntentService"/>
         <service
