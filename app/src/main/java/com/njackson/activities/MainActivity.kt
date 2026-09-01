@@ -163,8 +163,8 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
     private fun handleMenu(id: String, nav: androidx.navigation.NavController) {
         when (id) {
             "action_settings" -> nav.navigate("settings")
-            "action_export_gpx" -> if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) GpxExport.export(applicationContext, _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", "")!!, "gpx", "") else Toast.makeText(applicationContext, R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show()
-            "action_export_tcx" -> if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) GpxExport.export(applicationContext, _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", "")!!, "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking")!!) else Toast.makeText(applicationContext, R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show()
+            "action_export_gpx" -> if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false) || _sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false)) GpxExport.export(applicationContext, _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", "")!!, "gpx", "") else Toast.makeText(applicationContext, R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show()
+            "action_export_tcx" -> if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false) || _sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false)) GpxExport.export(applicationContext, _sharedPreferences.getBoolean("ADVANCED_GPX", false), _sharedPreferences.getString("EXPORT_EMAIL", "")!!, "tcx", _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking")!!) else Toast.makeText(applicationContext, R.string.alert_tracks_gpx_export, Toast.LENGTH_SHORT).show()
             "action_load_route" -> {
                 Toast.makeText(applicationContext, R.string.alert_open_gpx_file, Toast.LENGTH_SHORT).show()
                 val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "*/*"; addCategory(Intent.CATEGORY_OPENABLE) }
