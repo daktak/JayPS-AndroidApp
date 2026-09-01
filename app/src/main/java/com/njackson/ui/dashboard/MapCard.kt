@@ -1,5 +1,6 @@
 package com.njackson.ui.dashboard
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,9 +42,19 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Polyline
 
 @Composable
-fun MapCard(trail: List<TrailPoint>, modifier: Modifier = Modifier) {
+fun MapCard(trail: List<TrailPoint>, isIndoor: Boolean = false, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    if (isIndoor) {
+        Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                stringResource(R.string.indoor_mode_map_disabled),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
     val map = remember {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)

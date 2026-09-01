@@ -209,6 +209,12 @@ class DashboardViewModel(
         _state.value = cur.copy(gopros = list, lights = lights)
     }
 
-    fun setLightMode(address: String, modeName: String) { bus.post(LightControlRequest(address, modeName)) }
-    fun setGoProRecording(address: String, start: Boolean) { bus.post(GoProControlRequest(address, start)) }
+    fun setLightMode(address: String, modeName: String) {
+        if (!prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true)) return
+        bus.post(LightControlRequest(address, modeName))
+    }
+    fun setGoProRecording(address: String, start: Boolean) {
+        if (!prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true)) return
+        bus.post(GoProControlRequest(address, start))
+    }
 }

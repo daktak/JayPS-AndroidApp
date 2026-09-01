@@ -30,4 +30,6 @@ data class SettingsUiState(
     val debug: Boolean = false,
     val pressureAvailable: Boolean = false,
     val geoidHeight: Float = 0f,
+    val autostartLights: Boolean = true,
+    val autostartGoPro: Boolean = true,
 )

@@ -116,7 +116,7 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             GpsRow(state.accuracy)
-            MapCard(trail = state.trail)
+            MapCard(trail = state.trail, isIndoor = state.isIndoor)
             HeroCard(state)
             StatsGrid(state)
             SensorRow(state)

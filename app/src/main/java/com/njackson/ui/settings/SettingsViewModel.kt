@@ -66,6 +66,8 @@ class SettingsViewModel(
             debug = prefs.getBoolean("PREF_DEBUG", false),
             pressureAvailable = pressure,
             geoidHeight = prefs.getFloat("GEOID_HEIGHT", 0f),
+            autostartLights = prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true),
+            autostartGoPro = prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true),
         )
     }
 

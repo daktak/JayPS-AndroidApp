@@ -228,7 +228,9 @@ public class GPSServiceCommand implements IServiceCommand {
                 _power = pwr;
                 Log.d(TAG, "onNewBleSensorData _power:" + _power);
                 if (_indoor && !_hasSpeedSensor && _power > 0) {
-                    _advancedLocation.setSensorSpeed(estimateSpeedFromPower(_power), _time.getCurrentTimeMilliseconds());
+                    float estimatedSpeed = estimateSpeedFromPower(_power);
+                    _advancedLocation.setSensorSpeed(estimatedSpeed, _time.getCurrentTimeMilliseconds());
+                    _advancedLocation.setMaxSpeed(Math.max(estimatedSpeed, _advancedLocation.getMaxSpeed()));
                 }
                 if (!_powerOverride) {
                     _powerOverride = true;

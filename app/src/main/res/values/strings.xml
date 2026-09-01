@@ -229,6 +229,8 @@
     <string name="PREF_EXPORT_EMAIL_TITLE">Export email</string>
     <string name="PREF_EXPORT_EMAIL_SUMMARY">Email address to export your gpx file</string>
 
+    <string name="indoor_mode_map_disabled">Map disabled in indoor mode</string>
+
     <!-- Dashboard / Map (Compose) -->
     <string name="dashboard_ready_title">Ready to ride</string>
     <string name="dashboard_ready_subtitle">Tap START — GPS + sensors will appear here live on your watch &amp; phone</string>
@@ -296,5 +298,9 @@
     <string name="dashboard_no_cadence_data">No cadence yet</string>
     <string name="strava_not_set">Not set</string>
     <string name="strava_set_length">Session set (length %d)</string>
+    <string name="autostart_lights_title">Autostart lights with GPS</string>
+    <string name="autostart_lights_summary">Day Flash on Start, Off on Stop</string>
+    <string name="autostart_gopro_title">Autostart GoPro with GPS</string>
+    <string name="autostart_gopro_summary">Record on Start, Stop on Stop</string>
 
 </resources>

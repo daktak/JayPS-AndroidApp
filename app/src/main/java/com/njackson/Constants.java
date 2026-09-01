@@ -64,6 +64,8 @@ public class Constants {
     public static final String PREF_PEBBLE_HRM = "PREF_PEBBLE_HRM";
 
     public static final String PREF_INDOOR_MODE = "INDOOR_MODE";
+    public static final String PREF_AUTOSTART_LIGHTS = "AUTOSTART_LIGHTS";
+    public static final String PREF_AUTOSTART_GOPRO = "AUTOSTART_GOPRO";
 
     public static final int CODE_LOAD_GPX = 10;
 }

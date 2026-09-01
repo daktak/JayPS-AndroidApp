@@ -4,60 +4,71 @@ import java.util.ArrayList;
 
 public class SensorGraphReduce {
 
-    private ArrayList<Integer> _bins = new ArrayList<Integer>();
-    private long _lastBinChange = -1;
-    private int _binSizeMs;
-    private int _countInBin = 0;
+    private static final int GRAPH_SEGMENTS = 14;
+    private static final long ROLLING_WINDOW_MS = 300000;
 
-    public SensorGraphReduce() { this(21428); }
-    public SensorGraphReduce(int binSizeMs) { _binSizeMs = binSizeMs; }
+    private ArrayList<Long> _timestamps = new ArrayList<Long>();
+    private ArrayList<Integer> _values = new ArrayList<Integer>();
 
-    public void setBinInterval(int v) { _binSizeMs = v; }
-    public ArrayList<Integer> getCache() { return _bins; }
-    public void setCache(ArrayList<Integer> v) { _bins = v; }
+    public SensorGraphReduce() {}
 
     public void addValue(int value, long elapsedTimeMs) {
-        if (_lastBinChange == -1) {
-            _bins.add(value);
-            _lastBinChange = elapsedTimeMs;
-            _countInBin = 1;
-            return;
-        }
-        if (_lastBinChange + _binSizeMs > elapsedTimeMs) {
-            _bins.set(_bins.size() - 1, (_bins.get(_bins.size() - 1) * _countInBin + value) / (_countInBin + 1));
-            _countInBin++;
-        } else {
-            _countInBin = 1;
-            _bins.add(value);
-            _lastBinChange = elapsedTimeMs;
+        _values.add(value);
+        _timestamps.add(elapsedTimeMs);
+        purgeOldValues(elapsedTimeMs);
+    }
+
+    private void purgeOldValues(long currentTimeMs) {
+        while (!_timestamps.isEmpty()) {
+            long oldest = _timestamps.get(0);
+            if (currentTimeMs - oldest > ROLLING_WINDOW_MS) {
+                _values.remove(0);
+                _timestamps.remove(0);
+            } else {
+                break;
+            }
         }
     }
 
     public int[] getGraphData() {
-        double binsPerBar = 14.0 / (double) _bins.size();
-        int[] graphData = new int[14];
-        double binCount = binsPerBar;
-        if (binsPerBar > 1) { binsPerBar = 1; binCount = 0; }
-        int currentBinCount = 0;
-        int currentBinItems = 0;
-        int lastBin = 0;
-        for (int n = 0; n < _bins.size(); n++) {
-            currentBinCount += _bins.get(n);
-            currentBinItems++;
-            binCount += binsPerBar;
-            if ((int) binCount == lastBin + 1) {
-                graphData[lastBin] = (currentBinCount / currentBinItems);
-                lastBin++;
-                currentBinCount = 0;
-                currentBinItems = 0;
+        if (_values.isEmpty()) {
+            return new int[GRAPH_SEGMENTS];
+        }
+
+        int[] graphData = new int[GRAPH_SEGMENTS];
+        long windowMs = ROLLING_WINDOW_MS;
+        long binWidth = windowMs / GRAPH_SEGMENTS;
+
+        for (int i = 0; i < _values.size(); i++) {
+            long ts = _timestamps.get(i);
+            int binIndex = (int) (ts / binWidth);
+            if (binIndex >= GRAPH_SEGMENTS) {
+                binIndex = GRAPH_SEGMENTS - 1;
+            }
+            graphData[binIndex] += _values.get(i);
+        }
+
+        int[] counts = new int[GRAPH_SEGMENTS];
+        for (int i = 0; i < _timestamps.size(); i++) {
+            long ts = _timestamps.get(i);
+            int binIndex = (int) (ts / binWidth);
+            if (binIndex >= GRAPH_SEGMENTS) {
+                binIndex = GRAPH_SEGMENTS - 1;
+            }
+            counts[binIndex]++;
+        }
+
+        for (int i = 0; i < GRAPH_SEGMENTS; i++) {
+            if (counts[i] > 0) {
+                graphData[i] = graphData[i] / counts[i];
             }
         }
+
         return graphData;
     }
 
     public void resetData() {
-        _bins = new ArrayList<Integer>();
-        _lastBinChange = -1;
-        _countInBin = 0;
+        _timestamps = new ArrayList<Long>();
+        _values = new ArrayList<Integer>();
     }
 }
