@@ -291,5 +291,10 @@
     <string name="settings_orux_integration">OruxMaps Integration</string>
     <string name="settings_strava">Strava</string>
     <string name="settings_advanced_debug">Debug</string>
+    <string name="dashboard_no_hr_data">No heart rate yet</string>
+    <string name="dashboard_no_power_data">No power yet</string>
+    <string name="dashboard_no_cadence_data">No cadence yet</string>
+    <string name="strava_not_set">Not set</string>
+    <string name="strava_set_length">Session set (length %d)</string>
 
 </resources>

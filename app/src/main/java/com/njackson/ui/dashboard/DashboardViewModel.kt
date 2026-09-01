@@ -11,6 +11,7 @@ import com.njackson.events.GPSServiceCommand.ResetGPSState
 import com.njackson.events.GPSServiceCommand.SavedLocation
 import com.njackson.events.base.BaseStatus
 import com.njackson.state.IGPSDataStore
+import com.njackson.utils.SensorGraphReduce
 import com.squareup.otto.Bus
 import com.squareup.otto.Subscribe
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,9 @@ class DashboardViewModel(
     private var hrm = false
     private var power = false
     private var cadence = false
+    private val hrReduce = SensorGraphReduce()
+    private val powerReduce = SensorGraphReduce()
+    private val cadenceReduce = SensorGraphReduce()
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, k ->
         if (k == Constants.PREF_PEBBLE_HRM) updateHrm()
@@ -66,6 +70,22 @@ class DashboardViewModel(
                 if (appended.size > 5000) appended.takeLast(5000) else appended
             } else list
         } else cur.trail
+        val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
+        val hr = e.getHeartRate()
+        val pwr = e.getPower()
+        val cad = e.getCyclingCadence()
+        val pebbleHrm = prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)
+        if (hr in 1..254) hrReduce.addValue(hr, elapsedMs)
+        if (pwr in 1..2000) powerReduce.addValue(pwr, elapsedMs)
+        else if (pwr == 0 && power) powerReduce.addValue(0, elapsedMs)
+        if (cad in 1..254) cadenceReduce.addValue(cad, elapsedMs)
+        val newHr = if (hr in 1..254) hr else cur.heartRate
+        val newPower = when {
+            pwr in 1..2000 -> pwr
+            pwr == 0 && power -> 0
+            else -> cur.power
+        }
+        val newCad = if (cad in 1..254) cad else cur.cadence
         _state.value = cur.copy(
             speed = e.getSpeed(),
             avgSpeed = e.getAverageSpeed(),
@@ -73,16 +93,19 @@ class DashboardViewModel(
             elapsedSec = e.getElapsedTimeSeconds(),
             ascent = e.getAscent(),
             maxSpeed = e.getMaxSpeed(),
-            heartRate = e.getHeartRate(),
-            power = e.getPower(),
-            cadence = e.getCyclingCadence(),
+            heartRate = newHr,
+            power = newPower,
+            cadence = newCad,
             accuracy = e.getAccuracy(),
             units = e.getUnits(),
             trail = newTrail,
+            hrGraph = hrReduce.getGraphData().toList(),
+            powerGraph = powerReduce.getGraphData().toList(),
+            cadenceGraph = cadenceReduce.getGraphData().toList(),
         )
-        if (e.getHeartRate() in 1..254) hrm = true
-        if (e.getPower() >= 0) power = true
-        if (e.getCyclingCadence() in 1..254) cadence = true
+        if (hr in 1..254) hrm = true
+        if (pwr in 1..2000) power = true
+        if (cad in 1..254) cadence = true
         updateHrm()
     }
 
@@ -98,6 +121,7 @@ class DashboardViewModel(
 
     @Subscribe fun onResetGPSState(@Suppress("UNUSED_PARAMETER") e: ResetGPSState) {
         hrm = false; power = false; cadence = false
+        hrReduce.resetData(); powerReduce.resetData(); cadenceReduce.resetData()
         _state.value = DashboardUiState(units = store.getMeasurementUnits())
     }
 
@@ -119,8 +143,12 @@ class DashboardViewModel(
 
     @Subscribe fun onBle(e: BleSensorData) {
         when (e.getType()) {
-            BleSensorData.SENSOR_HRM -> hrm = true
-            BleSensorData.SENSOR_POWER -> power = true
+            BleSensorData.SENSOR_HRM -> {
+                if (!prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)) hrm = true
+            }
+            BleSensorData.SENSOR_POWER -> {
+                if (e.getPower() > 0) power = true
+            }
             BleSensorData.SENSOR_CSC_CADENCE, BleSensorData.SENSOR_RSC -> cadence = true
         }
         updateHrm()

@@ -48,6 +48,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -258,10 +260,11 @@ private fun OruxGroup(nav: NavController, vm: SettingsViewModel) {
 private fun StravaGroup(nav: NavController, vm: SettingsViewModel) {
     val s by vm.state.collectAsState()
     var open by remember { mutableStateOf(false) }
+    val summary = if (s.stravaSession.isEmpty()) stringResource(R.string.strava_not_set) else stringResource(R.string.strava_set_length, s.stravaSession.length)
     SettingsScaffold(stringResource(R.string.settings_strava), nav) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { GroupCard(stringResource(R.string.settings_strava), Icons.Filled.Download) {
-                EditRow(stringResource(R.string.PREF_STRAVA_SESSION_TITLE), if (s.stravaSession.isEmpty()) "Not set" else "Session set (length ${s.stravaSession.length})") { vm.putString("STRAVA_SESSION", it) }
+                EditRowWithSummary(title = stringResource(R.string.PREF_STRAVA_SESSION_TITLE), summary = summary, value = s.stravaSession, onSave = { vm.putString("STRAVA_SESSION", it) })
                 ClickRow(stringResource(R.string.STRAVA_AUTO_TITLE), if (s.stravaAuto == "disable") "Disable" else "At the end of the track") { open = true }
             } }
         }
@@ -335,6 +338,21 @@ private fun EditRow(title: String, value: String, onSave: (String) -> Unit) {
     ClickRow(title, value, { text = value; open = true })
     if (open) {
         AlertDialog(onDismissRequest = { open = false }, title = { Text(title) }, text = { OutlinedTextField(value = text, onValueChange = { text = it }, modifier = Modifier.fillMaxWidth()) }, confirmButton = { TextButton(onClick = { open = false; onSave(text) }) { Text(stringResource(R.string.dialog_ok)) } }, dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.dialog_cancel)) } })
+    }
+}
+
+@Composable
+private fun EditRowWithSummary(title: String, summary: String, value: String, onSave: (String) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    var text by remember { mutableStateOf(value) }
+    var reveal by remember { mutableStateOf(false) }
+    ClickRow(title, summary, { text = value; reveal = false; open = true })
+    if (open) {
+        AlertDialog(onDismissRequest = { open = false }, title = { Text(title) }, text = {
+            OutlinedTextField(value = text, onValueChange = { text = it }, modifier = Modifier.fillMaxWidth(), visualTransformation = if (reveal) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = {
+                IconButton(onClick = { reveal = !reveal }) { Icon(if (reveal) Icons.Filled.Bluetooth else Icons.Filled.Download, contentDescription = null) }
+            })
+        }, confirmButton = { TextButton(onClick = { open = false; onSave(text) }) { Text(stringResource(R.string.dialog_ok)) } }, dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.dialog_cancel)) } })
     }
 }
 

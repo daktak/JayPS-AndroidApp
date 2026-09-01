@@ -18,4 +18,7 @@ data class DashboardUiState(
     val hasPower: Boolean = false,
     val hasCadence: Boolean = false,
     val trail: List<TrailPoint> = emptyList(),
+    val hrGraph: List<Int> = List(14) { 0 },
+    val powerGraph: List<Int> = List(14) { 0 },
+    val cadenceGraph: List<Int> = List(14) { 0 },
 )

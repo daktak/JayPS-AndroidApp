@@ -187,20 +187,22 @@ public class GPSServiceCommand implements IServiceCommand {
     public void onNewBleSensorData(BleSensorData event) {
         switch (event.getType()) {
             case BleSensorData.SENSOR_HRM:
+                int hr = event.getHeartRate();
+                if (hr < 1 || hr > 254) break;
                 if ("pebble".equals(event.getBleAddress())) {
-                    _heartRate = event.getHeartRate();
+                    _heartRate = hr;
                     _heartRateFromPebble = true;
                 } else if (!_sharedPreferences.getBoolean(Constants.PREF_PEBBLE_HRM, false)) {
-                    // Pebble HRM not selected: use the BLE sensor HRM
-                    _heartRate = event.getHeartRate();
+                    _heartRate = hr;
                     _heartRateFromPebble = false;
                 }
-                // PREF_PEBBLE_HRM selected: the Pebble HR takes precedence, ignore the BLE sensor HRM
-                // (a strap with poor contact sends 0 and would otherwise clobber the Pebble HR)
+                // Pebble priority: ignore BLE HR when pebble enabled; ignore 0/invalid
                 Log.d(TAG, "onNewBleSensorData _heartRate:" + _heartRate + " fromPebble:" + _heartRateFromPebble);
                 break;
             case BleSensorData.SENSOR_CSC_CADENCE:
-                _cyclingCadence = event.getCyclingCadence();
+                int cad = event.getCyclingCadence();
+                if (cad < 1 || cad > 254) break;
+                _cyclingCadence = cad;
                 Log.d(TAG, "onNewBleSensorData _cadence:" + _cyclingCadence);
                 break;
             case BleSensorData.SENSOR_CSC_WHEEL_RPM:
@@ -221,13 +223,14 @@ public class GPSServiceCommand implements IServiceCommand {
                 Log.d(TAG, "onNewBleSensorData _runningCadence:" + _runningCadence);
                 break;
             case BleSensorData.SENSOR_POWER:
-                _power = event.getPower();
+                int pwr = event.getPower();
+                if (pwr < 1 || pwr > 2000) break;
+                _power = pwr;
                 Log.d(TAG, "onNewBleSensorData _power:" + _power);
                 if (_indoor && !_hasSpeedSensor && _power > 0) {
-                    // no wheel sensor: estimate speed from power (aero + rolling model)
                     _advancedLocation.setSensorSpeed(estimateSpeedFromPower(_power), _time.getCurrentTimeMilliseconds());
                 }
-                if (!_powerOverride && _power >= 0) {
+                if (!_powerOverride) {
                     _powerOverride = true;
                     _refresh_interval = Math.min(_refresh_interval, 1000);
                     applySaveMode();

@@ -26,6 +26,9 @@ internal fun putInt8(d: ByteArray, i: Int, v: Int) {
     if (v < 0) d[i + 1] = (d[i + 1] + 128).toByte()
 }
 
+private var lastWatchHr: Int = 255
+private var lastWatchCad: Int = 255
+
 /**
  * Builds the AppMessage dictionary sent to the pebblebike watchface for a location update.
  * The byte layout (BYTE_* offsets, uint8/int16 packing) MUST stay identical to
@@ -90,6 +93,7 @@ fun buildLocationDictionary(
         locationDataVersion = Constants.PEBBLE_LOCATION_DATA_V3
     }
 
+    if (!serviceRunning) { lastWatchHr = 255; lastWatchCad = 255 }
     val data = ByteArray(33)
 
     data[BYTE_SETTINGS] = ((event.units % 8) shl POS_UNITS).toByte()
@@ -116,13 +120,19 @@ fun buildLocationDictionary(
     putUInt8(data, BYTE_BEARING, (event.bearing / 360 * 256).toInt())
 
     if (locationDataVersion >= Constants.PEBBLE_LOCATION_DATA_V3) {
-        // When the HR came from the watch's own sensor, don't echo it back (255 = no HR).
-        if (event.heartRateFromPebble) {
-            putUInt8(data, BYTE_HEARTRATE, 255)
-        } else {
-            putUInt8(data, BYTE_HEARTRATE, event.heartRate)
+        val hrToSend = when {
+            event.heartRate in 1..254 -> { lastWatchHr = event.heartRate; event.heartRate }
+            lastWatchHr in 1..254 -> lastWatchHr
+            else -> 255
         }
-        putUInt8(data, BYTE_CADENCE, event.cyclingCadence)
+        putUInt8(data, BYTE_HEARTRATE, hrToSend)
+        val cadToSend = when {
+            event.cyclingCadence in 1..254 -> { lastWatchCad = event.cyclingCadence; event.cyclingCadence }
+            event.cyclingCadence == 0 && event.speed < 0.5f -> 0
+            lastWatchCad in 1..254 -> lastWatchCad
+            else -> 255
+        }
+        if (cadToSend == 0) putUInt8(data, BYTE_CADENCE, 0) else putUInt8(data, BYTE_CADENCE, cadToSend)
     } else if (event.cyclingCadence < 255) {
         // On V2 the HR byte is reused for cadence; never overwrite it with the echoed HR.
         putUInt8(data, BYTE_HEARTRATE, event.cyclingCadence)

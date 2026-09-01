@@ -106,6 +106,9 @@ fun DashboardScreen(
             HeroCard(state)
             StatsGrid(state)
             SensorRow(state)
+            if (state.hasHrm) SensorGraphCard(title = stringResource(R.string.dashboard_heart_rate), graph = state.hrGraph, current = if (state.heartRate in 1..254) state.heartRate else null, unit = "bpm", icon = Icons.Filled.Favorite, color = MaterialTheme.colorScheme.error, emptyText = stringResource(R.string.dashboard_no_hr_data), validRange = 1..254)
+            if (state.hasPower) SensorGraphCard(title = stringResource(R.string.dashboard_power), graph = state.powerGraph, current = if (state.power >= 0) state.power else null, unit = "W", icon = Icons.Filled.Bolt, color = MaterialTheme.colorScheme.secondary, emptyText = stringResource(R.string.dashboard_no_power_data), validRange = 0..2000)
+            if (state.hasCadence) SensorGraphCard(title = stringResource(R.string.dashboard_cadence), graph = state.cadenceGraph, current = if (state.cadence in 1..254) state.cadence else null, unit = "rpm", icon = Icons.Filled.PedalBike, color = MaterialTheme.colorScheme.tertiary, emptyText = stringResource(R.string.dashboard_no_cadence_data), validRange = 1..254)
             ElevationCard(state.altitudes)
             if (!state.isRunning && state.distance == 0f && state.elapsedSec == 0) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
@@ -250,6 +253,34 @@ private fun SensorRow(s: DashboardUiState) {
 }
 
 @Composable
+private fun SensorGraphCard(title: String, graph: List<Int>, current: Int?, unit: String, icon: ImageVector, color: Color, emptyText: String, validRange: IntRange) {
+    val filtered = graph.filter { it in validRange }
+    val hasData = filtered.isNotEmpty()
+    val dash = stringResource(R.string.placeholder_dash)
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = color)
+                Spacer(Modifier.width(6.dp))
+                Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.width(8.dp))
+                if (current != null) Text("$current $unit", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(Modifier.weight(1f))
+                Text(if (hasData) "${filtered.minOrNull()} – ${filtered.maxOrNull()} $unit" else dash, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(Modifier.height(10.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+                if (hasData) {
+                    TimeSeriesSparkline(values = graph, color = color, validRange = validRange, modifier = Modifier.fillMaxSize().padding(8.dp))
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(emptyText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ElevationCard(values: List<Int>) {
     val hasData = values.any { it != 0 }
     val dash = stringResource(R.string.placeholder_dash)
@@ -265,7 +296,7 @@ private fun ElevationCard(values: List<Int>) {
             Spacer(Modifier.height(10.dp))
             Box(modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                 if (hasData) {
-                    ElevationSparkline(values, modifier = Modifier.fillMaxSize().padding(8.dp))
+                    TimeSeriesSparkline(values = values, color = MaterialTheme.colorScheme.primary, validRange = 1..99999, modifier = Modifier.fillMaxSize().padding(8.dp))
                 } else {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.dashboard_no_elevation), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
@@ -275,20 +306,19 @@ private fun ElevationCard(values: List<Int>) {
 }
 
 @Composable
-private fun ElevationSparkline(values: List<Int>, modifier: Modifier = Modifier) {
-    val filtered = values.filter { it != 0 }
+private fun TimeSeriesSparkline(values: List<Int>, color: Color, validRange: IntRange, modifier: Modifier = Modifier) {
+    val filtered = values.filter { it in validRange }
     if (filtered.isEmpty()) return
     val min = filtered.minOrNull()!!.toFloat()
     val max = filtered.maxOrNull()!!.toFloat()
     val range = (max - min).takeIf { it != 0f } ?: 1f
-    val primary = MaterialTheme.colorScheme.primary
-    val fill = Brush.verticalGradient(listOf(primary.copy(alpha = 0.35f), primary.copy(alpha = 0.02f)))
+    val fill = Brush.verticalGradient(listOf(color.copy(alpha = 0.35f), color.copy(alpha = 0.02f)))
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         val step = w / (values.size - 1).coerceAtLeast(1)
         val pts = values.mapIndexed { i, v ->
-            val norm = if (v == 0) 0.5f else (v - min) / range
+            val norm = if (v !in validRange) 0.5f else (v - min) / range
             androidx.compose.ui.geometry.Offset(i * step, h - norm * h * 0.85f - h * 0.07f)
         }
         val path = Path().apply {
@@ -307,7 +337,12 @@ private fun ElevationSparkline(values: List<Int>, modifier: Modifier = Modifier)
             close()
         }
         drawPath(fillPath, brush = fill)
-        drawPath(path, color = primary, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
-        pts.filterIndexed { i, _ -> values[i] != 0 }.forEach { drawCircle(color = primary, radius = 3.dp.toPx(), center = it) }
+        drawPath(path, color = color, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
+        pts.filterIndexed { i, _ -> values[i] in validRange }.forEach { drawCircle(color = color, radius = 3.dp.toPx(), center = it) }
     }
+}
+
+@Composable
+private fun ElevationSparkline(values: List<Int>, modifier: Modifier = Modifier) {
+    TimeSeriesSparkline(values = values, color = MaterialTheme.colorScheme.primary, validRange = 1..99999, modifier = modifier)
 }
