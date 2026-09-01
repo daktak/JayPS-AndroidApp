@@ -1,7 +1,9 @@
 package com.njackson.ui.settings
+import android.app.Activity
 
 import android.content.Intent
 import android.net.Uri
+import de.cketti.library.changelog.ChangeLog
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -291,6 +293,7 @@ private fun AboutGroup(nav: NavController, vm: SettingsViewModel) {
             item { GroupCard(stringResource(R.string.settings_about_title), Icons.Filled.Info) {
                 ClickRow(stringResource(R.string.PREF_ABOUT_TITLE), stringResource(R.string.PREF_ABOUT_URL)) { openUrl(ctx, aboutUrl) }
                 ClickRow(stringResource(R.string.PREF_PEBBLE_STORE), stringResource(R.string.PREF_PEBBLE_STORE_SUMMARY)) { openUrl(ctx, pebbleUrl) }
+                ClickRow(stringResource(R.string.PREF_CHANGE_LOG_TITLE), stringResource(R.string.PREF_CHANGE_LOG_SUMMARY)) { openChangeLogDialog(ctx) }
             } }
         }
     }
@@ -368,4 +371,10 @@ private fun unitsLabel(v: String) = when(v) {"0"->"Imperial (miles)";"1"->"Metri
 private fun refreshLabel(v: String) = when(v){"103000"->"Adaptative Normal (3s-30s)";"203000"->"Adaptative Medium";"305000"->"Adaptative Low";"1000"->"Normal (1s)";"2000"->"2s";"5000"->"5s";"10000"->"Save battery (10s)";"30000"->"Save battery (30s)";else->v}
 private fun hrmZoneLabel(v: String) = when(v){"0"->"Disable";"1"->"Vibrate at every zone change";"2"->"Vibrate entering max zone";else->v}
 private fun oruxLabel(v: String) = when(v){"disable"->"Disable";"continue"->"Continue record";"new_segment"->"Start new segment";"new_track"->"Start new track";"auto"->"Start new segment (<12h) or new track";else->v}
-private fun stravaSummary(s: SettingsUiState) = "Session " + (if (s.stravaSession.isEmpty()) "not set" else "set") + if (s.stravaAuto != "disable") " - Auto upload" else ""
+
+    private fun openChangeLogDialog(ctx: android.content.Context) {
+        val activity = ctx as? Activity ?: return
+        ChangeLog(activity).getFullLogDialog().show()
+    }
+
+    private fun stravaSummary(s: SettingsUiState) = "Session " + (if (s.stravaSession.isEmpty()) "not set" else "set") + if (s.stravaAuto != "disable") " - Auto upload" else ""

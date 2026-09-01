@@ -23,7 +23,7 @@
         <change><![CDATA[<b>Nextcloud PhoneTrack live tracking</b><br/>
             - share your live location with a Nextcloud PhoneTrack instance<br/>
             - share your tracking link]]></change>
-        <change>GoPro: start/stop recording and upload videos automatically</change>
+        <change>GoPro: start/stop recording</change>
         <change>Support for up to 6 sensors</change>
     </release>
     <release version="3.0.0" versioncode="401" >
