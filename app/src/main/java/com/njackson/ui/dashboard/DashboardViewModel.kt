@@ -37,6 +37,7 @@ class DashboardViewModel(
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, k ->
         if (k == Constants.PREF_PEBBLE_HRM) updateHrm()
         if (k == "UNITS_OF_MEASURE") _state.value = _state.value.copy(units = store.getMeasurementUnits())
+        if (k == Constants.PREF_INDOOR_MODE) _state.value = _state.value.copy(isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
     }
 
     init {
@@ -44,7 +45,8 @@ class DashboardViewModel(
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
         updateHrm()
         val u = store.getMeasurementUnits()
-        _state.value = _state.value.copy(units = u)
+        val indoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false)
+        _state.value = _state.value.copy(units = u, isIndoor = indoor)
     }
 
     override fun onCleared() {
@@ -122,7 +124,7 @@ class DashboardViewModel(
     @Subscribe fun onResetGPSState(@Suppress("UNUSED_PARAMETER") e: ResetGPSState) {
         hrm = false; power = false; cadence = false
         hrReduce.resetData(); powerReduce.resetData(); cadenceReduce.resetData()
-        _state.value = DashboardUiState(units = store.getMeasurementUnits())
+        _state.value = DashboardUiState(units = store.getMeasurementUnits(), isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
     }
 
     @Subscribe fun onGPSStatus(e: GPSStatus) {

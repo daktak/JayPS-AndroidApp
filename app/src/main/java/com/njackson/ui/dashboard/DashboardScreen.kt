@@ -109,7 +109,7 @@ fun DashboardScreen(
             if (state.hasHrm) SensorGraphCard(title = stringResource(R.string.dashboard_heart_rate), graph = state.hrGraph, current = if (state.heartRate in 1..254) state.heartRate else null, unit = "bpm", icon = Icons.Filled.Favorite, color = MaterialTheme.colorScheme.error, emptyText = stringResource(R.string.dashboard_no_hr_data), validRange = 1..254)
             if (state.hasPower) SensorGraphCard(title = stringResource(R.string.dashboard_power), graph = state.powerGraph, current = if (state.power >= 0) state.power else null, unit = "W", icon = Icons.Filled.Bolt, color = MaterialTheme.colorScheme.secondary, emptyText = stringResource(R.string.dashboard_no_power_data), validRange = 0..2000)
             if (state.hasCadence) SensorGraphCard(title = stringResource(R.string.dashboard_cadence), graph = state.cadenceGraph, current = if (state.cadence in 1..254) state.cadence else null, unit = "rpm", icon = Icons.Filled.PedalBike, color = MaterialTheme.colorScheme.tertiary, emptyText = stringResource(R.string.dashboard_no_cadence_data), validRange = 1..254)
-            ElevationCard(state.altitudes)
+            if (!state.isIndoor) ElevationCard(state.altitudes)
             if (!state.isRunning && state.distance == 0f && state.elapsedSec == 0) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {

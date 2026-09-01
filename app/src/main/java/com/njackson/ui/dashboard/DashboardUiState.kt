@@ -21,4 +21,5 @@ data class DashboardUiState(
     val hrGraph: List<Int> = List(14) { 0 },
     val powerGraph: List<Int> = List(14) { 0 },
     val cadenceGraph: List<Int> = List(14) { 0 },
+    val isIndoor: Boolean = false,
 )
