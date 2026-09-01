@@ -83,9 +83,11 @@ public class Ble implements IBle, ITimerHandler {
     private Thread serviceDiscoveryThread;
     private ConcurrentHashMap<String, BluetoothGatt> mGatts = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, BluetoothGatt> mGattsConnectionPending = new ConcurrentHashMap<>();
-    private Queue<BluetoothGattDescriptor> descriptorWriteQueue = new LinkedList<BluetoothGattDescriptor>();
-    private Queue<BluetoothGattCharacteristic> characteristicWriteQueue = new LinkedList<BluetoothGattCharacteristic>();
-    private Queue<BluetoothGattCharacteristic> readCharacteristicQueue = new LinkedList<BluetoothGattCharacteristic>();
+    private static class PendingCharacteristicWrite { BluetoothGatt gatt; BluetoothGattCharacteristic characteristic; PendingCharacteristicWrite(BluetoothGatt g, BluetoothGattCharacteristic c) { gatt=g; characteristic=c; } }
+    private static class PendingDescriptorWrite { BluetoothGatt gatt; BluetoothGattDescriptor descriptor; PendingDescriptorWrite(BluetoothGatt g, BluetoothGattDescriptor d) { gatt=g; descriptor=d; } }
+    private Queue<PendingDescriptorWrite> descriptorWriteQueue = new LinkedList<>();
+    private Queue<PendingCharacteristicWrite> characteristicWriteQueue = new LinkedList<>();
+    private Queue<PendingCharacteristicWrite> readCharacteristicQueue = new LinkedList<>();
     private boolean allwrites = false;
     private int _nbReconnect = 0;
     private ConcurrentHashMap<BluetoothGatt, Integer> light_mode  = new ConcurrentHashMap<>();
@@ -287,7 +289,7 @@ public class Ble implements IBle, ITimerHandler {
                     public void onCharacteristicRead(BluetoothGatt gatt,
                                                      BluetoothGattCharacteristic characteristic,
                                                      int status) {
-                        readCharacteristicQueue.remove();
+                        readCharacteristicQueue.poll();
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             String msg = decodeCharacteristic(gatt, characteristic);
@@ -295,8 +297,9 @@ public class Ble implements IBle, ITimerHandler {
                         } else {
                             Log.d(TAG, display(gatt, characteristic) + " onCharacteristicRead error: " + status);
                         }
-                        if (readCharacteristicQueue.size() > 0) {
-                            gatt.readCharacteristic(readCharacteristicQueue.element());
+                        if (!readCharacteristicQueue.isEmpty()) {
+                            PendingCharacteristicWrite n = readCharacteristicQueue.peek();
+                            n.gatt.readCharacteristic(n.characteristic);
                         }
                     }
 
@@ -324,17 +327,19 @@ public class Ble implements IBle, ITimerHandler {
                         } else {
                             Log.d(TAG, display(gatt) + " Callback: Error writing GATT Descriptor: " + status);
                         }
-                        descriptorWriteQueue.remove();  //pop the item that we just finishing writing
-                        //if there is more to write, do it!
-                        if (descriptorWriteQueue.size() > 0) {
+                        descriptorWriteQueue.poll();
+                        if (!descriptorWriteQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " write next descriptor");
-                            gatt.writeDescriptor(descriptorWriteQueue.element());
-                        } else if (characteristicWriteQueue.size() > 0) {
-                            Log.d(TAG, display(gatt) + " write next descriptor");
-                            gatt.writeCharacteristic(characteristicWriteQueue.element());
-                        } else if (readCharacteristicQueue.size() > 0) {
-                            Log.d(TAG, display(gatt) + " no more descriptor, next characteristic");
-                            gatt.readCharacteristic(readCharacteristicQueue.element());
+                            PendingDescriptorWrite n = descriptorWriteQueue.peek();
+                            n.gatt.writeDescriptor(n.descriptor);
+                        } else if (!characteristicWriteQueue.isEmpty()) {
+                            Log.d(TAG, display(gatt) + " write next characteristic");
+                            PendingCharacteristicWrite n = characteristicWriteQueue.peek();
+                            n.gatt.writeCharacteristic(n.characteristic);
+                        } else if (!readCharacteristicQueue.isEmpty()) {
+                            Log.d(TAG, display(gatt) + " no more descriptor, next read");
+                            PendingCharacteristicWrite n = readCharacteristicQueue.peek();
+                            n.gatt.readCharacteristic(n.characteristic);
                         }
                     }
 
@@ -345,16 +350,19 @@ public class Ble implements IBle, ITimerHandler {
                         } else {
                             Log.d(TAG, display(gatt) + " Callback: Error writing GATT Characteristic: " + status);
                         }
-                        characteristicWriteQueue.remove();  //pop the item that we just finishing writing
-                        if (descriptorWriteQueue.size() > 0) {
+                        characteristicWriteQueue.poll();
+                        if (!descriptorWriteQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " write next descriptor");
-                            gatt.writeDescriptor(descriptorWriteQueue.element());
-                        } else if (characteristicWriteQueue.size() > 0) {
-                            Log.d(TAG, display(gatt) + " write next descriptor");
-                            gatt.writeCharacteristic(characteristicWriteQueue.element());
-                        } else if (readCharacteristicQueue.size() > 0) {
-                            Log.d(TAG, display(gatt) + " no more descriptor, next characteristic");
-                            gatt.readCharacteristic(readCharacteristicQueue.element());
+                            PendingDescriptorWrite n = descriptorWriteQueue.peek();
+                            n.gatt.writeDescriptor(n.descriptor);
+                        } else if (!characteristicWriteQueue.isEmpty()) {
+                            Log.d(TAG, display(gatt) + " write next characteristic");
+                            PendingCharacteristicWrite n = characteristicWriteQueue.peek();
+                            n.gatt.writeCharacteristic(n.characteristic);
+                        } else if (!readCharacteristicQueue.isEmpty()) {
+                            Log.d(TAG, display(gatt) + " no more descriptor, next read");
+                            PendingCharacteristicWrite n = readCharacteristicQueue.peek();
+                            n.gatt.readCharacteristic(n.characteristic);
                         }
                     }
 
@@ -432,7 +440,7 @@ public class Ble implements IBle, ITimerHandler {
                 if ((newMode==0)||current_mode.equals(0)) {
                     Log.i(TAG, String.format("Setting light mode %d",newMode));
                     gattChar.setValue(newMode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                    characteristicWriteQueue.add(gattChar);
+                    characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
                 }
             }
         }
@@ -465,10 +473,10 @@ public class Ble implements IBle, ITimerHandler {
                     if (characteristicWriteQueue.isEmpty()) {
                         gatt.writeCharacteristic(gattChar);
                     } else {
-                        characteristicWriteQueue.add(gattChar);
+                        characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
                     }
                 } else {
-                    characteristicWriteQueue.add(gattChar);
+                    characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
                 }
                 light_mode.put(gatt, newMode);
                 postLightState(gatt);
@@ -908,12 +916,12 @@ public class Ble implements IBle, ITimerHandler {
                     }
                 }
                 if (UUID_MODEL_NUMBER.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                    readCharacteristicQueue.add(gattCharacteristic);
+                    readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, gattCharacteristic));
                 }
             }
         }
         if (!readCharacteristicQueue.isEmpty() && descriptorWriteQueue.isEmpty() && characteristicWriteQueue.isEmpty()) {
-            try { gatt.readCharacteristic(readCharacteristicQueue.element()); } catch (Exception e) { Log.w(TAG, "read model failed "+e); }
+            try { PendingCharacteristicWrite r = readCharacteristicQueue.peek(); r.gatt.readCharacteristic(r.characteristic); } catch (Exception e) { Log.w(TAG, "read model failed "+e); }
         }
         try { postLightState(gatt); } catch (Exception e) {}
         try { if (gatt.getDevice().getName() != null && gatt.getDevice().getName().startsWith("GoPro")) postGoProState(gatt); } catch (Exception e) {}
@@ -979,8 +987,7 @@ public class Ble implements IBle, ITimerHandler {
     }
 
     public void writeGattDescriptor(BluetoothGatt gatt, BluetoothGattDescriptor d){
-        //put the descriptor into the write queue
-        descriptorWriteQueue.add(d);
+        descriptorWriteQueue.add(new PendingDescriptorWrite(gatt, d));
         //if there is only 1 item in the queue, then write it.  If more than 1, we handle asynchronously in the callback above
 //        if(descriptorWriteQueue.size() == 1) {
 //            gatt.writeDescriptor(d);
@@ -1026,10 +1033,12 @@ public class Ble implements IBle, ITimerHandler {
         setGoProRecording(gatt, status);
         Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
         Log.d(TAG, "characteristicWriteQueue.size=" + characteristicWriteQueue.size());
-        if (characteristicWriteQueue.size() > 0) {
-            gatt.writeCharacteristic(characteristicWriteQueue.element());
-        } else if (descriptorWriteQueue.size() > 0) {
-            gatt.writeDescriptor(descriptorWriteQueue.element());
+        if (!characteristicWriteQueue.isEmpty()) {
+            PendingCharacteristicWrite w = characteristicWriteQueue.peek();
+            w.gatt.writeCharacteristic(w.characteristic);
+        } else if (!descriptorWriteQueue.isEmpty()) {
+            PendingDescriptorWrite d = descriptorWriteQueue.peek();
+            d.gatt.writeDescriptor(d.descriptor);
         }
     }
 
@@ -1063,7 +1072,7 @@ public class Ble implements IBle, ITimerHandler {
 	    if (gattChar != null) {
                 Log.i(TAG, "Setting GoPro "+gopro_on);
                 gattChar.setValue(newMode);
-                characteristicWriteQueue.add(gattChar);
+                characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
                 goproRecording.put(gatt.getDevice().getAddress(), gopro_on);
                 // keep mode as last known, default Video
                 if (!goproMode.containsKey(gatt.getDevice().getAddress())) goproMode.put(gatt.getDevice().getAddress(), "Video");
