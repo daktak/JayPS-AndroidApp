@@ -12,6 +12,16 @@ data class LightInfo(
     val battery: Int,
 )
 
+data class GoProInfo(
+    val address: String,
+    val name: String,
+    val model: String,
+    val modeName: String,
+    val isRecording: Boolean,
+    val battery: Int,
+    val connected: Boolean,
+)
+
 data class DashboardUiState(
     val speed: Float = 0f,
     val avgSpeed: Float = 0f,
@@ -35,4 +45,5 @@ data class DashboardUiState(
     val cadenceGraph: List<Int> = List(14) { 0 },
     val isIndoor: Boolean = false,
     val lights: List<LightInfo> = emptyList(),
+    val gopros: List<GoProInfo> = emptyList(),
 )

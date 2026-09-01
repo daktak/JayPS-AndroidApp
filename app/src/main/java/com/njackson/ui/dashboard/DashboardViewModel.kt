@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import com.njackson.Constants
 import com.njackson.events.BleServiceCommand.BleSensorData
+import com.njackson.events.BleServiceCommand.GoProState
+import com.njackson.events.BleServiceCommand.GoProControlRequest
 import com.njackson.events.BleServiceCommand.LightControlRequest
 import com.njackson.events.BleServiceCommand.LightState
 import com.njackson.events.GPSServiceCommand.GPSStatus
@@ -159,6 +161,8 @@ class DashboardViewModel(
     }
 
     @Subscribe fun onLightState(e: LightState) {
+        // Guard: GoPro must never appear as light (legacy phantom from before service guard)
+        if (e.getName().startsWith("GoPro") || e.getModel().contains("GoPro")) return
         val cur = _state.value
         val list = cur.lights.toMutableList()
         val idx = list.indexOfFirst { it.address == e.getAddress() }
@@ -181,5 +185,30 @@ class DashboardViewModel(
         _state.value = cur.copy(lights = list)
     }
 
+    @Subscribe fun onGoProState(e: GoProState) {
+        val cur = _state.value
+        val list = cur.gopros.toMutableList()
+        val idx = list.indexOfFirst { it.address == e.getAddress() }
+        val info = GoProInfo(
+            address = e.getAddress(),
+            name = e.getName(),
+            model = e.getModel(),
+            modeName = e.getModeName() ?: "Video",
+            isRecording = e.isRecording(),
+            battery = e.getBattery(),
+            connected = e.isConnected(),
+        )
+        if (e.isConnected()) {
+            if (idx >= 0) list[idx] = info else list.add(info)
+        } else {
+            if (idx >= 0) list.removeAt(idx)
+        }
+        // GoPro was previously mis-posted as light (service guard) - clean phantom light card
+        val lights = cur.lights.toMutableList()
+        lights.removeAll { it.address == e.getAddress() }
+        _state.value = cur.copy(gopros = list, lights = lights)
+    }
+
     fun setLightMode(address: String, modeName: String) { bus.post(LightControlRequest(address, modeName)) }
+    fun setGoProRecording(address: String, start: Boolean) { bus.post(GoProControlRequest(address, start)) }
 }

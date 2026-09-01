@@ -24,13 +24,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PedalBike
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Route
@@ -86,6 +89,7 @@ fun DashboardScreen(
     onStartStop: () -> Unit,
     onMenu: (String) -> Unit,
     onLightMode: (String, String) -> Unit = { _, _ -> },
+    onGoProShutter: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -122,6 +126,9 @@ fun DashboardScreen(
             if (!state.isIndoor) ElevationCard(state.altitudes)
             state.lights.forEach { light ->
                 LightCard(light = light, onModeSelected = { mode -> onLightMode(light.address, mode) }, onOff = { onLightMode(light.address, "Off") })
+            }
+            state.gopros.forEach { gopro ->
+                GoProCard(gopro = gopro, onShutter = { start -> onGoProShutter(gopro.address, start) })
             }
             if (!state.isRunning && state.distance == 0f && state.elapsedSec == 0) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
@@ -325,6 +332,55 @@ private fun LightCard(light: LightInfo, onModeSelected: (String) -> Unit, onOff:
                 Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Off")
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoProCard(gopro: GoProInfo, onShutter: (Boolean) -> Unit) {
+    val isPhoto = gopro.modeName.equals("Photo", ignoreCase = true)
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(6.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(gopro.name.ifEmpty { gopro.address }, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                    Text("${gopro.model} • ${gopro.address.takeLast(5)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(if (gopro.connected) GpsExcellent else GpsDisabled))
+                Spacer(Modifier.width(8.dp))
+                if (gopro.battery >= 0) {
+                    Icon(Icons.Filled.BatteryChargingFull, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.width(4.dp))
+                    Text("${gopro.battery}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Text("Mode: ${gopro.modeName.ifEmpty { "Video" }}${if (gopro.isRecording) " • Recording" else ""}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Button(
+                onClick = { onShutter(!gopro.isRecording) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = if (gopro.isRecording) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = Color.White) else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                enabled = gopro.connected
+            ) {
+                Icon(
+                    when {
+                        gopro.isRecording -> Icons.Filled.Stop
+                        isPhoto -> Icons.Filled.CameraAlt
+                        else -> Icons.Filled.PlayArrow
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    when {
+                        gopro.isRecording -> "Stop"
+                        isPhoto -> "Take Photo"
+                        else -> "Record"
+                    }
+                )
             }
         }
     }

@@ -19,6 +19,8 @@ import android.util.Log;
 
 import com.njackson.application.IInjectionContainer;
 import com.njackson.events.BleServiceCommand.BleSensorData;
+import com.njackson.events.BleServiceCommand.GoProControlRequest;
+import com.njackson.events.BleServiceCommand.GoProState;
 import com.njackson.events.BleServiceCommand.LightControlRequest;
 import com.njackson.events.BleServiceCommand.LightState;
 import com.njackson.utils.time.ITimer;
@@ -61,6 +63,8 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_LIGHT_MODE_SERVICE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE);
     public final static UUID UUID_GOPRO_SERVICE = UUID.fromString(BLESampleGattAttributes.GOPRO_SERVICE);
     public final static UUID UUID_GOPRO_COMMAND = UUID.fromString(BLESampleGattAttributes.GOPRO_COMMAND);
+    public final static UUID UUID_GOPRO_QUERY = UUID.fromString("b5f90076-aa8d-11e3-9046-0002a5d5c51b");
+    public final static UUID UUID_GOPRO_RESPONSE = UUID.fromString("b5f90073-aa8d-11e3-9046-0002a5d5c51b");
     public final static UUID UUID_MODEL_NUMBER = UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_DEVICE_INFO_SERVICE = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
 
@@ -87,6 +91,8 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<BluetoothGatt, Integer> light_mode  = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, String> deviceModels = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> deviceBattery = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> goproRecording = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, String> goproMode = new ConcurrentHashMap<>();
     private Set<String> _ble_addresses;
 
     public Ble(Context context) {
@@ -254,10 +260,10 @@ public class Ble implements IBle, ITimerHandler {
 
                         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                             if (debug) Log.i(TAG, display(gatt) + " Disconnected from GATT server.");
-                            try { postLightState(gatt); } catch (Exception e) {}
+                            try { postLightState(gatt); postGoProState(gatt); } catch (Exception e) {}
                             gatt.close();
                             mGatts.remove(gatt.getDevice().getAddress());
-                            try { postLightState(gatt); } catch (Exception e) {}
+                            try { postLightState(gatt); postGoProState(gatt); } catch (Exception e) {}
                             if (_bleStarted) {
                                 reconnectLater(gatt);
                             }
@@ -472,6 +478,8 @@ public class Ble implements IBle, ITimerHandler {
 
     private void postLightState(BluetoothGatt gatt) {
         if (_bus == null || gatt == null) return;
+        // only lights have 71261000 service - GoPro/HRM must not appear as light card
+        if (gatt.getService(UUID_LIGHT_MODE_SERVICE) == null) return;
         String addr = gatt.getDevice().getAddress();
         String name = "";
         try { name = gatt.getDevice().getName(); } catch (Exception e) {}
@@ -501,8 +509,37 @@ public class Ble implements IBle, ITimerHandler {
         } catch (Exception e) { Log.w(TAG, "postLightState failed "+e); }
     }
 
+    private void postGoProState(BluetoothGatt gatt) {
+        if (_bus == null || gatt == null) return;
+        String addr = gatt.getDevice().getAddress();
+        String name = "";
+        try { name = gatt.getDevice().getName(); } catch (Exception e) {}
+        if (name == null) name = addr;
+        if (!name.startsWith("GoPro")) return;
+        String model = deviceModels.get(addr);
+        if (model == null) model = name;
+        int batt = deviceBattery.get(addr) != null ? deviceBattery.get(addr) : -1;
+        boolean rec = goproRecording.get(addr) != null ? goproRecording.get(addr) : false;
+        String mode = goproMode.get(addr);
+        if (mode == null) mode = "Video";
+        boolean connected = mGatts.containsKey(addr);
+        try { _bus.post(new GoProState(addr, name, model, mode, rec, batt, connected)); } catch (Exception e) { Log.w(TAG, "postGoProState failed "+e); }
+    }
+
     @Subscribe
     public void onLightControl(LightControlRequest req) { setLightMode(req.getAddress(), req.getModeName()); }
+
+    @Subscribe
+    public void onGoProControl(GoProControlRequest req) {
+        BluetoothGatt gatt = mGatts.get(req.getAddress());
+        if (gatt == null) gatt = mGattsConnectionPending.get(req.getAddress());
+        if (gatt != null) {
+            setGoProRecording(gatt, req.isStart());
+            // optimistic update
+            goproRecording.put(req.getAddress(), req.isStart());
+            postGoProState(gatt);
+        }
+    }
 
     public void disconnectAllDevices() {
         if (mBluetoothAdapter == null) {
@@ -694,6 +731,7 @@ public class Ble implements IBle, ITimerHandler {
             final int battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             deviceBattery.put(gatt.getDevice().getAddress(), battery);
             postLightState(gatt);
+            try { if (gatt.getDevice().getName() != null && gatt.getDevice().getName().startsWith("GoPro")) postGoProState(gatt); } catch (Exception e) {}
             res = String.format("Received battery: %d", battery);
         } else if (UUID_TEMPERATURE_MEASUREMENT.equals(characteristic.getUuid())) {
             int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
@@ -801,7 +839,12 @@ public class Ble implements IBle, ITimerHandler {
                 else if (low.contains("ion") || low.contains("circuit")) type = "front";
                 Log.d(TAG, "Light type inferred as " + type + " from model " + model);
                 postLightState(gatt);
+                try { if (model.contains("GoPro") || (gatt.getDevice().getName()!=null && gatt.getDevice().getName().startsWith("GoPro"))) postGoProState(gatt); } catch (Exception e) {}
             }
+        } else if (UUID_GOPRO_COMMAND.equals(characteristic.getUuid()) || UUID_GOPRO_RESPONSE.equals(characteristic.getUuid()) || UUID_GOPRO_QUERY.equals(characteristic.getUuid())) {
+            byte[] data = characteristic.getValue();
+            Log.d(TAG, "GoPro response: " + (data != null ? java.util.Arrays.toString(data) : "null"));
+            postGoProState(gatt);
         } else if (UUID_LIGHT_MODE.equals(characteristic.getUuid())) {
             int lm = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             Log.d(TAG, String.format("recieved mode %d",lm));
@@ -855,6 +898,9 @@ public class Ble implements IBle, ITimerHandler {
                         || UUID_TEMPERATURE_MEASUREMENT.equals(gattCharacteristic.getUuid())
                         || UUID_CYCLING_POWER_MEASUREMENT.equals(gattCharacteristic.getUuid())
                         || UUID_LIGHT_MODE.equals(gattCharacteristic.getUuid())
+                        || UUID_GOPRO_COMMAND.equals(gattCharacteristic.getUuid())
+                        || UUID_GOPRO_RESPONSE.equals(gattCharacteristic.getUuid())
+                        || UUID_GOPRO_QUERY.equals(gattCharacteristic.getUuid())
 
                 ) {
                     if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
@@ -870,6 +916,7 @@ public class Ble implements IBle, ITimerHandler {
             try { gatt.readCharacteristic(readCharacteristicQueue.element()); } catch (Exception e) { Log.w(TAG, "read model failed "+e); }
         }
         try { postLightState(gatt); } catch (Exception e) {}
+        try { if (gatt.getDevice().getName() != null && gatt.getDevice().getName().startsWith("GoPro")) postGoProState(gatt); } catch (Exception e) {}
         start_stop_handler(gatt, true);
         allwrites = true;
     }
@@ -1017,6 +1064,10 @@ public class Ble implements IBle, ITimerHandler {
                 Log.i(TAG, "Setting GoPro "+gopro_on);
                 gattChar.setValue(newMode);
                 characteristicWriteQueue.add(gattChar);
+                goproRecording.put(gatt.getDevice().getAddress(), gopro_on);
+                // keep mode as last known, default Video
+                if (!goproMode.containsKey(gatt.getDevice().getAddress())) goproMode.put(gatt.getDevice().getAddress(), "Video");
+                postGoProState(gatt);
             }
         }
     }
