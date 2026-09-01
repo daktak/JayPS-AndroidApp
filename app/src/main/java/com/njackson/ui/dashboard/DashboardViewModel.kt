@@ -57,7 +57,16 @@ class DashboardViewModel(
     @Subscribe fun onSavedLocation(e: SavedLocation) { applyLocation(e) }
 
     private fun applyLocation(e: com.njackson.events.GPSServiceCommand.MyLocation) {
-        _state.value = _state.value.copy(
+        val cur = _state.value
+        val newTrail = if (e.getLatitude() != 0.0 || e.getLongitude() != 0.0) {
+            val pt = TrailPoint(e.getLatitude(), e.getLongitude())
+            val list = cur.trail
+            if (list.isEmpty() || distanceBetween(list.last(), pt) > 2.0) {
+                val appended = list + pt
+                if (appended.size > 5000) appended.takeLast(5000) else appended
+            } else list
+        } else cur.trail
+        _state.value = cur.copy(
             speed = e.getSpeed(),
             avgSpeed = e.getAverageSpeed(),
             distance = e.getDistance(),
@@ -69,11 +78,18 @@ class DashboardViewModel(
             cadence = e.getCyclingCadence(),
             accuracy = e.getAccuracy(),
             units = e.getUnits(),
+            trail = newTrail,
         )
         if (e.getHeartRate() in 1..254) hrm = true
         if (e.getPower() >= 0) power = true
         if (e.getCyclingCadence() in 1..254) cadence = true
         updateHrm()
+    }
+
+    private fun distanceBetween(a: TrailPoint, b: TrailPoint): Double {
+        val dLat = a.lat - b.lat
+        val dLon = a.lon - b.lon
+        return Math.sqrt(dLat * dLat + dLon * dLon) * 111000.0
     }
 
     @Subscribe fun onNewAltitude(e: NewAltitude) {

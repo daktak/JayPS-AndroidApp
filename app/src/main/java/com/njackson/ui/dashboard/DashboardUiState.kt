@@ -17,4 +17,5 @@ data class DashboardUiState(
     val hasHrm: Boolean = false,
     val hasPower: Boolean = false,
     val hasCadence: Boolean = false,
+    val trail: List<TrailPoint> = emptyList(),
 )

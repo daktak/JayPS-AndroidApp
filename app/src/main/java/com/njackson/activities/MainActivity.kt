@@ -76,6 +76,12 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         actionBar?.hide()
+        try {
+            val cfg = org.osmdroid.config.Configuration.getInstance()
+            cfg.userAgentValue = packageName
+            cfg.osmdroidBasePath = getDir("osmdroid", MODE_PRIVATE)
+            cfg.osmdroidTileCache = getDir("osmdroid/tiles", MODE_PRIVATE)
+        } catch (_: Exception) {}
         (application as PebbleBikeApplication).inject(this)
         vm = ViewModelProvider(this, object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
