@@ -27,4 +27,9 @@
         <item name="android:textSize">14dp</item>
     </style>
 
+    <style name="Theme.Kayps" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/main_background</item>
+        <item name="android:statusBarColor">@color/main_background</item>
+    </style>
+
 </resources>

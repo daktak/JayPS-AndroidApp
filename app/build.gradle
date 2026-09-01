@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
@@ -37,6 +38,13 @@ android {
         }
     }
 
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "2.3.20"
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -53,6 +61,8 @@ configurations.all {
         force 'androidx.core:core:1.13.1'
     }
 }
+
+def composeBom = "2024.09.03"
 
 dependencies {
     implementation project(':advancedlocation-library')
@@ -72,6 +82,17 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.9.1'
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.fragment:fragment:1.8.5'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.8.7'
+
+    implementation platform("androidx.compose:compose-bom:$composeBom")
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material:material-icons-extended'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
 
     // Location (Activity Recognition + FusedLocationProviderClient)
     implementation 'com.google.android.gms:play-services-location:21.3.0'
