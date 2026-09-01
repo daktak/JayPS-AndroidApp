@@ -1,5 +1,17 @@
 package com.njackson.ui.dashboard
 
+data class LightInfo(
+    val address: String,
+    val name: String,
+    val model: String,
+    val type: String,
+    val currentMode: Int,
+    val currentModeName: String,
+    val availableModes: Map<String, Int>,
+    val connected: Boolean,
+    val battery: Int,
+)
+
 data class DashboardUiState(
     val speed: Float = 0f,
     val avgSpeed: Float = 0f,
@@ -22,4 +34,5 @@ data class DashboardUiState(
     val powerGraph: List<Int> = List(14) { 0 },
     val cadenceGraph: List<Int> = List(14) { 0 },
     val isIndoor: Boolean = false,
+    val lights: List<LightInfo> = emptyList(),
 )

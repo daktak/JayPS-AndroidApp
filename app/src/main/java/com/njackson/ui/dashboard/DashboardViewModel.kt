@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import com.njackson.Constants
 import com.njackson.events.BleServiceCommand.BleSensorData
+import com.njackson.events.BleServiceCommand.LightControlRequest
+import com.njackson.events.BleServiceCommand.LightState
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.NewAltitude
 import com.njackson.events.GPSServiceCommand.NewLocation
@@ -155,4 +157,29 @@ class DashboardViewModel(
         }
         updateHrm()
     }
+
+    @Subscribe fun onLightState(e: LightState) {
+        val cur = _state.value
+        val list = cur.lights.toMutableList()
+        val idx = list.indexOfFirst { it.address == e.getAddress() }
+        val info = LightInfo(
+            address = e.getAddress(),
+            name = e.getName(),
+            model = e.getModel(),
+            type = e.getType(),
+            currentMode = e.getCurrentMode(),
+            currentModeName = e.getCurrentModeName(),
+            availableModes = e.getAvailableModes() ?: emptyMap(),
+            connected = e.isConnected(),
+            battery = e.getBattery(),
+        )
+        if (e.isConnected()) {
+            if (idx >= 0) list[idx] = info else list.add(info)
+        } else {
+            if (idx >= 0) list.removeAt(idx)
+        }
+        _state.value = cur.copy(lights = list)
+    }
+
+    fun setLightMode(address: String, modeName: String) { bus.post(LightControlRequest(address, modeName)) }
 }

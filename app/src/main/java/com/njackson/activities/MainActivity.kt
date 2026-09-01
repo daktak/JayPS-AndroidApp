@@ -131,7 +131,7 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                 NavHost(navController = nav, startDestination = "dashboard") {
                     composable("dashboard") {
                         val state by dashVm.state.collectAsState()
-                        DashboardScreen(state = state, onStartStop = { handleStartStop() }, onMenu = { id -> handleMenu(id, nav) })
+                        DashboardScreen(state = state, onStartStop = { handleStartStop() }, onMenu = { id -> handleMenu(id, nav) }, onLightMode = { addr, mode -> dashVm.setLightMode(addr, mode) })
                     }
                     composable("settings") {
                         SettingsNavHost(rootNav = nav, vm = settingsVm,

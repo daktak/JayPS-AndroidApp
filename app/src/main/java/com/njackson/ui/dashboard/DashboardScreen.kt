@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,20 +23,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
+import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Landscape
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PedalBike
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Route
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -76,6 +85,7 @@ fun DashboardScreen(
     state: DashboardUiState,
     onStartStop: () -> Unit,
     onMenu: (String) -> Unit,
+    onLightMode: (String, String) -> Unit = { _, _ -> },
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -110,6 +120,9 @@ fun DashboardScreen(
             if (state.hasPower) SensorGraphCard(title = stringResource(R.string.dashboard_power), graph = state.powerGraph, current = if (state.power >= 0) state.power else null, unit = "W", icon = Icons.Filled.Bolt, color = MaterialTheme.colorScheme.secondary, emptyText = stringResource(R.string.dashboard_no_power_data), validRange = 0..2000)
             if (state.hasCadence) SensorGraphCard(title = stringResource(R.string.dashboard_cadence), graph = state.cadenceGraph, current = if (state.cadence in 1..254) state.cadence else null, unit = "rpm", icon = Icons.Filled.PedalBike, color = MaterialTheme.colorScheme.tertiary, emptyText = stringResource(R.string.dashboard_no_cadence_data), validRange = 1..254)
             if (!state.isIndoor) ElevationCard(state.altitudes)
+            state.lights.forEach { light ->
+                LightCard(light = light, onModeSelected = { mode -> onLightMode(light.address, mode) }, onOff = { onLightMode(light.address, "Off") })
+            }
             if (!state.isRunning && state.distance == 0f && state.elapsedSec == 0) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -275,6 +288,43 @@ private fun SensorGraphCard(title: String, graph: List<Int>, current: Int?, unit
                 } else {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(emptyText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LightCard(light: LightInfo, onModeSelected: (String) -> Unit, onOff: () -> Unit) {
+    val isOff = light.currentModeName == "Off" || light.currentMode == 0
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Filled.Lightbulb, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (light.type == "rear") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(6.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(light.name.ifEmpty { light.address }, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                    Text("${light.model} • ${light.type} • ${light.address.takeLast(5)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(if (light.connected) GpsExcellent else GpsDisabled))
+                Spacer(Modifier.width(8.dp))
+                if (light.battery >= 0) {
+                    Icon(Icons.Filled.BatteryChargingFull, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.width(4.dp))
+                    Text("${light.battery}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Text("Mode: ${light.currentModeName.ifEmpty { if (isOff) "Off" else "${light.currentMode}" }}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                light.availableModes.filterKeys { it != "Off" }.toList().sortedBy { it.second }.forEach { (name, _) ->
+                    val selected = name == light.currentModeName
+                    FilterChip(selected = selected, onClick = { onModeSelected(name) }, label = { Text(name) }, leadingIcon = if (selected) { { Icon(Icons.Filled.Lightbulb, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer))
+                }
+            }
+            Button(onClick = onOff, modifier = Modifier.fillMaxWidth(), enabled = !isOff || light.availableModes.isNotEmpty(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) {
+                Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Off")
             }
         }
     }

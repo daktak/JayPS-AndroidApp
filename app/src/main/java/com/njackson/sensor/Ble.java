@@ -19,9 +19,12 @@ import android.util.Log;
 
 import com.njackson.application.IInjectionContainer;
 import com.njackson.events.BleServiceCommand.BleSensorData;
+import com.njackson.events.BleServiceCommand.LightControlRequest;
+import com.njackson.events.BleServiceCommand.LightState;
 import com.njackson.utils.time.ITimer;
 import com.njackson.utils.time.ITimerHandler;
 import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -58,6 +61,8 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_LIGHT_MODE_SERVICE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE);
     public final static UUID UUID_GOPRO_SERVICE = UUID.fromString(BLESampleGattAttributes.GOPRO_SERVICE);
     public final static UUID UUID_GOPRO_COMMAND = UUID.fromString(BLESampleGattAttributes.GOPRO_COMMAND);
+    public final static UUID UUID_MODEL_NUMBER = UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb");
+    public final static UUID UUID_DEVICE_INFO_SERVICE = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
 
     private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
 
@@ -80,6 +85,8 @@ public class Ble implements IBle, ITimerHandler {
     private boolean allwrites = false;
     private int _nbReconnect = 0;
     private ConcurrentHashMap<BluetoothGatt, Integer> light_mode  = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, String> deviceModels = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> deviceBattery = new ConcurrentHashMap<>();
     private Set<String> _ble_addresses;
 
     public Ble(Context context) {
@@ -123,6 +130,7 @@ public class Ble implements IBle, ITimerHandler {
 
         container.inject(this);
         _bus = bus;
+        try { _bus.register(this); } catch (Exception e) {}
         _bleStarted = true;
         _ble_addresses = ble_addresses;
         initialize();
@@ -135,6 +143,7 @@ public class Ble implements IBle, ITimerHandler {
     public void stop() {
         Log.d(TAG, "stop");
         _bleStarted = false;
+        try { _bus.unregister(this); } catch (Exception e) {}
         disconnectAllDevices();
 
         // Unregister broadcast listeners
@@ -245,12 +254,10 @@ public class Ble implements IBle, ITimerHandler {
 
                         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                             if (debug) Log.i(TAG, display(gatt) + " Disconnected from GATT server.");
-                            // TODO(jay) post something?
-                            //broadcastUpdate(ACTION_GATT_DISCONNECTED);
-
+                            try { postLightState(gatt); } catch (Exception e) {}
                             gatt.close();
                             mGatts.remove(gatt.getDevice().getAddress());
-                            //Log.d(TAG, "after remove, mGatts.size:" + mGatts.size());
+                            try { postLightState(gatt); } catch (Exception e) {}
                             if (_bleStarted) {
                                 reconnectLater(gatt);
                             }
@@ -384,15 +391,23 @@ public class Ble implements IBle, ITimerHandler {
                         newModeString = "Day Flash";
                         break;
                     default:
-                        return;
+                        // generic fallback for unknown Bontrager/Trek and other lights (e.g., Ion 100, Flare City)
+                        // try Day Flash first, else High
+                        newModeString = "Day Flash";
+                        break;
                 }
             }
 
             try {
                 JSONObject LIGHT_MODES_JSON = new JSONObject(BLESampleGattAttributes.LIGHT_MODES_JSON);
-                JSONObject LIGHT_MODE_JSON = (JSONObject)LIGHT_MODES_JSON.get(device);
+                JSONObject json = null;
+                if (LIGHT_MODES_JSON.has(device)) json = (JSONObject) LIGHT_MODES_JSON.get(device);
+                else if (LIGHT_MODES_JSON.has("Generic")) json = (JSONObject) LIGHT_MODES_JSON.get("Generic");
+                if (json == null) return;
+                String val = json.optString(newModeString);
+                if (val == null || val.isEmpty()) val = json.optString("High", "1");
                 try {
-                    newMode = Integer.parseInt(LIGHT_MODE_JSON.optString(newModeString).toString());
+                    newMode = Integer.parseInt(val);
                 } catch (Exception e) {
                     Log.i(TAG, "Unable to load light mode for "+device+" : "+e);
                     return;
@@ -416,6 +431,78 @@ public class Ble implements IBle, ITimerHandler {
             }
         }
     }
+
+    public void setLightMode(String address, String modeName) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setLightMode(gatt, modeName);
+    }
+
+    public void setLightMode(BluetoothGatt gatt, String modeName) {
+        String device = "";
+        try { device = gatt.getDevice().getName().toString(); } catch (Exception e) { return; }
+        try {
+            JSONObject LIGHT_MODES_JSON = new JSONObject(BLESampleGattAttributes.LIGHT_MODES_JSON);
+            JSONObject json = null;
+            if (LIGHT_MODES_JSON.has(device)) json = (JSONObject) LIGHT_MODES_JSON.get(device);
+            else if (LIGHT_MODES_JSON.has("Generic")) json = (JSONObject) LIGHT_MODES_JSON.get("Generic");
+            if (json == null) return;
+            String val = json.optString(modeName);
+            if (val == null || val.isEmpty()) return;
+            int newMode = Integer.parseInt(val);
+            BluetoothGattCharacteristic gattChar = getCharacter(gatt, UUID_LIGHT_MODE_SERVICE, UUID_LIGHT_MODE, "LIGHT MODE");
+            if (gattChar != null) {
+                Log.i(TAG, String.format("User setting light %s mode %s -> %d", device, modeName, newMode));
+                gattChar.setValue(newMode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                // immediate write if possible
+                if (descriptorWriteQueue.isEmpty() && readCharacteristicQueue.isEmpty()) {
+                    if (characteristicWriteQueue.isEmpty()) {
+                        gatt.writeCharacteristic(gattChar);
+                    } else {
+                        characteristicWriteQueue.add(gattChar);
+                    }
+                } else {
+                    characteristicWriteQueue.add(gattChar);
+                }
+                light_mode.put(gatt, newMode);
+                postLightState(gatt);
+            }
+        } catch (Exception e) { Log.w(TAG, "setLightMode string failed "+e); }
+    }
+
+    private void postLightState(BluetoothGatt gatt) {
+        if (_bus == null || gatt == null) return;
+        String addr = gatt.getDevice().getAddress();
+        String name = "";
+        try { name = gatt.getDevice().getName(); } catch (Exception e) {}
+        if (name == null) name = addr;
+        String model = deviceModels.get(addr);
+        if (model == null) model = name;
+        String type = "unknown";
+        String low = model.toLowerCase();
+        if (low.contains("flare")) type = "rear";
+        else if (low.contains("ion") || low.contains("circuit")) type = "front";
+        int cur = light_mode.get(gatt) != null ? light_mode.get(gatt) : -1;
+        String curName = "";
+        int batt = deviceBattery.get(addr) != null ? deviceBattery.get(addr) : -1;
+        try {
+            JSONObject LIGHT_MODES_JSON = new JSONObject(BLESampleGattAttributes.LIGHT_MODES_JSON);
+            JSONObject json = null;
+            if (LIGHT_MODES_JSON.has(name)) json = (JSONObject) LIGHT_MODES_JSON.get(name);
+            else if (LIGHT_MODES_JSON.has(model)) json = (JSONObject) LIGHT_MODES_JSON.get(model);
+            else if (LIGHT_MODES_JSON.has("Generic")) json = (JSONObject) LIGHT_MODES_JSON.get("Generic");
+            Map<String,Integer> map = new java.util.HashMap<>();
+            if (json != null) {
+                java.util.Iterator<String> it = json.keys();
+                while (it.hasNext()) { String k = it.next(); map.put(k, json.getInt(k)); if (json.getInt(k)==cur) curName=k; }
+            }
+            if (curName.isEmpty() && cur==0) curName="Off";
+            _bus.post(new LightState(addr, name, model, type, cur, curName, map, mGatts.containsKey(addr), batt));
+        } catch (Exception e) { Log.w(TAG, "postLightState failed "+e); }
+    }
+
+    @Subscribe
+    public void onLightControl(LightControlRequest req) { setLightMode(req.getAddress(), req.getModeName()); }
 
     public void disconnectAllDevices() {
         if (mBluetoothAdapter == null) {
@@ -605,6 +692,8 @@ public class Ble implements IBle, ITimerHandler {
             }
         } else if (UUID_BATTERY_LEVEL.equals(characteristic.getUuid())) {
             final int battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            deviceBattery.put(gatt.getDevice().getAddress(), battery);
+            postLightState(gatt);
             res = String.format("Received battery: %d", battery);
         } else if (UUID_TEMPERATURE_MEASUREMENT.equals(characteristic.getUuid())) {
             int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
@@ -700,11 +789,24 @@ public class Ble implements IBle, ITimerHandler {
             }
             res = String.format("Received power: %d", instantaneousPower);
 
+        } else if (UUID_MODEL_NUMBER.equals(characteristic.getUuid())) {
+            String model = characteristic.getStringValue(0);
+            if (model != null) {
+                model = model.trim();
+                deviceModels.put(gatt.getDevice().getAddress(), model);
+                Log.d(TAG, "Model Number: " + model + " for " + gatt.getDevice().getAddress());
+                String low = model.toLowerCase();
+                String type = "unknown";
+                if (low.contains("flare")) type = "rear";
+                else if (low.contains("ion") || low.contains("circuit")) type = "front";
+                Log.d(TAG, "Light type inferred as " + type + " from model " + model);
+                postLightState(gatt);
+            }
         } else if (UUID_LIGHT_MODE.equals(characteristic.getUuid())) {
-            //store light address and mode
             int lm = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             Log.d(TAG, String.format("recieved mode %d",lm));
             light_mode.put(gatt, lm);
+            postLightState(gatt);
             BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
             _bus.post(sensorData);
         } else {
@@ -759,8 +861,15 @@ public class Ble implements IBle, ITimerHandler {
                         setCharacteristicNotification(gatt, gattCharacteristic, true);
                     }
                 }
+                if (UUID_MODEL_NUMBER.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    readCharacteristicQueue.add(gattCharacteristic);
+                }
             }
         }
+        if (!readCharacteristicQueue.isEmpty() && descriptorWriteQueue.isEmpty() && characteristicWriteQueue.isEmpty()) {
+            try { gatt.readCharacteristic(readCharacteristicQueue.element()); } catch (Exception e) { Log.w(TAG, "read model failed "+e); }
+        }
+        try { postLightState(gatt); } catch (Exception e) {}
         start_stop_handler(gatt, true);
         allwrites = true;
     }
