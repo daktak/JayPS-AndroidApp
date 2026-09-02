@@ -93,7 +93,7 @@ fun buildLocationDictionary(
         locationDataVersion = Constants.PEBBLE_LOCATION_DATA_V3
     }
 
-    if (!serviceRunning) { lastWatchHr = 255; lastWatchCad = 255 }
+    if (!serviceRunning) { lastWatchCad = 255 }
     val data = ByteArray(33)
 
     data[BYTE_SETTINGS] = ((event.units % 8) shl POS_UNITS).toByte()

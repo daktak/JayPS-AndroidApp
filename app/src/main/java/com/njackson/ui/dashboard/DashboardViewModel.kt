@@ -80,12 +80,20 @@ class DashboardViewModel(
         val hr = e.getHeartRate()
         val pwr = e.getPower()
         val cad = e.getCyclingCadence()
-        val pebbleHrm = prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)
-        if (hr in 1..254) hrReduce.addValue(hr, elapsedMs)
-        if (pwr in 1..2000) powerReduce.addValue(pwr, elapsedMs)
-        else if (pwr == 0 && power) powerReduce.addValue(0, elapsedMs)
-        if (cad in 1..254) cadenceReduce.addValue(cad, elapsedMs)
-        val newHr = if (hr in 1..254) hr else cur.heartRate
+        val pebbleHrmEnabled = prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)
+        val hrValid = hr in 1..254
+        if (hrValid) {
+            if (pebbleHrmEnabled) {
+                if (e.getHeartRateFromPebble()) hrReduce.addValue(hr, elapsedMs)
+            } else {
+                hrReduce.addValue(hr, elapsedMs)
+            }
+        }
+        val newHr = when {
+            hrValid && pebbleHrmEnabled && e.getHeartRateFromPebble() -> hr
+            hrValid && !pebbleHrmEnabled -> hr
+            else -> cur.heartRate
+        }
         val newPower = when {
             pwr in 1..2000 -> pwr
             pwr == 0 && power -> 0
@@ -150,7 +158,19 @@ class DashboardViewModel(
     @Subscribe fun onBle(e: BleSensorData) {
         when (e.getType()) {
             BleSensorData.SENSOR_HRM -> {
-                if (!prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)) hrm = true
+                val hr = e.getHeartRate()
+                val pebbleEnabled = prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false)
+                val isPebble = e.getBleAddress() == "pebble"
+                if (hr in 1..254) {
+                    if ((pebbleEnabled && isPebble) || (!pebbleEnabled && !isPebble)) {
+                        val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
+                        hrReduce.addValue(hr, elapsedMs)
+                        _state.value = _state.value.copy(heartRate = hr, hrGraph = hrReduce.getGraphData().toList())
+                        hrm = true
+                    }
+                }
+                updateHrm()
+                return
             }
             BleSensorData.SENSOR_POWER -> {
                 if (e.getPower() > 0) power = true

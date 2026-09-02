@@ -86,14 +86,24 @@ class PebbleListenerService : BasePebbleListenerService() {
     private fun handleButtonData(button: Int) {
         Log.i(tag, "handleButtonData:$button")
         when (button) {
-            Constants.ORUXMAPS_START_RECORD_CONTINUE_PRESS -> oruxMaps.startRecordNewSegment()
-            Constants.ORUXMAPS_STOP_RECORD_PRESS -> oruxMaps.stopRecord()
+            Constants.ORUXMAPS_START_RECORD_CONTINUE_PRESS -> {
+                oruxMaps.startRecordNewSegment()
+                serviceStarter.startLocationServices()
+            }
+            Constants.ORUXMAPS_STOP_RECORD_PRESS -> {
+                oruxMaps.stopRecord()
+                serviceStarter.stopLocationServices()
+            }
             Constants.ORUXMAPS_NEW_WAYPOINT_PRESS -> oruxMaps.newWaypoint()
             Constants.STOP_PRESS -> serviceStarter.stopLocationServices()
             Constants.PLAY_PRESS -> serviceStarter.startLocationServices()
             Constants.REFRESH_PRESS -> {
                 resetSavedData()
                 bus.post(ResetGPSState())
+            }
+            else -> {
+                if (button == 1) serviceStarter.stopLocationServices()
+                else if (button == 0) serviceStarter.startLocationServices()
             }
         }
     }
