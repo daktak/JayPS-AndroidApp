@@ -1070,8 +1070,9 @@ public class Ble implements IBle, ITimerHandler {
     }
 
     public void start_stop_handler(BluetoothGatt gatt, Boolean status) {
-        setLightMode(gatt, status);
-        setGoProRecording(gatt, status);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(_context);
+        if (gatt.getService(UUID_LIGHT_MODE_SERVICE) != null && prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true)) setLightMode(gatt, status);
+        if (gatt.getService(UUID_GOPRO_SERVICE) != null && prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true)) setGoProRecording(gatt, status);
         Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
         Log.d(TAG, "characteristicWriteQueue.size=" + characteristicWriteQueue.size());
         if (!characteristicWriteQueue.isEmpty()) {
