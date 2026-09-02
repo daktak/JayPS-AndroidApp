@@ -328,7 +328,7 @@ private fun LightCard(light: LightInfo, onModeSelected: (String) -> Unit, onOff:
                     FilterChip(selected = selected, onClick = { onModeSelected(name) }, label = { Text(name) }, leadingIcon = if (selected) { { Icon(Icons.Filled.Lightbulb, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer))
                 }
             }
-            Button(onClick = onOff, modifier = Modifier.fillMaxWidth(), enabled = !isOff || light.availableModes.isNotEmpty(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) {
+            Button(onClick = onOff, modifier = Modifier.fillMaxWidth(), enabled = light.connected, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) {
                 Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Off")
