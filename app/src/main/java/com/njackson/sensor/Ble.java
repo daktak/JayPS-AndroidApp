@@ -569,13 +569,12 @@ public class Ble implements IBle, ITimerHandler {
         boolean allowLights = prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true);
         boolean allowGoPro = prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true);
         for (BluetoothGatt gatt : mGatts.values()) {
-            if (gatt.getService(UUID_GOPRO_SERVICE) != null) {
-                if (!allowGoPro) continue;
+            if (gatt.getService(UUID_GOPRO_SERVICE) != null && allowGoPro) {
                 setGoProRecording(gatt, start);
                 goproRecording.put(gatt.getDevice().getAddress(), start);
                 postGoProState(gatt);
-            } else if (gatt.getService(UUID_LIGHT_MODE_SERVICE) != null) {
-                if (!allowLights) continue;
+            }
+            if (gatt.getService(UUID_LIGHT_MODE_SERVICE) != null && allowLights) {
                 setLightMode(gatt, start);
             }
         }

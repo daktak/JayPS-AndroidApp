@@ -44,6 +44,7 @@ public class BLEServiceCommand implements IServiceCommand {
             _registrered_bus = true;
             _container = container;
             _currentStatus = BaseStatus.Status.INITIALIZED;
+            start();
         }
     }
 
@@ -83,9 +84,7 @@ public class BLEServiceCommand implements IServiceCommand {
                 }
                 break;
             case STOPPED:
-                if(_currentStatus == BaseStatus.Status.STARTED) {
-                    stop();
-                }
+                break;
         }
     }
 
