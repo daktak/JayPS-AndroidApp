@@ -134,13 +134,7 @@ class DashboardViewModel(
     @Subscribe fun onGPSStatus(e: GPSStatus) {
         val running = e.getStatus() == BaseStatus.Status.STARTED
         _state.value = _state.value.copy(isRunning = running)
-        if (e.getStatus() == BaseStatus.Status.STARTED) {
-            if (prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true)) _state.value.lights.forEach { bus.post(LightControlRequest(it.address, "Day Flash")) }
-            if (prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true)) _state.value.gopros.forEach { bus.post(GoProControlRequest(it.address, true)) }
-        }
         if (e.getStatus() == BaseStatus.Status.STOPPED) {
-            if (prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true)) _state.value.lights.forEach { bus.post(LightControlRequest(it.address, "Off")) }
-            if (prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true)) _state.value.gopros.forEach { bus.post(GoProControlRequest(it.address, false)) }
             val raw = store.getDistance()
             val u = store.getMeasurementUnits()
             val converted = when (u) {
@@ -185,7 +179,6 @@ class DashboardViewModel(
         )
         if (e.isConnected()) {
             if (idx >= 0) list[idx] = info else list.add(info)
-            if (_state.value.isRunning && prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true)) bus.post(LightControlRequest(e.getAddress(), "Day Flash"))
         } else {
             if (idx >= 0) list.removeAt(idx)
         }
@@ -207,7 +200,6 @@ class DashboardViewModel(
         )
         if (e.isConnected()) {
             if (idx >= 0) list[idx] = info else list.add(info)
-            if (_state.value.isRunning && prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true)) bus.post(GoProControlRequest(e.getAddress(), true))
         } else {
             if (idx >= 0) list.removeAt(idx)
         }

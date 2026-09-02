@@ -17,6 +17,9 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.util.Log;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import com.njackson.Constants;
 import com.njackson.application.IInjectionContainer;
 import com.njackson.events.BleServiceCommand.BleSensorData;
 import com.njackson.events.BleServiceCommand.GoProControlRequest;
@@ -557,12 +560,17 @@ public class Ble implements IBle, ITimerHandler {
         if (e.getStatus() == BaseStatus.Status.STARTED) start = true;
         else if (e.getStatus() == BaseStatus.Status.STOPPED) start = false;
         else return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(_context);
+        boolean allowLights = prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true);
+        boolean allowGoPro = prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true);
         for (BluetoothGatt gatt : mGatts.values()) {
             if (gatt.getService(UUID_GOPRO_SERVICE) != null) {
+                if (!allowGoPro) continue;
                 setGoProRecording(gatt, start);
                 goproRecording.put(gatt.getDevice().getAddress(), start);
                 postGoProState(gatt);
             } else if (gatt.getService(UUID_LIGHT_MODE_SERVICE) != null) {
+                if (!allowLights) continue;
                 setLightMode(gatt, start);
             }
         }
