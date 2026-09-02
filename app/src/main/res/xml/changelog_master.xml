@@ -10,9 +10,6 @@
             - new option to also trigger on walking/running (Settings)]]></change>
         <change><![CDATA[<b>Indoor mode</b><br/>
             - track indoor sessions without GPS: time keeps running while stationary, speed and distance come from sensors]]></change>
-        <change><![CDATA[<b>Strava</b><br/>
-            - open the Ventoo Strava club from Settings]]></change>
-        <change>Removed the "send anonymous crash reports" option</change>
     </release>
     <release version="26.8.0" versioncode="500" >
         <change><![CDATA[<b>Update to use new libpebble</b><br/>
@@ -21,9 +18,9 @@
             - go in the settings to grant the access to Strava via session cookie<br/>
             - upload manually from the menu or automatically at the end of the track]]></change>
         <change><![CDATA[<b>Nextcloud PhoneTrack live tracking</b><br/>
-            - share your live location with a Nextcloud PhoneTrack instance<br/>
-            - share your tracking link]]></change>
+            - share your live location with a Nextcloud PhoneTrack instance]]></change>
         <change>GoPro: start/stop recording</change>
+        <change>Support for bluetooth lights</change>
         <change>Support for up to 6 sensors</change>
     </release>
     <release version="3.0.0" versioncode="401" >
