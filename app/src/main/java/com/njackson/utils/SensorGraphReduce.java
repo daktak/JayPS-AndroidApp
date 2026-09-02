@@ -38,10 +38,14 @@ public class SensorGraphReduce {
         int[] graphData = new int[GRAPH_SEGMENTS];
         long windowMs = ROLLING_WINDOW_MS;
         long binWidth = windowMs / GRAPH_SEGMENTS;
+        long latest = _timestamps.get(_timestamps.size() - 1);
+        long windowStart = latest - windowMs;
+        if (windowStart < 0) windowStart = 0;
 
         for (int i = 0; i < _values.size(); i++) {
             long ts = _timestamps.get(i);
-            int binIndex = (int) (ts / binWidth);
+            int binIndex = (int) ((ts - windowStart) / binWidth);
+            if (binIndex < 0) binIndex = 0;
             if (binIndex >= GRAPH_SEGMENTS) {
                 binIndex = GRAPH_SEGMENTS - 1;
             }
@@ -51,7 +55,8 @@ public class SensorGraphReduce {
         int[] counts = new int[GRAPH_SEGMENTS];
         for (int i = 0; i < _timestamps.size(); i++) {
             long ts = _timestamps.get(i);
-            int binIndex = (int) (ts / binWidth);
+            int binIndex = (int) ((ts - windowStart) / binWidth);
+            if (binIndex < 0) binIndex = 0;
             if (binIndex >= GRAPH_SEGMENTS) {
                 binIndex = GRAPH_SEGMENTS - 1;
             }
