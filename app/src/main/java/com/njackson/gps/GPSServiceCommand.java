@@ -214,7 +214,9 @@ public class GPSServiceCommand implements IServiceCommand {
                 }
                 if (wheelSize > 0) {
                     _hasSpeedSensor = true;
-                    _advancedLocation.setSensorSpeed(wheelSize / 1000 * event.getCyclingWheelRpm() / 60, _time.getCurrentTimeMilliseconds());
+                    float sensSpeed = (float) (wheelSize / 1000.0 * event.getCyclingWheelRpm() / 60.0);
+                    _advancedLocation.setSensorSpeed(sensSpeed, _time.getCurrentTimeMilliseconds());
+                    _advancedLocation.setMaxSpeed(Math.max(sensSpeed, _advancedLocation.getMaxSpeed()));
                 }
                 Log.d(TAG, "onNewBleSensorData wheelRpm:" + event.getCyclingWheelRpm() + " wheelSize:" + wheelSize);
                 break;
@@ -224,14 +226,15 @@ public class GPSServiceCommand implements IServiceCommand {
                 break;
             case BleSensorData.SENSOR_POWER:
                 int pwr = event.getPower();
-                if (pwr < 1 || pwr > 2000) break;
+                if (pwr < 0 || pwr > 2000) break;
                 _power = pwr;
                 Log.d(TAG, "onNewBleSensorData _power:" + _power);
-                if (_indoor && !_hasSpeedSensor && _power > 0) {
+                if (_indoor && !_hasSpeedSensor) {
                     float estimatedSpeed = estimateSpeedFromPower(_power);
                     _advancedLocation.setSensorSpeed(estimatedSpeed, _time.getCurrentTimeMilliseconds());
                     _advancedLocation.setMaxSpeed(Math.max(estimatedSpeed, _advancedLocation.getMaxSpeed()));
                 }
+                if (pwr == 0) break;
                 if (!_powerOverride) {
                     _powerOverride = true;
                     _refresh_interval = Math.min(_refresh_interval, 1000);

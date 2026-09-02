@@ -99,6 +99,9 @@ class DashboardViewModel(
             pwr == 0 && power -> 0
             else -> cur.power
         }
+        if (pwr in 1..2000) powerReduce.addValue(pwr, elapsedMs)
+        else if (pwr == 0 && power) powerReduce.addValue(0, elapsedMs)
+        if (cad in 1..254) cadenceReduce.addValue(cad, elapsedMs)
         val newCad = if (cad in 1..254) cad else cur.cadence
         _state.value = cur.copy(
             speed = e.getSpeed(),
@@ -173,9 +176,27 @@ class DashboardViewModel(
                 return
             }
             BleSensorData.SENSOR_POWER -> {
-                if (e.getPower() > 0) power = true
+                val p = e.getPower()
+                if (p in 1..2000) {
+                    power = true
+                    val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
+                    powerReduce.addValue(p, elapsedMs)
+                    _state.value = _state.value.copy(power = p, powerGraph = powerReduce.getGraphData().toList())
+                } else if (p == 0 && power) {
+                    val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
+                    powerReduce.addValue(0, elapsedMs)
+                    _state.value = _state.value.copy(power = 0, powerGraph = powerReduce.getGraphData().toList())
+                }
             }
-            BleSensorData.SENSOR_CSC_CADENCE, BleSensorData.SENSOR_RSC -> cadence = true
+            BleSensorData.SENSOR_CSC_CADENCE, BleSensorData.SENSOR_RSC -> {
+                val c = if (e.getType() == BleSensorData.SENSOR_RSC) e.getRunningCadence() else e.getCyclingCadence()
+                if (c in 1..254) {
+                    cadence = true
+                    val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
+                    cadenceReduce.addValue(c, elapsedMs)
+                    _state.value = _state.value.copy(cadence = c, cadenceGraph = cadenceReduce.getGraphData().toList())
+                }
+            }
         }
         updateHrm()
     }
