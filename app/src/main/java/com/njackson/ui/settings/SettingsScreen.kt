@@ -171,6 +171,8 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
                 SwitchRow(stringResource(R.string.PREF_PEBBLE_HRM_TITLE), stringResource(R.string.PREF_PEBBLE_HRM_SUMMARY), s.pebbleHrm) { vm.putBool(Constants.PREF_PEBBLE_HRM, it) }
                 ClickRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_PRESET_TITLE), s.wheelPreset.ifEmpty { "Custom" }) { wheelPresetOpen = true }
                 EditRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_SIZE), s.wheelSize) { vm.putString("PREF_BLE_CSC_WHEEL_SIZE", it) }
+                SwitchRow(stringResource(R.string.autostart_lights_title), stringResource(R.string.autostart_lights_summary), s.autostartLights) { vm.putBool(Constants.PREF_AUTOSTART_LIGHTS, it) }
+                SwitchRow(stringResource(R.string.autostart_gopro_title), stringResource(R.string.autostart_gopro_summary), s.autostartGoPro) { vm.putBool(Constants.PREF_AUTOSTART_GOPRO, it) }
             } }
             item { GroupCard(stringResource(R.string.settings_altitude_title), Icons.Filled.Landscape) {
                 ClickRow("Altimeter Pressure sensor", if (s.pressureAvailable) stringResource(R.string.PREF_PRESSURE_SENSOR_AVAILABLE) else stringResource(R.string.PREF_PRESSURE_SENSOR_NOT_AVAILABLE)) { }
