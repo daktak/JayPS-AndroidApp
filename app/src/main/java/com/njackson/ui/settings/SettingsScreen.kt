@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -362,7 +364,7 @@ private fun EditRowWithSummary(title: String, summary: String, value: String, on
 @Composable
 private fun ListDialog(title: String, entries: Array<String>, values: Array<String>, selected: String, onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = {
-        Column { entries.forEachIndexed { i, e -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelect(values[i]) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) { RadioButton(selected = values[i] == selected, onClick = { onSelect(values[i]) }); Spacer(Modifier.width(8.dp)); Text(e) } } }
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) { entries.forEachIndexed { i, e -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelect(values[i]) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) { RadioButton(selected = values[i] == selected, onClick = { onSelect(values[i]) }); Spacer(Modifier.width(8.dp)); Text(e) } } }
     }, confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }, dismissButton = {})
 }
 
