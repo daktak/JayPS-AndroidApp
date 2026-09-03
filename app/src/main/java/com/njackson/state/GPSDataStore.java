@@ -21,6 +21,7 @@ public class GPSDataStore implements IGPSDataStore {
     long _prevStartTime = 0;
     float _distance = 0;
     long _elapsedTime = 0;
+    long _totalElapsedTime = 0;
     float _ascent = 0;
     int _nbascent = 0;
     float _maxSpeed = 0;
@@ -55,6 +56,7 @@ public class GPSDataStore implements IGPSDataStore {
         _startTime = _sharedPreferences.getLong("GPS_LAST_START",0);
         _distance = _sharedPreferences.getFloat("GPS_DISTANCE", 0);
         _elapsedTime = _sharedPreferences.getLong("GPS_ELAPSEDTIME",0);
+        _totalElapsedTime = _sharedPreferences.getLong("GPS_TOTALELAPSEDTIME",0);
         _ascent = _sharedPreferences.getFloat("GPS_ASCENT", 0);
         _nbascent = _sharedPreferences.getInt("GPS_NB_ASCENT", 0);
         _maxSpeed = _sharedPreferences.getFloat("GPS_MAX_SPEED", 0);
@@ -215,6 +217,7 @@ public class GPSDataStore implements IGPSDataStore {
         //_startTime = 0; // no reset needed, it's for orxumaps auto-start
         _distance = 0;
         _elapsedTime = 0;
+        _totalElapsedTime = 0;
         _ascent = 0;
         _nbascent = 0;
         _maxSpeed = 0;
@@ -242,6 +245,7 @@ public class GPSDataStore implements IGPSDataStore {
         editor.putLong("GPS_LAST_START",_startTime);
         editor.putFloat("GPS_DISTANCE",_distance);
         editor.putLong("GPS_ELAPSEDTIME", _elapsedTime);
+        editor.putLong("GPS_TOTALELAPSEDTIME", _totalElapsedTime);
         editor.putFloat("GPS_ASCENT", _ascent);
         editor.putInt("GPS_NB_ASCENT", _nbascent);
         editor.putFloat("GPS_MAX_SPEED", _maxSpeed);
