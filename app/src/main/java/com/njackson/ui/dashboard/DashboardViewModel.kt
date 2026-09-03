@@ -76,8 +76,7 @@ class DashboardViewModel(
                 if (appended.size > 5000) appended.takeLast(5000) else appended
             } else list
         } else cur.trail
-val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
-        val totalMs = e.getTotalTimeSeconds().toLong() * 1000L
+        val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         val hr = e.getHeartRate()
         val pwr = e.getPower()
         val cad = e.getCyclingCadence()
@@ -109,13 +108,13 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
             avgSpeed = e.getAverageSpeed(),
             distance = e.getDistance(),
             elapsedSec = e.getElapsedTimeSeconds(),
-            totalSec = e.getTotalTimeSeconds(),
             ascent = e.getAscent(),
             maxSpeed = e.getMaxSpeed(),
             heartRate = newHr,
             power = newPower,
             cadence = newCad,
             accuracy = e.getAccuracy(),
+            units = e.getUnits(),
             trail = newTrail,
             hrGraph = hrReduce.getGraphData().toList(),
             powerGraph = powerReduce.getGraphData().toList(),
@@ -155,11 +154,7 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
                 Constants.NAUTICAL_IMPERIAL, Constants.NAUTICAL_METRIC -> raw * Constants.M_TO_NM
                 else -> raw * Constants.M_TO_KM
             }
-            _state.value = _state.value.copy(
-                elapsedSec = (store.getElapsedTime() / 1000).toInt(),
-                totalSec = (store.getTotalElapsedTime() / 1000).toInt(),
-                distance = converted, units = u
-            )
+            _state.value = _state.value.copy(elapsedSec = (store.getElapsedTime() / 1000).toInt(), distance = converted, units = u)
         }
     }
 

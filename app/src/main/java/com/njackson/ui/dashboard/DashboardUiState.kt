@@ -27,7 +27,6 @@ data class DashboardUiState(
     val avgSpeed: Float = 0f,
     val distance: Float = 0f,
     val elapsedSec: Int = 0,
-    val totalSec: Int = 0,
     val ascent: Double = 0.0,
     val maxSpeed: Float = 0f,
     val heartRate: Int = 0,
