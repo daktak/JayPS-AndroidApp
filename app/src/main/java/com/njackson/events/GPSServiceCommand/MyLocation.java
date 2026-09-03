@@ -107,6 +107,18 @@ public abstract class MyLocation {
         this._elapsedTimeSeconds = _time;
     }
 
+    private long _totalElapsedTime;
+    public long getTotalElapsedTime() {
+        return _totalElapsedTime;
+    }
+    public void setTotalElapsedTime(long _time) {
+        this._totalElapsedTime = _time;
+    }
+
+    public int getTotalTimeSeconds() {
+        return (int) (_totalElapsedTime / 1000);
+    }
+
     private double _xpos;
     public double getXpos() {
         return _xpos;

@@ -21,6 +21,9 @@ public interface IGPSDataStore {
     long getElapsedTime();
     void setElapsedTime(long value);
 
+    long getTotalElapsedTime();
+    void setTotalElapsedTime(long value);
+
     float getAscent();
     void setAscent(float value);
 

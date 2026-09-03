@@ -115,6 +115,16 @@ public class GPSDataStore implements IGPSDataStore {
     }
 
     @Override
+    public long getTotalElapsedTime() {
+        return _totalElapsedTime;
+    }
+
+    @Override
+    public void setTotalElapsedTime(long value) {
+        _totalElapsedTime = value;
+    }
+
+    @Override
     public float getAscent() {
         return _ascent;
     }
