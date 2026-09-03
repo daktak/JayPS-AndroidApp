@@ -459,7 +459,8 @@ public class GPSServiceCommand implements IServiceCommand {
         if (_advancedLocation == null || _refresh_interval <= 0) {
             return;
         }
-        _advancedLocation.setSaveOnLocationChange(!isNonAdaptative());
+        boolean tracksEnabled = _sharedPreferences.getBoolean("ENABLE_TRACKS", false);
+        _advancedLocation.setSaveOnLocationChange(tracksEnabled || !isNonAdaptative());
     }
 
     private void scheduleIntervalSave() {
