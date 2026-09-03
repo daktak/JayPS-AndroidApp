@@ -384,6 +384,7 @@ public class GPSServiceCommand implements IServiceCommand {
     private void loadGPSStats() {
         _advancedLocation.setDistance(_dataStore.getDistance());
         _advancedLocation.setElapsedTime(_dataStore.getElapsedTime());
+        _advancedLocation.setTotalElapsedTime(_dataStore.getTotalElapsedTime());
 
         try {
             _advancedLocation.setAscent(_dataStore.getAscent());
@@ -411,6 +412,7 @@ public class GPSServiceCommand implements IServiceCommand {
         Log.d(TAG, "saveGPSStats");
         _dataStore.setDistance(_advancedLocation.getDistance());
         _dataStore.setElapsedTime(_advancedLocation.getElapsedTime());
+        _dataStore.setTotalElapsedTime(_advancedLocation.getTotalElapsedTime());
         _dataStore.setAscent((float) _advancedLocation.getAscent());
         _dataStore.setNbAscent(_advancedLocation.getNbAscent());
         _dataStore.setMaxSpeed(_advancedLocation.getMaxSpeed());

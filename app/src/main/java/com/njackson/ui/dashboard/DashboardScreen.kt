@@ -204,8 +204,8 @@ private fun HeroCard(s: DashboardUiState) {
                 Text(stringResource(R.string.dashboard_avg_format, if (isPace) conv.convertSpeedToPace(s.avgSpeed) else conv.convertFloatToString(s.avgSpeed, 1), unitText), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(DateUtils.formatElapsedTime(s.elapsedSec.toLong()), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
-                Text(stringResource(R.string.dashboard_elapsed), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(DateUtils.formatElapsedTime(s.totalSec.toLong()), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
+                Text(stringResource(R.string.dashboard_time), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
