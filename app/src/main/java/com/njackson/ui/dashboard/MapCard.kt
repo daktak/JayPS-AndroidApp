@@ -57,7 +57,7 @@ fun MapCard(trail: List<TrailPoint>, isIndoor: Boolean = false, modifier: Modifi
     }
     val map = remember {
         MapView(ctx).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            setTileSource(TileSourceFactory.CYCLE)
             setMultiTouchControls(true)
             controller.setZoom(15.0)
             isTilesScaledToDpi = true
