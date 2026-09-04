@@ -151,10 +151,6 @@ class MessageManager @Inject constructor(
         putUInt16(ftp, 0, prefs.getString(Constants.PREF_FTP, "0")!!.toIntOrNull() ?: 0)
         dict[Constants.MSG_FTP.toUInt()] = PebbleDictionaryItem.Bytes(ftp)
 
-        val indoor = ByteArray(1)
-        putUInt8(indoor, 0, if (prefs.getBoolean(Constants.PREF_INDOOR_MODE, false)) 1 else 0)
-        dict[Constants.MSG_INDOOR.toUInt()] = PebbleDictionaryItem.Bytes(indoor)
-
         offer(dict)
     }
 }
