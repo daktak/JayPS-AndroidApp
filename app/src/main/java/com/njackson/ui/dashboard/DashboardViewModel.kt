@@ -244,11 +244,7 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
             battery = e.getBattery(),
             connected = e.isConnected(),
         )
-        if (e.isConnected()) {
-            if (idx >= 0) list[idx] = info else list.add(info)
-        } else {
-            if (idx >= 0) list.removeAt(idx)
-        }
+        if (idx >= 0) list[idx] = info else list.add(info)
         // GoPro was previously mis-posted as light (service guard) - clean phantom light card
         val lights = cur.lights.toMutableList()
         lights.removeAll { it.address == e.getAddress() }

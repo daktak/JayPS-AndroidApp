@@ -362,7 +362,6 @@ private fun GoProCard(gopro: GoProInfo, onShutter: (Boolean) -> Unit) {
                 onClick = { onShutter(!gopro.isRecording) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = if (gopro.isRecording) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = Color.White) else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                enabled = gopro.connected
             ) {
                 Icon(
                     when {
@@ -377,6 +376,7 @@ private fun GoProCard(gopro: GoProInfo, onShutter: (Boolean) -> Unit) {
                 Text(
                     when {
                         gopro.isRecording -> "Stop"
+                        !gopro.connected -> if (isPhoto) stringResource(R.string.gopro_wake_photo) else stringResource(R.string.gopro_wake_record)
                         isPhoto -> "Take Photo"
                         else -> "Record"
                     }

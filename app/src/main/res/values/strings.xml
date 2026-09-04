@@ -304,5 +304,7 @@
     <string name="autostart_lights_summary">Day Flash on Start, Off on Stop</string>
     <string name="autostart_gopro_title">Autostart GoPro with GPS</string>
     <string name="autostart_gopro_summary">Record on Start, Stop on Stop</string>
+    <string name="gopro_wake_record">Wake &amp; Record</string>
+    <string name="gopro_wake_photo">Wake &amp; Photo</string>
 
 </resources>

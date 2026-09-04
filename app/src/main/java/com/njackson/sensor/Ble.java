@@ -100,6 +100,7 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<String, Integer> deviceBattery = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Boolean> goproRecording = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, String> goproMode = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> goproPending = new ConcurrentHashMap<>();
     private Set<String> _ble_addresses;
 
     public Ble(Context context) {
@@ -552,10 +553,45 @@ public class Ble implements IBle, ITimerHandler {
         BluetoothGatt gatt = mGatts.get(req.getAddress());
         if (gatt == null) gatt = mGattsConnectionPending.get(req.getAddress());
         if (gatt != null) {
-            setGoProRecording(gatt, req.isStart());
+            if (gatt.getService(UUID_GOPRO_SERVICE) != null) {
+                setGoProRecording(gatt, req.isStart());
+                goproPending.remove(req.getAddress());
+            } else {
+                goproPending.put(req.getAddress(), req.isStart());
+            }
             goproRecording.put(req.getAddress(), req.isStart());
             postGoProState(gatt);
             triggerNextWrite();
+            return;
+        }
+        goproRecording.put(req.getAddress(), req.isStart());
+        goproPending.put(req.getAddress(), req.isStart());
+        try {
+            String cachedName = "";
+            String cachedModel = deviceModels.get(req.getAddress());
+            if (cachedModel == null) cachedModel = "";
+            int cachedBatt = deviceBattery.get(req.getAddress()) != null ? deviceBattery.get(req.getAddress()) : -1;
+            String cachedMode = goproMode.get(req.getAddress());
+            if (cachedMode == null) cachedMode = "Video";
+            try { _bus.post(new GoProState(req.getAddress(), cachedName, cachedModel, cachedMode, req.isStart(), cachedBatt, false)); } catch (Exception e) {}
+        } catch (Exception e) {}
+        if (mBluetoothAdapter != null && _bleStarted) {
+            try {
+                BluetoothDevice dev = mBluetoothAdapter.getRemoteDevice(req.getAddress());
+                if (!mGattsConnectionPending.containsKey(req.getAddress())) {
+                    connectionQueue.add(dev);
+                    ensureConnectionThread();
+                }
+            } catch (Exception e) { Log.w(TAG, "GoPro wake queue failed "+e); }
+        }
+    }
+
+    private void ensureConnectionThread() {
+        if (connectionThread == null) {
+            connectionThread = new Thread(new Runnable() {
+                @Override public void run() { connectionLoop(); }
+            });
+            connectionThread.start();
         }
     }
 
@@ -645,6 +681,7 @@ public class Ble implements IBle, ITimerHandler {
             } else {
                 Log.w(TAG, display(gatt) + " reconnectLater connectionQueue.add");
                 connectionQueue.add(gatt.getDevice());
+                ensureConnectionThread();
             }
         }
     }
@@ -970,6 +1007,17 @@ public class Ble implements IBle, ITimerHandler {
         }
         try { postLightState(gatt); } catch (Exception e) {}
         try { if (gatt.getService(UUID_GOPRO_SERVICE) != null) postGoProState(gatt); } catch (Exception e) {}
+        try {
+            if (gatt.getService(UUID_GOPRO_SERVICE) != null) {
+                String addr = gatt.getDevice().getAddress();
+                Boolean pending = goproPending.get(addr);
+                if (pending != null) {
+                    setGoProRecording(gatt, pending);
+                    goproPending.remove(addr);
+                    postGoProState(gatt);
+                }
+            }
+        } catch (Exception e) {}
         start_stop_handler(gatt, true);
         allwrites = true;
     }
