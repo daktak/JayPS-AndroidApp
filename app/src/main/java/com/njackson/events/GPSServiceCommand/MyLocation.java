@@ -171,6 +171,10 @@ public abstract class MyLocation {
     public int getFtp() { return this._ftp; }
     public void setFtp(int ftp) { this._ftp = ftp;}
 
+    private boolean _indoor = false;
+    public boolean getIndoor() { return this._indoor; }
+    public void setIndoor(boolean indoor) { this._indoor = indoor;}
+
     private int _cyclingCadence = 0;
     public int getCyclingCadence() { return this._cyclingCadence; }
     public void setCyclingCadence(int cyclingCadence) { this._cyclingCadence = cyclingCadence;}

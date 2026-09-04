@@ -586,6 +586,8 @@ public class GPSServiceCommand implements IServiceCommand {
     private int previousHeartRateMax = 0;
     private int previousFtp = 0;
     private long _last_post_ftp = 0;
+    private boolean previousIndoor = false;
+    private long _last_post_indoor = 0;
     private void broadcastLocation(Location location) {
         boolean force_send = false;
         if (firstLocation != null && location != null) {
@@ -624,6 +626,12 @@ public class GPSServiceCommand implements IServiceCommand {
                 force_send = true;
             }
         } catch (NumberFormatException nfe) {}
+        if (_indoor != previousIndoor || _time.getCurrentTimeMilliseconds() - _last_post_indoor > 5 * 60 * 1000) {
+            event.setIndoor(_indoor);
+            previousIndoor = _indoor;
+            _last_post_indoor = _time.getCurrentTimeMilliseconds();
+            force_send = true;
+        }
         if (_cyclingCadence > 0) {
             event.setCyclingCadence(_cyclingCadence);
         }
