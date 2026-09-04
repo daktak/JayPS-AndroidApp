@@ -62,6 +62,52 @@ public class IndoorPowermeterTest extends AndroidTestCase {
     }
 
     @SmallTest
+    public void testIndoorSpeedSensorWithWheelSizeCalculatesSpeedDistanceAndExports() throws Exception {
+        int hr = 142;
+        int cad = 88;
+        int power = 0;
+        int wheelSizeMm = 2133;
+        int wheelRpm = 90;
+        float sensorSpeed = (float) (wheelSizeMm / 1000.0 * wheelRpm / 60.0);
+        assertTrue("wheel sensor speed must be >0", sensorSpeed > 0f);
+
+        getContext().getSharedPreferences("PREFS", 0).edit().putString("PREF_BLE_CSC_WHEEL_SIZE", String.valueOf(wheelSizeMm)).commit();
+
+        long now = System.currentTimeMillis();
+        adv.setSensorSpeed(sensorSpeed, now);
+        adv.updateIndoor(hr, cad, power, now);
+        adv.saveCurrentLocationAtInterval(now);
+        for (int i = 1; i <= 5; i++) {
+            long t = now + i * 1000L;
+            adv.setSensorSpeed(sensorSpeed, t);
+            adv.updateIndoor(hr, cad, power, t);
+            adv.saveCurrentLocationAtInterval(t);
+        }
+
+        assertTrue("speed from wheel sensor must be >0", adv.getSpeed() > 0f);
+        assertEquals("speed must match wheelSize/rpm", sensorSpeed, adv.getSpeed(), 0.01f);
+        assertTrue("distance must be >0 from wheel sensor", adv.getDistance() > 0f);
+        assertTrue("distance approx speed*5s", adv.getDistance() > sensorSpeed * 4.5f && adv.getDistance() < sensorSpeed * 5.5f);
+        assertTrue("elapsed must be >0", adv.getElapsedTime() > 0L);
+        assertTrue("totalElapsed must be >0", adv.getTotalElapsedTime() > 0L);
+
+        NewLocation nl = new AdvancedLocationToNewLocation(adv, 0, 0, Constants.METRIC);
+        assertTrue("dashboard speed must be >0", nl.getSpeed() > 0f);
+        assertTrue("dashboard distance must be >0", nl.getDistance() > 0f);
+
+        String tcx = adv.getTCX("Biking");
+        assertTrue("TCX must contain HR", tcx.contains("<HeartRateBpm><Value>" + hr + "</Value></HeartRateBpm>"));
+        assertTrue("TCX must contain cadence", tcx.contains("<Cadence>" + cad + "</Cadence>"));
+        assertTrue("TCX must contain Speed from wheel", tcx.contains("<ns3:Speed>"));
+        assertTrue("TCX must contain DistanceMeters from wheel", tcx.contains("<DistanceMeters>"));
+        assertTrue("TCX speed value must match sensor", tcx.contains(String.valueOf(sensorSpeed).substring(0, 3)));
+
+        String gpx = adv.getGPX(true);
+        assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));
+        assertTrue("GPX must contain cad", gpx.contains("<gpxtpx:cad>" + cad + "</gpxtpx:cad>"));
+    }
+
+    @SmallTest
     public void testIndoorExportTcxPopulatedWithHrCadPower() throws Exception {
         int hr = 150;
         int cad = 90;
