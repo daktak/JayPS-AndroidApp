@@ -111,6 +111,8 @@
     <string name="PREF_BLE_HRM_HRMAX">HRM: Max heart rate</string>
     <string name="PREF_BLE_HRM_HRMAX_SUMMARY">Example: 220 minus your age</string>
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: Zone alarms</string>
+    <string name="PREF_FTP">FTP (Functional Threshold Power)</string>
+    <string name="PREF_FTP_SUMMARY">Watts at threshold, e.g. 250</string>
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT">0</string>
     <string name="PREF_PEBBLE_HRM_TITLE">Use Pebble heart rate monitor</string>
     <string name="PREF_PEBBLE_HRM_SUMMARY">Use the watch\'s built-in HR sensor instead of a Bluetooth HRM during recording</string>

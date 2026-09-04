@@ -584,6 +584,8 @@ public class GPSServiceCommand implements IServiceCommand {
     private NewLocation previousLocation;
     private int nbSent=0;
     private int previousHeartRateMax = 0;
+    private int previousFtp = 0;
+    private long _last_post_ftp = 0;
     private void broadcastLocation(Location location) {
         boolean force_send = false;
         if (firstLocation != null && location != null) {
@@ -610,6 +612,15 @@ public class GPSServiceCommand implements IServiceCommand {
                 event.setHeartRateMode(Integer.valueOf(_sharedPreferences.getString("PREF_BLE_HRM_ZONE_NOTIFICATION_MODE", "0")));
                 previousHeartRateMax = heartRateMax;
                 _last_post_hr_max = _time.getCurrentTimeMilliseconds();
+                force_send = true;
+            }
+        } catch (NumberFormatException nfe) {}
+        try {
+            int ftp = Integer.valueOf(_sharedPreferences.getString(Constants.PREF_FTP, "0"));
+            if (ftp != previousFtp || _time.getCurrentTimeMilliseconds() - _last_post_ftp > 5 * 60 * 1000) {
+                event.setFtp(ftp);
+                previousFtp = ftp;
+                _last_post_ftp = _time.getCurrentTimeMilliseconds();
                 force_send = true;
             }
         } catch (NumberFormatException nfe) {}

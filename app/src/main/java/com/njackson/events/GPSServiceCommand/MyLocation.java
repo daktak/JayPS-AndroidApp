@@ -167,6 +167,10 @@ public abstract class MyLocation {
     public int getHeartRateMode() { return this._HeartRateMode; }
     public void setHeartRateMode(int HeartRateMode) { this._HeartRateMode = HeartRateMode;}
 
+    private int _ftp = 0;
+    public int getFtp() { return this._ftp; }
+    public void setFtp(int ftp) { this._ftp = ftp;}
+
     private int _cyclingCadence = 0;
     public int getCyclingCadence() { return this._cyclingCadence; }
     public void setCyclingCadence(int cyclingCadence) { this._cyclingCadence = cyclingCadence;}

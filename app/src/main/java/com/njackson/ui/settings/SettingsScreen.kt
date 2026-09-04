@@ -171,6 +171,7 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
                 EditRow(stringResource(R.string.PREF_BLE_HRM_HRMAX), s.hrmMax) { vm.putString("PREF_BLE_HRM_HRMAX", it) }
                 ClickRow(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), hrmZoneLabel(s.hrmZone)) { hrmZoneOpen = true }
                 SwitchRow(stringResource(R.string.PREF_PEBBLE_HRM_TITLE), stringResource(R.string.PREF_PEBBLE_HRM_SUMMARY), s.pebbleHrm) { vm.putBool(Constants.PREF_PEBBLE_HRM, it) }
+                EditRow(stringResource(R.string.PREF_FTP), s.ftp) { vm.putString(Constants.PREF_FTP, it.filter { c -> c.isDigit() }) }
                 ClickRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_PRESET_TITLE), s.wheelPreset.ifEmpty { "Custom" }) { wheelPresetOpen = true }
                 EditRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_SIZE), s.wheelSize) { vm.putString("PREF_BLE_CSC_WHEEL_SIZE", it) }
                 SwitchRow(stringResource(R.string.autostart_lights_title), stringResource(R.string.autostart_lights_summary), s.autostartLights) { vm.putBool(Constants.PREF_AUTOSTART_LIGHTS, it) }

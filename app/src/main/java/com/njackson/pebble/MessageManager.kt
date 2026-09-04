@@ -7,6 +7,7 @@ import android.util.Log
 import com.njackson.Constants
 import com.njackson.adapters.AdvancedLocationToNewLocation
 import com.njackson.adapters.buildLocationDictionary
+import com.njackson.adapters.putUInt16
 import com.njackson.adapters.putUInt8
 import com.njackson.events.GPSServiceCommand.NewLocation
 import com.njackson.application.modules.ForApplication
@@ -145,6 +146,10 @@ class MessageManager @Inject constructor(
         putUInt8(hrMax, 0, prefs.getString("PREF_BLE_HRM_HRMAX", "0")!!.toInt() % 256)
         putUInt8(hrMax, 1, prefs.getString("PREF_BLE_HRM_ZONE_NOTIFICATION_MODE", "0")!!.toInt() % 256)
         dict[Constants.MSG_HR_MAX.toUInt()] = PebbleDictionaryItem.Bytes(hrMax)
+
+        val ftp = ByteArray(2)
+        putUInt16(ftp, 0, prefs.getString(Constants.PREF_FTP, "0")!!.toIntOrNull() ?: 0)
+        dict[Constants.MSG_FTP.toUInt()] = PebbleDictionaryItem.Bytes(ftp)
 
         offer(dict)
     }

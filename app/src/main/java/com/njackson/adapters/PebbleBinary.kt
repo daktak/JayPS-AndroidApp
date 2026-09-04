@@ -164,6 +164,11 @@ fun buildLocationDictionary(
         putUInt8(hm, 1, event.heartRateMode % 256)
         dict[Constants.MSG_HR_MAX.toUInt()] = PebbleDictionaryItem.Bytes(hm)
     }
+    if (event.ftp != 0) {
+        val f = ByteArray(2)
+        putUInt16(f, 0, event.ftp)
+        dict[Constants.MSG_FTP.toUInt()] = PebbleDictionaryItem.Bytes(f)
+    }
     if (event.sendNavigation) {
         val nav = ByteArray(NAV_NB_BYTES)
         putUInt16(nav, NAV_BYTE_DISTANCE1, Math.floor(navigator.getNextDistance(event.units).toDouble()).toInt())
