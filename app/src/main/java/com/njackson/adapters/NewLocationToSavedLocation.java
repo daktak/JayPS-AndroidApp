@@ -18,6 +18,7 @@ public class NewLocationToSavedLocation extends SavedLocation {
         this.setSlope(newLocation.getSlope());
         this.setAccuracy(newLocation.getAccuracy());
         this.setElapsedTimeSeconds(newLocation.getElapsedTimeSeconds());
+        this.setTotalElapsedTime(newLocation.getTotalElapsedTime());
         this.setXpos(newLocation.getXpos());
         this.setYpos(newLocation.getYpos());
         this.setBearing(newLocation.getBearing());

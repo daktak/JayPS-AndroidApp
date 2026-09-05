@@ -42,6 +42,7 @@ public class AdvancedLocationToNewLocation extends NewLocation {
         this.setAccuracy(advancedLocation.getAccuracy()); // m
         this.setTime(advancedLocation.getTime());
         this.setElapsedTimeSeconds((int) (advancedLocation.getElapsedTime() / 1000));
+        this.setTotalElapsedTime(advancedLocation.getTotalElapsedTime());
         this.setXpos(xpos);
         this.setYpos(ypos);
         this.setBearing(advancedLocation.getBearing());

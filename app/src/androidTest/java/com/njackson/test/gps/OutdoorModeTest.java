@@ -38,24 +38,43 @@ public class OutdoorModeTest extends AndroidTestCase {
         long baseTime = System.currentTimeMillis();
         double baseLat = 48.8566;
         double baseLon = 2.3522;
+        float speedMs = 1.0f;
+        double deltaDeg = 0.00027;
+        long prevElapsed = -1;
+        int prevDashboardSec = -1;
 
         for (int i = 0; i < 5; i++) {
             Location loc = new Location("JayPS");
-            loc.setLatitude(baseLat + i * 0.001);
-            loc.setLongitude(baseLon + i * 0.001);
+            loc.setLatitude(baseLat + i * deltaDeg);
+            loc.setLongitude(baseLon);
             loc.setAltitude(80 + i * 2);
             loc.setAccuracy(5);
             loc.setTime(baseTime + i * 30000L);
-            loc.setSpeed(3.5f);
+            loc.setSpeed(speedMs);
 
             int result = adv.onLocationChanged(loc, hr, cad, power);
             assertTrue("onLocationChanged must not skip", result != AdvancedLocation.SKIPPED);
 
             adv.saveCurrentLocationAtInterval(loc.getTime());
+
+            long curElapsed = adv.getElapsedTime();
+            assertTrue("elapsed must increase at i=" + i, curElapsed > prevElapsed);
+            prevElapsed = curElapsed;
+
+            NewLocation dash = new AdvancedLocationToNewLocation(adv, 0, 0, Constants.METRIC);
+            assertTrue("dashboard elapsed must be >0 at i=" + i, dash.getElapsedTimeSeconds() > 0 || i == 0);
+            if (dash.getElapsedTimeSeconds() > 0) {
+                assertTrue("dashboard elapsed must increase at i=" + i, dash.getElapsedTimeSeconds() > prevDashboardSec);
+                prevDashboardSec = dash.getElapsedTimeSeconds();
+            }
+            assertTrue("dashboard distance must be >0 at i=" + i + " value=" + dash.getDistance(), dash.getDistance() >= 0f);
+            assertTrue("dashboard speed must be >0 at i=" + i, dash.getSpeed() > 0f);
+            assertTrue("speed must be 3-4km/h ~0.83-1.11m/s at i=" + i + " was " + dash.getSpeed(), dash.getSpeed() >= 0.7f && dash.getSpeed() <= 1.4f);
         }
 
         assertTrue("outdoor distance must be >0", adv.getDistance() > 0f);
         assertTrue("outdoor speed must be >0", adv.getSpeed() > 0f);
+        assertTrue("speed 3-4km/h check", adv.getSpeed() >= 0.7f && adv.getSpeed() <= 1.4f);
         assertTrue("outdoor elapsed must be >0", adv.getElapsedTime() > 0L);
         assertTrue("outdoor totalElapsed must be >0", adv.getTotalElapsedTime() > 0L);
         assertTrue("outdoor average speed must be >0", adv.getAverageSpeed() > 0f);
@@ -63,7 +82,10 @@ public class OutdoorModeTest extends AndroidTestCase {
         NewLocation nl = new AdvancedLocationToNewLocation(adv, 0, 0, Constants.METRIC);
         assertTrue("dashboard distance must be >0", nl.getDistance() > 0f);
         assertTrue("dashboard speed must be >0", nl.getSpeed() > 0f);
+        assertTrue("dashboard speed 3-4km/h", nl.getSpeed() >= 0.7f && nl.getSpeed() <= 1.4f);
         assertTrue("dashboard avgSpeed must be >0", nl.getAverageSpeed() > 0f);
+        assertTrue("dashboard elapsed must be >0", nl.getElapsedTimeSeconds() > 0);
+        assertTrue("dashboard total must be >0", nl.getTotalTimeSeconds() > 0);
 
         String tcx = adv.getTCX("Biking");
         assertTrue("TCX must contain HR " + hr, tcx.contains("<HeartRateBpm><Value>" + hr + "</Value></HeartRateBpm>"));
