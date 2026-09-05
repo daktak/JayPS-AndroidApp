@@ -213,10 +213,14 @@ public class GPSServiceCommand implements IServiceCommand {
                     wheelSize = 0;
                 }
                 if (wheelSize > 0) {
-                    _hasSpeedSensor = true;
-                    float sensSpeed = (float) (wheelSize / 1000.0 * event.getCyclingWheelRpm() / 60.0);
-                    _advancedLocation.setSensorSpeed(sensSpeed, _time.getCurrentTimeMilliseconds());
-                    _advancedLocation.setMaxSpeed(Math.max(sensSpeed, _advancedLocation.getMaxSpeed()));
+                    if (_indoor && _power > 0) {
+                        Log.d(TAG, "onNewBleSensorData wheelRpm ignored indoors - power present:" + _power);
+                    } else {
+                        _hasSpeedSensor = true;
+                        float sensSpeed = (float) (wheelSize / 1000.0 * event.getCyclingWheelRpm() / 60.0);
+                        _advancedLocation.setSensorSpeed(sensSpeed, _time.getCurrentTimeMilliseconds());
+                        _advancedLocation.setMaxSpeed(Math.max(sensSpeed, _advancedLocation.getMaxSpeed()));
+                    }
                 }
                 Log.d(TAG, "onNewBleSensorData wheelRpm:" + event.getCyclingWheelRpm() + " wheelSize:" + wheelSize);
                 break;
@@ -229,7 +233,7 @@ public class GPSServiceCommand implements IServiceCommand {
                 if (pwr < 0 || pwr > 2000) break;
                 _power = pwr;
                 Log.d(TAG, "onNewBleSensorData _power:" + _power);
-                if (_indoor && !_hasSpeedSensor) {
+                if (_indoor) {
                     float estimatedSpeed = estimateSpeedFromPower(_power);
                     _advancedLocation.setSensorSpeed(estimatedSpeed, _time.getCurrentTimeMilliseconds());
                     _advancedLocation.setMaxSpeed(Math.max(estimatedSpeed, _advancedLocation.getMaxSpeed()));
