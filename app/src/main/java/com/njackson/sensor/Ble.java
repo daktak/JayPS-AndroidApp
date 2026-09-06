@@ -164,6 +164,55 @@ public class Ble implements IBle, ITimerHandler {
         _context.unregisterReceiver(mReceiver);
     }
 
+    @Override
+    public void disconnectAddress(String address) {
+        if (address == null || address.isEmpty()) return;
+        Log.d(TAG, "disconnectAddress " + address);
+        if (_ble_addresses != null) _ble_addresses.remove(address);
+        try {
+            Iterator<BluetoothDevice> it = connectionQueue.iterator();
+            while (it.hasNext()) {
+                BluetoothDevice d = it.next();
+                if (d.getAddress().equals(address)) {
+                    it.remove();
+                    Log.d(TAG, "removed from connectionQueue " + address);
+                }
+            }
+        } catch (Exception e) {}
+        try {
+            BluetoothGatt pending = mGattsConnectionPending.remove(address);
+            if (pending != null) {
+                Log.d(TAG, "closing pending gatt " + address);
+                try { pending.close(); } catch (Exception e) {}
+            }
+        } catch (Exception e) {}
+        try {
+            BluetoothGatt gatt = mGatts.remove(address);
+            if (gatt != null) {
+                Log.d(TAG, "disconnect active gatt " + address);
+                try { start_stop_handler(gatt, false); } catch (Exception e) {}
+                try { gatt.disconnect(); } catch (Exception e) {}
+                try { gatt.close(); } catch (Exception e) {}
+                try { light_mode.remove(gatt); } catch (Exception e) {}
+                try {
+                    Iterator<PendingDescriptorWrite> dit = descriptorWriteQueue.iterator();
+                    while (dit.hasNext()) if (dit.next().gatt == gatt) dit.remove();
+                    Iterator<PendingCharacteristicWrite> cit = characteristicWriteQueue.iterator();
+                    while (cit.hasNext()) if (cit.next().gatt == gatt) cit.remove();
+                    Iterator<PendingCharacteristicWrite> rit = readCharacteristicQueue.iterator();
+                    while (rit.hasNext()) if (rit.next().gatt == gatt) rit.remove();
+                } catch (Exception e) {}
+                try { deviceBattery.remove(address); } catch (Exception e) {}
+                try { goproRecording.remove(address); } catch (Exception e) {}
+                try { goproMode.remove(address); } catch (Exception e) {}
+                try { goproPending.remove(address); } catch (Exception e) {}
+                try { triggerNextWrite(); } catch (Exception e) {}
+            }
+        } catch (Exception e) { Log.w(TAG, "disconnectAddress failed "+e); }
+        try { goproPending.remove(address); } catch (Exception e) {}
+        try { goproRecording.remove(address); } catch (Exception e) {}
+    }
+
 
     public void initialize() {
         // For API level 18 and above, get a reference to BluetoothAdapter through

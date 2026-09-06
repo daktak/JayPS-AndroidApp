@@ -34,11 +34,39 @@ public class BLEServiceCommand implements IServiceCommand {
     private BaseStatus.Status _currentStatus= BaseStatus.Status.NOT_INITIALIZED;
     private boolean _registrered_bus = false;
     private final int max_ble_devices = 6;
+    private SharedPreferences.OnSharedPreferenceChangeListener _prefListener;
+    private Set<String> _startedAddresses = new HashSet<>();
 
     @Override
     public void execute(IInjectionContainer container) {
         container.inject(this);
         _registrered_bus = false;
+        _prefListener = (prefs, key) -> {
+            if (key != null && key.startsWith("hrm_address")) {
+                if (_hrm != null && _currentStatus == BaseStatus.Status.STARTED) {
+                    Set<String> allowed = new HashSet<>();
+                    for (int i = 1; i <= max_ble_devices; i++) {
+                        String a = prefs.getString("hrm_address" + i, "");
+                        if (a != null && !a.isEmpty()) allowed.add(a);
+                    }
+                    for (String old : new HashSet<>(_startedAddresses)) {
+                        if (!allowed.contains(old)) {
+                            Log.d(TAG, "pref cleared -> disconnect " + old);
+                            try { _hrm.disconnectAddress(old); } catch (Exception e) { Log.w(TAG, "disconnect failed "+e); }
+                            _startedAddresses.remove(old);
+                        }
+                    }
+                    if (allowed.isEmpty()) {
+                        Log.d(TAG, "no ble addresses left -> stop");
+                        try { _hrm.stop(); } catch (Exception e) {}
+                        _currentStatus = BaseStatus.Status.STOPPED;
+                        _bus.post(new BleStatus(_currentStatus));
+                        _startedAddresses.clear();
+                    }
+                }
+            }
+        };
+        _sharedPreferences.registerOnSharedPreferenceChangeListener(_prefListener);
         if (isHrmActivated()) {
             _bus.register(this);
             _registrered_bus = true;
@@ -50,8 +78,15 @@ public class BLEServiceCommand implements IServiceCommand {
 
     @Override
     public void dispose() {
+        if (_prefListener != null) {
+            try { _sharedPreferences.unregisterOnSharedPreferenceChangeListener(_prefListener); } catch (Exception e) {}
+            _prefListener = null;
+        }
         if (isHrmActivated() && _registrered_bus) {
             _bus.unregister(this);
+            _registrered_bus = false;
+        } else if (_registrered_bus) {
+            try { _bus.unregister(this); } catch (Exception e) {}
             _registrered_bus = false;
         }
     }
@@ -100,9 +135,11 @@ public class BLEServiceCommand implements IServiceCommand {
         }
         Log.d(TAG, addresses.size()+" ble sensors");
         if (addresses.size()>0) {
+            _startedAddresses = new HashSet<>(addresses);
             _hrm.start(addresses, _bus, _container);
             _currentStatus = BaseStatus.Status.STARTED;
         } else {
+            _startedAddresses.clear();
             _currentStatus = BaseStatus.Status.UNABLE_TO_START;
         }
         _bus.post(new BleStatus(_currentStatus));
@@ -115,6 +152,7 @@ public class BLEServiceCommand implements IServiceCommand {
             return;
         }
         _hrm.stop();
+        _startedAddresses.clear();
         _currentStatus = BaseStatus.Status.STOPPED;
         _bus.post(new BleStatus(_currentStatus));
     }

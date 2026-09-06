@@ -42,6 +42,17 @@ class DashboardViewModel(
         if (k == Constants.PREF_PEBBLE_HRM) updateHrm()
         if (k == "UNITS_OF_MEASURE") _state.value = _state.value.copy(units = store.getMeasurementUnits())
         if (k == Constants.PREF_INDOOR_MODE) _state.value = _state.value.copy(isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
+        if (k != null && k.startsWith("hrm_address")) pruneStaleDevices()
+    }
+
+    private fun allowedAddresses(): Set<String> = (1..6).map { prefs.getString("hrm_address$it", "") ?: "" }.filter { it.isNotEmpty() }.toSet()
+
+    private fun pruneStaleDevices() {
+        val allowed = allowedAddresses()
+        val cur = _state.value
+        val nl = cur.lights.filter { it.address in allowed }
+        val ng = cur.gopros.filter { it.address in allowed }
+        if (nl.size != cur.lights.size || ng.size != cur.gopros.size) _state.value = cur.copy(lights = nl, gopros = ng)
     }
 
     init {
@@ -140,7 +151,10 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
     @Subscribe fun onResetGPSState(@Suppress("UNUSED_PARAMETER") e: ResetGPSState) {
         hrm = false; power = false; cadence = false
         hrReduce.resetData(); powerReduce.resetData(); cadenceReduce.resetData()
-        _state.value = DashboardUiState(units = store.getMeasurementUnits(), isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
+        val allowed = allowedAddresses()
+        val cur = _state.value
+        val fresh = DashboardUiState(units = store.getMeasurementUnits(), isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
+        _state.value = fresh.copy(lights = cur.lights.filter { it.address in allowed }, gopros = cur.gopros.filter { it.address in allowed })
     }
 
     @Subscribe fun onGPSStatus(e: GPSStatus) {
@@ -209,6 +223,12 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
     @Subscribe fun onLightState(e: LightState) {
         // Guard: GoPro must never appear as light (legacy phantom from before service guard)
         if (e.getName().startsWith("GoPro") || e.getModel().contains("GoPro")) return
+        if (e.getAddress() !in allowedAddresses()) {
+            val cur = _state.value
+            val list = cur.lights.toMutableList()
+            if (list.removeAll { it.address == e.getAddress() }) _state.value = cur.copy(lights = list)
+            return
+        }
         val cur = _state.value
         val list = cur.lights.toMutableList()
         val idx = list.indexOfFirst { it.address == e.getAddress() }
@@ -232,6 +252,16 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
     }
 
     @Subscribe fun onGoProState(e: GoProState) {
+        if (e.getAddress() !in allowedAddresses()) {
+            val cur = _state.value
+            val list = cur.gopros.toMutableList()
+            if (list.removeAll { it.address == e.getAddress() }) {
+                val lights = cur.lights.toMutableList()
+                lights.removeAll { it.address == e.getAddress() }
+                _state.value = cur.copy(gopros = list, lights = lights)
+            }
+            return
+        }
         val cur = _state.value
         val list = cur.gopros.toMutableList()
         val idx = list.indexOfFirst { it.address == e.getAddress() }
