@@ -116,6 +116,12 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             GpsRow(state.accuracy)
+            state.gopros.forEach { gopro ->
+                GoProCard(gopro = gopro, onShutter = { start -> onGoProShutter(gopro.address, start) })
+            }
+            state.lights.forEach { light ->
+                LightCard(light = light, onModeSelected = { mode -> onLightMode(light.address, mode) }, onOff = { onLightMode(light.address, "Off") })
+            }
             MapCard(trail = state.trail, isIndoor = state.isIndoor)
             HeroCard(state)
             StatsGrid(state)
@@ -124,12 +130,6 @@ fun DashboardScreen(
             if (state.hasPower) SensorGraphCard(title = stringResource(R.string.dashboard_power), graph = state.powerGraph, current = if (state.power >= 0) state.power else null, unit = "W", icon = Icons.Filled.Bolt, color = MaterialTheme.colorScheme.secondary, emptyText = stringResource(R.string.dashboard_no_power_data), validRange = 0..2000)
             if (state.hasCadence) SensorGraphCard(title = stringResource(R.string.dashboard_cadence), graph = state.cadenceGraph, current = if (state.cadence in 1..254) state.cadence else null, unit = "rpm", icon = Icons.Filled.PedalBike, color = MaterialTheme.colorScheme.tertiary, emptyText = stringResource(R.string.dashboard_no_cadence_data), validRange = 1..254)
             if (!state.isIndoor) ElevationCard(state.altitudes)
-            state.lights.forEach { light ->
-                LightCard(light = light, onModeSelected = { mode -> onLightMode(light.address, mode) }, onOff = { onLightMode(light.address, "Off") })
-            }
-            state.gopros.forEach { gopro ->
-                GoProCard(gopro = gopro, onShutter = { start -> onGoProShutter(gopro.address, start) })
-            }
             if (!state.isRunning && state.distance == 0f && state.elapsedSec == 0) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
