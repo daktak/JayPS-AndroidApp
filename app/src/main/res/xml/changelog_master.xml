@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
-    <release version="26.9.next" versioncode="511" >
+    <release version="26.9.1" versioncode="511" >
         <change>New UI</change>
         <change>Openstreetmap with breadcrumbs</change>
         <change>GoPro: start/stop recording from dashbard</change>
