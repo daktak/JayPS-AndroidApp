@@ -88,7 +88,14 @@ jobs:
       - name: Locate APK artifact
         id: apk
         run: |
-          apk="$(ls app/build/outputs/apk/release/*.apk | head -n 1)"
+          set -e
+          apk="$(ls app/build/outputs/apk/debug/*.apk 2>/dev/null | head -n 1)"
+          if [ -z "$apk" ]; then
+            echo "No release APK found in app/build/outputs/apk/debug/" >&2
+            ls -R app/build/outputs/apk/ >&2 || true
+            exit 1
+          fi
+          echo "Found APK: $apk"
           echo "path=$apk" >> "$GITHUB_OUTPUT"
           echo "name=$(basename "$apk")" >> "$GITHUB_OUTPUT"
 
