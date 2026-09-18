@@ -64,6 +64,8 @@ class SettingsViewModel(
             oruxAuto = prefs.getString("ORUXMAPS_AUTO", "disable") ?: "disable",
             stravaSession = prefs.getString("STRAVA_SESSION", "") ?: "",
             stravaAuto = prefs.getString("STRAVA_AUTO", "disable") ?: "disable",
+            intervalsIcuApiKey = prefs.getString("INTERVALS_ICU_API_KEY", "") ?: "",
+            intervalsIcuAuto = prefs.getString("INTERVALS_ICU_AUTO", "disable") ?: "disable",
             debug = prefs.getBoolean("PREF_DEBUG", false),
             pressureAvailable = pressure,
             geoidHeight = prefs.getFloat("GEOID_HEIGHT", 0f),

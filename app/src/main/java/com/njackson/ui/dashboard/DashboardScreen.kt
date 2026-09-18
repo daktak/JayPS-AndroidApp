@@ -156,7 +156,7 @@ private fun TopMenu(onMenu: (String) -> Unit) {
                 "action_load_route" to stringResource(R.string.action_load_route),
                 "action_reset" to stringResource(R.string.action_reset),
                 "action_share_location" to stringResource(R.string.action_share_location),
-                "action_upload_strava" to stringResource(R.string.action_upload_strava)
+                "action_upload_activity" to stringResource(R.string.action_upload_activity)
             ).forEach { (id, label) ->
                 DropdownMenuItem(text = { Text(label) }, onClick = { open = false; onMenu(id) })
             }
