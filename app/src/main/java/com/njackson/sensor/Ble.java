@@ -26,6 +26,7 @@ import com.njackson.events.BleServiceCommand.GoProControlRequest;
 import com.njackson.events.BleServiceCommand.GoProState;
 import com.njackson.events.BleServiceCommand.LightControlRequest;
 import com.njackson.events.BleServiceCommand.LightState;
+import com.njackson.events.BleServiceCommand.TrainerControlRequest;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.utils.time.ITimer;
@@ -73,6 +74,16 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_MODEL_NUMBER = UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_DEVICE_INFO_SERVICE = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
 
+    // FTMS (Fitness Machine Service)
+    public final static UUID UUID_FITNESS_MACHINE_SERVICE = UUID.fromString(BLESampleGattAttributes.FITNESS_MACHINE_SERVICE);
+    public final static UUID UUID_INDOOR_BIKE_DATA = UUID.fromString(BLESampleGattAttributes.INDOOR_BIKE_DATA);
+    public final static UUID UUID_FITNESS_MACHINE_CONTROL_POINT = UUID.fromString(BLESampleGattAttributes.FITNESS_MACHINE_CONTROL_POINT);
+    public final static UUID UUID_FITNESS_MACHINE_STATUS = UUID.fromString(BLESampleGattAttributes.FITNESS_MACHINE_STATUS);
+    public final static UUID UUID_TRAINING_STATUS = UUID.fromString(BLESampleGattAttributes.TRAINING_STATUS);
+    public final static UUID UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE = UUID.fromString(BLESampleGattAttributes.SUPPORTED_RESISTANCE_LEVEL_RANGE);
+    public final static UUID UUID_SUPPORTED_POWER_RANGE = UUID.fromString(BLESampleGattAttributes.SUPPORTED_POWER_RANGE);
+    public final static UUID UUID_SUPPORTED_SPEED_RANGE = UUID.fromString(BLESampleGattAttributes.SUPPORTED_SPEED_RANGE);
+
     private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
 
     private int _cpsCrankRevolutions = 0;
@@ -101,6 +112,18 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<String, Boolean> goproRecording = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, String> goproMode = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Boolean> goproPending = new ConcurrentHashMap<>();
+
+    // FTMS Trainer state
+    private ConcurrentHashMap<String, Integer> trainerMinResistance = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMaxResistance = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMinPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMaxPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMinSpeed = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMaxSpeed = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> trainerHasControl = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> trainerControlRequested = new ConcurrentHashMap<>();
+    private String trainerAddress = "";
+
     private Set<String> _ble_addresses;
 
     public Ble(Context context) {
@@ -635,6 +658,11 @@ public class Ble implements IBle, ITimerHandler {
         }
     }
 
+    @Subscribe
+    public void onTrainerControl(TrainerControlRequest req) {
+        handleTrainerControlRequest(req);
+    }
+
     private void ensureConnectionThread() {
         if (connectionThread == null) {
             connectionThread = new Thread(new Runnable() {
@@ -966,6 +994,138 @@ public class Ble implements IBle, ITimerHandler {
             }
             res = String.format("Received power: %d", instantaneousPower);
 
+        } else if (UUID_INDOOR_BIKE_DATA.equals(characteristic.getUuid())) {
+            // FTMS Indoor Bike Data - 0x2AD2
+            // Flags (uint16) followed by optional fields based on flags
+            // Bit 0: Instantaneous Speed (uint16, 0.01 km/h)
+            // Bit 1: Average Speed (uint16, 0.01 km/h)
+            // Bit 2: Instantaneous Cadence (uint16, 0.5 rpm)
+            // Bit 3: Average Cadence (uint16, 0.5 rpm)
+            // Bit 4: Total Distance (uint32, m)
+            // Bit 5: Instantaneous Power (sint16, watts)
+            // Bit 6: Average Power (sint16, watts)
+            // Bit 7: Instantaneous Resistance Level (sint16)
+            // Bit 8: Average Resistance Level (sint16)
+            // Bit 9: Instantaneous Heart Rate (uint8, bpm)
+            // Bit 10: Average Heart Rate (uint8, bpm)
+            // Bit 11: Instantaneous METs (uint8)
+            // Bit 12: Elapsed Time (uint16, s)
+            // Bit 13: Remaining Time (uint16, s)
+            // Bits 14-15: Reserved
+            byte[] data = characteristic.getValue();
+            if (data != null && data.length >= 2) {
+                int flags = data[0] & 0xFF | (data[1] & 0xFF) << 8;
+                int offset = 2;
+                int instSpeed = 0, instCadence = 0, instPower = 0, resistance = 0, targetPower = 0;
+                if ((flags & 0x01) != 0) { // Instantaneous Speed
+                    if (offset + 1 < data.length) {
+                        instSpeed = data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8;
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x02) != 0) offset += 2; // Average Speed
+                if ((flags & 0x04) != 0) { // Instantaneous Cadence
+                    if (offset + 1 < data.length) {
+                        instCadence = data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8;
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x08) != 0) offset += 2; // Average Cadence
+                if ((flags & 0x10) != 0) offset += 4; // Total Distance
+                if ((flags & 0x20) != 0) { // Instantaneous Power
+                    if (offset + 1 < data.length) {
+                        instPower = (short)(data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8);
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x40) != 0) offset += 2; // Average Power
+                if ((flags & 0x80) != 0) { // Instantaneous Resistance
+                    if (offset + 1 < data.length) {
+                        resistance = (short)(data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8);
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x100) != 0) offset += 2; // Average Resistance
+                if ((flags & 0x200) != 0) offset += 1; // Instantaneous HR
+                if ((flags & 0x400) != 0) offset += 1; // Average HR
+                if ((flags & 0x800) != 0) offset += 1; // METs
+                if ((flags & 0x1000) != 0) offset += 2; // Elapsed Time
+                if ((flags & 0x2000) != 0) offset += 2; // Remaining Time
+                // Target Power is not in standard Indoor Bike Data - may come from Training Status or Control Point
+                BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+                sensorData.setFtmsIndoorBikeData(instSpeed, instCadence, instPower, resistance, targetPower);
+                _bus.post(sensorData);
+                res = String.format("FTMS Indoor Bike: speed=%d cad=%d power=%d resistance=%d", instSpeed, instCadence, instPower, resistance);
+            }
+        } else if (UUID_FITNESS_MACHINE_STATUS.equals(characteristic.getUuid())) {
+            // Fitness Machine Status - 0x2ADA (uint16)
+            int status = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setFtmsStatus(status);
+            _bus.post(sensorData);
+            res = String.format("FTMS Status: %d", status);
+        } else if (UUID_TRAINING_STATUS.equals(characteristic.getUuid())) {
+            // Training Status - 0x2AD3 (uint8)
+            int status = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setFtmsTrainingStatus(status);
+            _bus.post(sensorData);
+            res = String.format("FTMS Training Status: %d", status);
+        } else if (UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE.equals(characteristic.getUuid())) {
+            // Supported Resistance Level Range - 0x2AD5 (uint16 min, uint16 max)
+            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
+                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+                String addr = gatt.getDevice().getAddress();
+                trainerMinResistance.put(addr, min);
+                trainerMaxResistance.put(addr, max);
+                Log.d(TAG, String.format("FTMS Resistance Range: min=%d max=%d for %s", min, max, addr));
+            }
+            // Read other ranges if not already read
+            readSupportedRanges(gatt);
+            res = "FTMS Resistance Range read";
+        } else if (UUID_SUPPORTED_POWER_RANGE.equals(characteristic.getUuid())) {
+            // Supported Power Range - 0x2AD6 (uint16 min, uint16 max)
+            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
+                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+                String addr = gatt.getDevice().getAddress();
+                trainerMinPower.put(addr, min);
+                trainerMaxPower.put(addr, max);
+                Log.d(TAG, String.format("FTMS Power Range: min=%d max=%d for %s", min, max, addr));
+            }
+            res = "FTMS Power Range read";
+        } else if (UUID_SUPPORTED_SPEED_RANGE.equals(characteristic.getUuid())) {
+            // Supported Speed Range - 0x2AD8 (uint16 min, uint16 max) in 0.01 km/h
+            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
+                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+                String addr = gatt.getDevice().getAddress();
+                trainerMinSpeed.put(addr, min);
+                trainerMaxSpeed.put(addr, max);
+                Log.d(TAG, String.format("FTMS Speed Range: min=%d max=%d for %s", min, max, addr));
+            }
+            res = "FTMS Speed Range read";
+        } else if (UUID_FITNESS_MACHINE_CONTROL_POINT.equals(characteristic.getUuid())) {
+            // Control Point Response - 0x2AD9
+            byte[] data = characteristic.getValue();
+            if (data != null && data.length >= 3) {
+                int requestOpcode = data[1] & 0xFF;
+                int responseCode = data[2] & 0xFF;
+                // Response codes: 1=Success, 2=Not Supported, 3=Invalid Parameter, 4=Operation Failed, 5=Control Not Permitted
+                String addr = gatt.getDevice().getAddress();
+                if (requestOpcode == 0x00 && responseCode == 1) { // Request Control success
+                    trainerHasControl.put(addr, true);
+                    Log.d(TAG, "FTMS Control granted for " + addr);
+                    // Post updated state
+                    BleSensorData sensorData = new BleSensorData(addr);
+                    sensorData.setHasControl(true);
+                    _bus.post(sensorData);
+                } else if (responseCode != 1) {
+                    Log.w(TAG, String.format("FTMS Control Point error: opcode=0x%02X response=%d", requestOpcode, responseCode));
+                }
+            }
+            res = "FTMS Control Point response";
         } else if (UUID_MODEL_NUMBER.equals(characteristic.getUuid())) {
             String model = characteristic.getStringValue(0);
             if (model != null) {
@@ -1049,12 +1209,45 @@ public class Ble implements IBle, ITimerHandler {
                 if (UUID_MODEL_NUMBER.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
                     readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, gattCharacteristic));
                 }
+                // FTMS Indoor Bike Data - enable notifications
+                if (UUID_INDOOR_BIKE_DATA.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Fitness Machine Status - enable notifications
+                if (UUID_FITNESS_MACHINE_STATUS.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Training Status - enable notifications
+                if (UUID_TRAINING_STATUS.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Control Point - enable notifications (for responses)
+                if (UUID_FITNESS_MACHINE_CONTROL_POINT.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Supported Ranges - read them
+                if ((UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE.equals(gattCharacteristic.getUuid())
+                        || UUID_SUPPORTED_POWER_RANGE.equals(gattCharacteristic.getUuid())
+                        || UUID_SUPPORTED_SPEED_RANGE.equals(gattCharacteristic.getUuid()))
+                        && (charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, gattCharacteristic));
+                }
             }
         }
         if (!readCharacteristicQueue.isEmpty() && descriptorWriteQueue.isEmpty() && characteristicWriteQueue.isEmpty()) {
             try { PendingCharacteristicWrite r = readCharacteristicQueue.peek(); r.gatt.readCharacteristic(r.characteristic); } catch (Exception e) { Log.w(TAG, "read model failed "+e); }
         }
         try { postLightState(gatt); } catch (Exception e) {}
+        // FTMS: if this is a fitness machine, read supported ranges and request control
+        if (gatt.getService(UUID_FITNESS_MACHINE_SERVICE) != null) {
+            String addr = gatt.getDevice().getAddress();
+            trainerAddress = addr;
+            // Auto-request control if not already requested
+            if (!trainerControlRequested.getOrDefault(addr, false)) {
+                trainerControlRequested.put(addr, true);
+                requestControl(gatt);
+            }
+        }
         try { if (gatt.getService(UUID_GOPRO_SERVICE) != null) postGoProState(gatt); } catch (Exception e) {}
         try {
             if (gatt.getService(UUID_GOPRO_SERVICE) != null) {
@@ -1215,6 +1408,97 @@ public class Ble implements IBle, ITimerHandler {
             goproRecording.put(gatt.getDevice().getAddress(), gopro_on);
             if (!goproMode.containsKey(gatt.getDevice().getAddress())) goproMode.put(gatt.getDevice().getAddress(), "Video");
             postGoProState(gatt);
+        }
+    }
+
+    // FTMS Trainer Control Methods
+    private void readSupportedRanges(BluetoothGatt gatt) {
+        String addr = gatt.getDevice().getAddress();
+        BluetoothGattService ftmsService = gatt.getService(UUID_FITNESS_MACHINE_SERVICE);
+        if (ftmsService == null) return;
+        // Read resistance range if not already read
+        if (!trainerMinResistance.containsKey(addr)) {
+            BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE);
+            if (chr != null) readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        }
+        // Read power range if not already read
+        if (!trainerMinPower.containsKey(addr)) {
+            BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_SUPPORTED_POWER_RANGE);
+            if (chr != null) readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        }
+        // Read speed range if not already read
+        if (!trainerMinSpeed.containsKey(addr)) {
+            BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_SUPPORTED_SPEED_RANGE);
+            if (chr != null) readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        }
+    }
+
+    public void requestControl(String address) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) requestControl(gatt);
+    }
+
+    private void requestControl(BluetoothGatt gatt) {
+        writeControlPoint(gatt, new byte[] { 0x00 }); // OpCode 0x00: Request Control
+    }
+
+    public void setTargetPower(String address, int watts) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setTargetPower(gatt, watts);
+    }
+
+    private void setTargetPower(BluetoothGatt gatt, int watts) {
+        // OpCode 0x02: Set Target Power (uint16, watts)
+        byte[] data = new byte[] { 0x02, (byte)(watts & 0xFF), (byte)((watts >> 8) & 0xFF) };
+        writeControlPoint(gatt, data);
+    }
+
+    public void setResistanceLevel(String address, int level) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setResistanceLevel(gatt, level);
+    }
+
+    private void setResistanceLevel(BluetoothGatt gatt, int level) {
+        // OpCode 0x03: Set Resistance Level (sint16)
+        byte[] data = new byte[] { 0x03, (byte)(level & 0xFF), (byte)((level >> 8) & 0xFF) };
+        writeControlPoint(gatt, data);
+    }
+
+    private void writeControlPoint(BluetoothGatt gatt, byte[] data) {
+        BluetoothGattService ftmsService = gatt.getService(UUID_FITNESS_MACHINE_SERVICE);
+        if (ftmsService == null) {
+            Log.w(TAG, "FTMS service not found for control point write");
+            return;
+        }
+        BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_FITNESS_MACHINE_CONTROL_POINT);
+        if (chr == null) {
+            Log.w(TAG, "FTMS Control Point characteristic not found");
+            return;
+        }
+        chr.setValue(data);
+        characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        triggerNextWrite();
+    }
+
+    // Called from DashboardViewModel via bus event
+    public void handleTrainerControlRequest(TrainerControlRequest req) {
+        String addr = req.getAddress();
+        BluetoothGatt gatt = mGatts.get(addr);
+        if (gatt == null) gatt = mGattsConnectionPending.get(addr);
+        if (gatt == null) return;
+        if (req.isRequestControl()) {
+            requestControl(gatt);
+        } else if (req.isErgMode()) {
+            if (req.getTargetPower() > 0) {
+                setTargetPower(gatt, req.getTargetPower());
+            }
+        } else {
+            if (req.getResistanceLevel() > 0) {
+                setResistanceLevel(gatt, req.getResistanceLevel());
+            }
         }
     }
 }

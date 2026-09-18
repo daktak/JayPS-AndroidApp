@@ -8,6 +8,7 @@ import com.njackson.events.BleServiceCommand.GoProState
 import com.njackson.events.BleServiceCommand.GoProControlRequest
 import com.njackson.events.BleServiceCommand.LightControlRequest
 import com.njackson.events.BleServiceCommand.LightState
+import com.njackson.events.BleServiceCommand.TrainerControlRequest
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.NewAltitude
 import com.njackson.events.GPSServiceCommand.NewLocation
@@ -87,7 +88,7 @@ class DashboardViewModel(
                 if (appended.size > 5000) appended.takeLast(5000) else appended
             } else list
         } else cur.trail
-val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
+        val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         val totalMs = e.getTotalTimeSeconds().toLong() * 1000L
         val hr = e.getHeartRate()
         val pwr = e.getPower()
@@ -114,9 +115,16 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         if (pwr in 1..2000) powerReduce.addValue(pwr, elapsedMs)
         else if (pwr == 0 && power) powerReduce.addValue(0, elapsedMs)
         if (cad in 1..254) cadenceReduce.addValue(cad, elapsedMs)
-        val newCad = if (cad in 1..254) cad else cur.cadence
+        
+        // Prefer FTMS trainer data for speed/cadence when connected and available
+        val trainer = cur.trainer
+        val useFtmsSpeed = trainer.connected && trainer.instantaneousSpeed > 0
+        val useFtmsCadence = trainer.connected && trainer.instantaneousCadence > 0
+        val newSpeed = if (useFtmsSpeed) trainer.instantaneousSpeed else e.getSpeed()
+        val newCad = if (useFtmsCadence) trainer.instantaneousCadence else (if (cad in 1..254) cad else cur.cadence)
+        
         _state.value = cur.copy(
-            speed = e.getSpeed(),
+            speed = newSpeed,
             avgSpeed = e.getAverageSpeed(),
             distance = e.getDistance(),
             elapsedSec = e.getElapsedTimeSeconds(),
@@ -154,7 +162,7 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         val allowed = allowedAddresses()
         val cur = _state.value
         val fresh = DashboardUiState(units = store.getMeasurementUnits(), isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
-        _state.value = fresh.copy(lights = cur.lights.filter { it.address in allowed }, gopros = cur.gopros.filter { it.address in allowed })
+        _state.value = fresh.copy(lights = cur.lights.filter { it.address in allowed }, gopros = cur.gopros.filter { it.address in allowed }, trainer = TrainerInfo())
     }
 
     @Subscribe fun onGPSStatus(e: GPSStatus) {
@@ -215,6 +223,49 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
                     cadenceReduce.addValue(c, elapsedMs)
                     _state.value = _state.value.copy(cadence = c, cadenceGraph = cadenceReduce.getGraphData().toList())
                 }
+            }
+            BleSensorData.SENSOR_FTMS_INDOOR_BIKE -> {
+                val addr = e.getBleAddress()
+                val cur = _state.value
+                if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
+                    val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
+                    val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
+                    _state.value = cur.copy(trainer = cur.trainer.copy(
+                        address = addr,
+                        instantaneousPower = e.getInstantaneousPower(),
+                        instantaneousCadence = cadenceRpm,
+                        instantaneousSpeed = speedKmh,
+                        resistanceLevel = e.getResistanceLevel(),
+                        targetPower = e.getTargetPower(),
+                        minResistance = e.getMinResistance(),
+                        maxResistance = e.getMaxResistance(),
+                        minPower = e.getMinPower(),
+                        maxPower = e.getMaxPower(),
+                        minSpeed = e.getMinSpeed() / 100f,
+                        maxSpeed = e.getMaxSpeed() / 100f,
+                    ))
+                }
+            }
+            BleSensorData.SENSOR_FTMS_SUPPORTED_RANGES -> {
+                val addr = e.getBleAddress()
+                val cur = _state.value
+                if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
+                    _state.value = cur.copy(trainer = cur.trainer.copy(
+                        address = addr,
+                        minResistance = e.getMinResistance(),
+                        maxResistance = e.getMaxResistance(),
+                        minPower = e.getMinPower(),
+                        maxPower = e.getMaxPower(),
+                        minSpeed = e.getMinSpeed() / 100f,
+                        maxSpeed = e.getMaxSpeed() / 100f,
+                    ))
+                }
+            }
+            BleSensorData.SENSOR_FTMS_STATUS -> {
+                // Fitness Machine Status - could indicate errors, etc.
+            }
+            BleSensorData.SENSOR_FTMS_TRAINING_STATUS -> {
+                // Training Status - could indicate session state
             }
         }
         updateHrm()
@@ -286,5 +337,21 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
     }
     fun setGoProRecording(address: String, start: Boolean) {
         bus.post(GoProControlRequest(address, start))
+    }
+    fun setTrainerTargetPower(watts: Int) {
+        val addr = _state.value.trainer.address
+        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, watts, 0, true, false))
+    }
+    fun setTrainerResistance(level: Int) {
+        val addr = _state.value.trainer.address
+        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, level, false, false))
+    }
+    fun setTrainerErgMode(enabled: Boolean) {
+        val addr = _state.value.trainer.address
+        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, 0, enabled, false))
+    }
+    fun requestTrainerControl() {
+        val addr = _state.value.trainer.address
+        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, 0, false, true))
     }
 }

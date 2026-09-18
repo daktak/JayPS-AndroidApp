@@ -8,6 +8,10 @@ public class BleSensorData {
     public static final int SENSOR_RSC = 4;
     public static final int SENSOR_TEMPERATURE = 5;
     public static final int SENSOR_POWER = 6;
+    public static final int SENSOR_FTMS_INDOOR_BIKE = 7;
+    public static final int SENSOR_FTMS_STATUS = 8;
+    public static final int SENSOR_FTMS_TRAINING_STATUS = 9;
+    public static final int SENSOR_FTMS_SUPPORTED_RANGES = 10;
 
     private String _bleAddress = "";
     public BleSensorData(String bleAddress) {
@@ -74,5 +78,71 @@ public class BleSensorData {
     public void setPower(int power) {
         this._type = SENSOR_POWER;
         this._power = power;
+    }
+
+    // FTMS Indoor Bike Data fields
+    private int _instantaneousSpeed = 0;        // 0.01 km/h
+    private int _instantaneousCadence = 0;      // 0.5 rpm
+    private int _instantaneousPower = 0;        // watts
+    private int _resistanceLevel = 0;           // unitless
+    private int _targetPower = 0;               // watts (ERG mode)
+    private int _minResistance = 0;
+    private int _maxResistance = 0;
+    private int _minPower = 0;
+    private int _maxPower = 0;
+    private int _minSpeed = 0;
+    private int _maxSpeed = 0;
+    private boolean _hasControl = false;
+
+    public int getInstantaneousSpeed() { return _instantaneousSpeed; }
+    public void setInstantaneousSpeed(int v) { _instantaneousSpeed = v; }
+    public int getInstantaneousCadence() { return _instantaneousCadence; }
+    public void setInstantaneousCadence(int v) { _instantaneousCadence = v; }
+    public int getInstantaneousPower() { return _instantaneousPower; }
+    public void setInstantaneousPower(int v) { _instantaneousPower = v; }
+    public int getResistanceLevel() { return _resistanceLevel; }
+    public void setResistanceLevel(int v) { _resistanceLevel = v; }
+    public int getTargetPower() { return _targetPower; }
+    public void setTargetPower(int v) { _targetPower = v; }
+    public int getMinResistance() { return _minResistance; }
+    public void setMinResistance(int v) { _minResistance = v; }
+    public int getMaxResistance() { return _maxResistance; }
+    public void setMaxResistance(int v) { _maxResistance = v; }
+    public int getMinPower() { return _minPower; }
+    public void setMinPower(int v) { _minPower = v; }
+    public int getMaxPower() { return _maxPower; }
+    public void setMaxPower(int v) { _maxPower = v; }
+    public int getMinSpeed() { return _minSpeed; }
+    public void setMinSpeed(int v) { _minSpeed = v; }
+    public int getMaxSpeed() { return _maxSpeed; }
+    public void setMaxSpeed(int v) { _maxSpeed = v; }
+    public boolean getHasControl() { return _hasControl; }
+    public void setHasControl(boolean v) { _hasControl = v; }
+
+    public void setFtmsIndoorBikeData(int speed, int cadence, int power, int resistance, int targetPower) {
+        this._type = SENSOR_FTMS_INDOOR_BIKE;
+        this._instantaneousSpeed = speed;
+        this._instantaneousCadence = cadence;
+        this._instantaneousPower = power;
+        this._resistanceLevel = resistance;
+        this._targetPower = targetPower;
+    }
+
+    public void setFtmsSupportedRanges(int minRes, int maxRes, int minPwr, int maxPwr, int minSpd, int maxSpd) {
+        this._type = SENSOR_FTMS_SUPPORTED_RANGES;
+        this._minResistance = minRes;
+        this._maxResistance = maxRes;
+        this._minPower = minPwr;
+        this._maxPower = maxPwr;
+        this._minSpeed = minSpd;
+        this._maxSpeed = maxSpd;
+    }
+
+    public void setFtmsStatus(int status) {
+        this._type = SENSOR_FTMS_STATUS;
+    }
+
+    public void setFtmsTrainingStatus(int status) {
+        this._type = SENSOR_FTMS_TRAINING_STATUS;
     }
 }

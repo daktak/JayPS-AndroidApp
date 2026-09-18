@@ -1,5 +1,7 @@
 package com.njackson.ui.dashboard
 
+import kotlin.math.roundToInt
+
 data class LightInfo(
     val address: String,
     val name: String,
@@ -21,6 +23,35 @@ data class GoProInfo(
     val battery: Int,
     val connected: Boolean,
 )
+
+data class TrainerInfo(
+    val address: String = "",
+    val name: String = "",
+    val model: String = "",
+    val connected: Boolean = false,
+    val instantaneousPower: Int = 0,
+    val instantaneousCadence: Int = 0,
+    val instantaneousSpeed: Float = 0f,
+    val resistanceLevel: Int = 0,
+    val targetPower: Int = 0,
+    val minResistance: Int = 0,
+    val maxResistance: Int = 0,
+    val minPower: Int = 0,
+    val maxPower: Int = 0,
+    val minSpeed: Float = 0f,
+    val maxSpeed: Float = 0f,
+    val isErgMode: Boolean = false,
+    val hasControl: Boolean = false,
+) {
+    fun resistancePercent(): Float = if (maxResistance > minResistance)
+        (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance) else 0f
+
+    fun estimatedWattsAtResistance(): Int {
+        if (maxResistance <= minResistance || maxPower <= minPower) return 0
+        val ratio = (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance)
+        return (minPower + ratio * (maxPower - minPower)).roundToInt()
+    }
+}
 
 data class DashboardUiState(
     val speed: Float = 0f,
@@ -47,4 +78,5 @@ data class DashboardUiState(
     val isIndoor: Boolean = false,
     val lights: List<LightInfo> = emptyList(),
     val gopros: List<GoProInfo> = emptyList(),
+    val trainer: TrainerInfo = TrainerInfo(),
 )
