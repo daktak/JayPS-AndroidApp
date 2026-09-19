@@ -1609,13 +1609,16 @@ public class Ble implements IBle, ITimerHandler {
         int minPower = wahooMinPower.getOrDefault(addr, 0);
         int maxPower = wahooMaxPower.getOrDefault(addr, 2000);
         BleSensorData sensorData = new BleSensorData(addr);
-        sensorData.setFtmsIndoorBikeData(0, 0, 0, 0, 0);
+        // Set individual fields FIRST, then combined methods in correct order
+        // so event type ends up as SENSOR_FTMS_INDOOR_BIKE (7)
         sensorData.setMinPower(minPower);
         sensorData.setMaxPower(maxPower);
         sensorData.setMinResistance(0);
         sensorData.setMaxResistance(100);
         sensorData.setHasControl(true);
+        // These must be called in order: ranges first, then indoor bike data LAST
         sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
+        sensorData.setFtmsIndoorBikeData(0, 0, 0, 0, 0);
         _bus.post(sensorData);
     }
 
