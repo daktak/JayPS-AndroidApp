@@ -42,6 +42,8 @@ data class TrainerInfo(
     val maxSpeed: Float = 0f,
     val isErgMode: Boolean = false,
     val hasControl: Boolean = false,
+    val isWahooProprietary: Boolean = false,
+    val isWahooProprietaryControl: Boolean = false,
 ) {
     fun resistancePercent(): Float = if (maxResistance > minResistance)
         (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance) else 0f

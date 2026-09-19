@@ -46,6 +46,9 @@ public class BLESampleGattAttributes {
     public static String SUPPORTED_POWER_RANGE = "00002ad6-0000-1000-8000-00805f9b34fb";
     public static String SUPPORTED_SPEED_RANGE = "00002ad8-0000-1000-8000-00805f9b34fb";
 
+    // Wahoo proprietary Cycling Power Extension (pre-FTMS KICKR control)
+    public static String WAHOO_CYCLING_POWER_EXTENSION = "a026e005-0a7d-4ab3-97fa-f1500f9feb8b";
+
     static {
         // Sample Services.
         // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
@@ -99,6 +102,9 @@ public class BLESampleGattAttributes {
         attributes.put("00002ad5-0000-1000-8000-00805f9b34fb", "Supported Resistance Level Range");
         attributes.put("00002ad6-0000-1000-8000-00805f9b34fb", "Supported Power Range");
         attributes.put("00002ad8-0000-1000-8000-00805f9b34fb", "Supported Speed Range");
+
+        // Wahoo proprietary extension
+        attributes.put("a026e005-0a7d-4ab3-97fa-f1500f9feb8b", "Wahoo Cycling Power Extension");
     }
 
     public static String lookup(String uuid, String defaultName) {

@@ -422,7 +422,9 @@ private fun TrainerCard(
                 }
                 Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(if (trainer.connected) GpsExcellent else GpsDisabled))
                 Spacer(Modifier.width(8.dp))
-                if (!trainer.hasControl) {
+                if (trainer.isWahooProprietaryControl) {
+                    Text("Proprietary BLE Control", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                } else if (!trainer.hasControl) {
                     Text("No Control", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                 }
             }
@@ -463,7 +465,14 @@ private fun TrainerCard(
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         val estWatts = trainer.estimatedWattsAtResistance()
-                        Text("Resistance: ${trainer.resistanceLevel} (~$estWatts W)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                        val resistanceText = if (trainer.isWahooProprietaryControl) {
+                            // For Wahoo proprietary: 0-100 maps to levels 1-9
+                            val kickrLevel = Math.max(1, Math.min(9, (trainer.resistanceLevel * 9) / 100 + 1))
+                            "Resistance: ${trainer.resistanceLevel} (Level $kickrLevel) (~$estWatts W)"
+                        } else {
+                            "Resistance: ${trainer.resistanceLevel} (~$estWatts W)"
+                        }
+                        Text(resistanceText, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.weight(1f))
                         Text("${trainer.minResistance}–${trainer.maxResistance}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -477,7 +486,7 @@ private fun TrainerCard(
             }
 
             // Request Control button (if needed)
-            if (!trainer.hasControl) {
+            if (!trainer.hasControl && !trainer.isWahooProprietaryControl) {
                 Button(onClick = onRequestControl, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
                     Text("Request Control")
                 }

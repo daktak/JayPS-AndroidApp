@@ -9,6 +9,7 @@ import com.njackson.events.BleServiceCommand.GoProControlRequest
 import com.njackson.events.BleServiceCommand.LightControlRequest
 import com.njackson.events.BleServiceCommand.LightState
 import com.njackson.events.BleServiceCommand.TrainerControlRequest
+import com.njackson.events.BleServiceCommand.WahooTrainerControlRequest
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.NewAltitude
 import com.njackson.events.GPSServiceCommand.NewLocation
@@ -227,23 +228,29 @@ class DashboardViewModel(
             BleSensorData.SENSOR_FTMS_INDOOR_BIKE -> {
                 val addr = e.getBleAddress()
                 val cur = _state.value
+                // Only update if this is a confirmation (hasControl=true means confirmed) or initial data
+                val isConfirmed = e.getHasControl()
                 if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
-                    val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
-                    val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
-                    _state.value = cur.copy(trainer = cur.trainer.copy(
-                        address = addr,
-                        instantaneousPower = e.getInstantaneousPower(),
-                        instantaneousCadence = cadenceRpm,
-                        instantaneousSpeed = speedKmh,
-                        resistanceLevel = e.getResistanceLevel(),
-                        targetPower = e.getTargetPower(),
-                        minResistance = e.getMinResistance(),
-                        maxResistance = e.getMaxResistance(),
-                        minPower = e.getMinPower(),
-                        maxPower = e.getMaxPower(),
-                        minSpeed = e.getMinSpeed() / 100f,
-                        maxSpeed = e.getMaxSpeed() / 100f,
-                    ))
+                    if (isConfirmed || cur.trainer.instantaneousPower == 0) {
+                        val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
+                        val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
+                        _state.value = cur.copy(trainer = cur.trainer.copy(
+                            address = addr,
+                            instantaneousPower = e.getInstantaneousPower(),
+                            instantaneousCadence = cadenceRpm,
+                            instantaneousSpeed = speedKmh,
+                            resistanceLevel = e.getResistanceLevel(),
+                            targetPower = e.getTargetPower(),
+                            minResistance = e.getMinResistance(),
+                            maxResistance = e.getMaxResistance(),
+                            minPower = e.getMinPower(),
+                            maxPower = e.getMaxPower(),
+                            minSpeed = e.getMinSpeed() / 100f,
+                            maxSpeed = e.getMaxSpeed() / 100f,
+                            isWahooProprietary = true,
+                            isWahooProprietaryControl = true,
+                        ))
+                    }
                 }
             }
             BleSensorData.SENSOR_FTMS_SUPPORTED_RANGES -> {
@@ -340,11 +347,25 @@ class DashboardViewModel(
     }
     fun setTrainerTargetPower(watts: Int) {
         val addr = _state.value.trainer.address
-        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, watts, 0, true, false))
+        val trainer = _state.value.trainer
+        if (addr.isNotEmpty()) {
+            if (trainer.isWahooProprietaryControl) {
+                bus.post(WahooTrainerControlRequest(addr, watts, 0, true))
+            } else {
+                bus.post(TrainerControlRequest(addr, watts, 0, true, false))
+            }
+        }
     }
     fun setTrainerResistance(level: Int) {
         val addr = _state.value.trainer.address
-        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, level, false, false))
+        val trainer = _state.value.trainer
+        if (addr.isNotEmpty()) {
+            if (trainer.isWahooProprietaryControl) {
+                bus.post(WahooTrainerControlRequest(addr, 0, level, false))
+            } else {
+                bus.post(TrainerControlRequest(addr, 0, level, false, false))
+            }
+        }
     }
     fun setTrainerErgMode(enabled: Boolean) {
         val addr = _state.value.trainer.address
