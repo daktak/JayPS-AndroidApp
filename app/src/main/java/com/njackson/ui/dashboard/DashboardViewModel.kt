@@ -385,7 +385,12 @@ class DashboardViewModel(
         val trainer = _state.value.trainer
         if (addr.isNotEmpty()) {
             if (trainer.isWahooProprietaryControl) {
-                bus.post(WahooTrainerControlRequest(addr, 0, 0, enabled))
+                // When enabling ERG mode, send current target power; when disabling, send current resistance level
+                if (enabled) {
+                    bus.post(WahooTrainerControlRequest(addr, trainer.targetPower, 0, true))
+                } else {
+                    bus.post(WahooTrainerControlRequest(addr, 0, trainer.resistanceLevel, false))
+                }
             } else {
                 bus.post(TrainerControlRequest(addr, 0, 0, enabled, false))
             }
