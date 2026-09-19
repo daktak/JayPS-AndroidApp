@@ -250,6 +250,7 @@ class DashboardViewModel(
                             maxSpeed = e.getMaxSpeed() / 100f,
                             isWahooProprietary = true,
                             isWahooProprietaryControl = true,
+                            hasControl = true,
                         ))
                     }
                 }
@@ -266,6 +267,7 @@ class DashboardViewModel(
                         maxPower = e.getMaxPower(),
                         minSpeed = e.getMinSpeed() / 100f,
                         maxSpeed = e.getMaxSpeed() / 100f,
+                        hasControl = true,
                     ))
                 }
             }
