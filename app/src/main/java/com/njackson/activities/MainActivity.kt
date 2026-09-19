@@ -186,16 +186,33 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                 if (!hasStrava && !hasIntervals) {
                     Toast.makeText(applicationContext, "No upload services configured. Set Strava session or intervals.icu API key in settings.", Toast.LENGTH_LONG).show()
                 } else {
-                    val messages = mutableListOf<String>()
-                    if (hasStrava) {
-                        StravaUpload(applicationContext).upload(stravaSession)
-                        messages.add("Strava: uploading...")
+                    val results = mutableListOf<String>()
+                    
+                    fun runNextUpload(index: Int) {
+                        if (index >= 2) {
+                            // Both done - show combined result
+                            Toast.makeText(this@MainActivity, results.joinToString("\n"), Toast.LENGTH_LONG).show()
+                            return
+                        }
+                        
+                        if (index == 0 && hasStrava) {
+                            Toast.makeText(this@MainActivity, "Strava: uploading...", Toast.LENGTH_SHORT).show()
+                            StravaUpload(applicationContext).upload(stravaSession) { result ->
+                                results.add("Strava: $result")
+                                runNextUpload(1)
+                            }
+                        } else if (index == 1 && hasIntervals) {
+                            Toast.makeText(this@MainActivity, "intervals.icu: uploading...", Toast.LENGTH_SHORT).show()
+                            IntervalsIcuUpload(applicationContext).upload(intervalsKey) { result ->
+                                results.add("intervals.icu: $result")
+                                runNextUpload(2)
+                            }
+                        } else {
+                            runNextUpload(index + 1)
+                        }
                     }
-                    if (hasIntervals) {
-                        IntervalsIcuUpload(applicationContext).upload(intervalsKey)
-                        messages.add("intervals.icu: uploading...")
-                    }
-                    Toast.makeText(applicationContext, messages.joinToString("\n"), Toast.LENGTH_LONG).show()
+                    
+                    runNextUpload(0)
                 }
             } else Toast.makeText(applicationContext, "Please enable tracks in the settings to save GPX before uploading", Toast.LENGTH_SHORT).show()
         }

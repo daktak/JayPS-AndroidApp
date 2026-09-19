@@ -38,6 +38,10 @@ import fr.jayps.android.AdvancedLocation;
  */
 public class IntervalsIcuUpload {
 
+    public interface UploadCallback {
+        void onComplete(String result);
+    }
+
     private static final String TAG = "PB-IntervalsIcuUpload";
     private static final String UA = "Mozilla/5.0 (Linux; Android) KayPS";
     private static final String UPLOAD_URL = "https://intervals.icu/api/v1/athlete/0/activities";
@@ -53,9 +57,9 @@ public class IntervalsIcuUpload {
         _context = context.getApplicationContext();
     }
 
-    public void upload(final String apiKey) {
+    public void upload(final String apiKey, final UploadCallback callback) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            toast("intervals.icu: no API key set");
+            if (callback != null) callback.onComplete("intervals.icu: no API key set");
             return;
         }
         toast("intervals.icu: uploading... Please wait");
@@ -83,7 +87,9 @@ public class IntervalsIcuUpload {
                 }
                 final String result = message;
                 Log.i(TAG, "RESULT: " + result);
-                toast("intervals.icu: " + result);
+                if (callback != null) {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onComplete(result));
+                }
             }
         }).start();
     }

@@ -370,7 +370,10 @@ public class GPSServiceCommand implements IServiceCommand {
                 if (_serviceStarter.isLocationServicesRunning()) {
                     return;
                 }
-                new StravaUpload(_applicationContext).upload(session);
+                new StravaUpload(_applicationContext).upload(session, result -> {
+                    // Auto-upload callback - log result
+                    Log.d("GPSServiceCommand", "Strava auto-upload result: " + result);
+                });
             }
         }, TIMEOUT_STRAVA);
     }
