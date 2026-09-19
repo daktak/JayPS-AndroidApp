@@ -673,6 +673,11 @@ public class Ble implements IBle, ITimerHandler {
         handleTrainerControlRequest(req);
     }
 
+    @Subscribe
+    public void onWahooTrainerControl(WahooTrainerControlRequest req) {
+        handleWahooTrainerControlRequest(req);
+    }
+
     private void ensureConnectionThread() {
         if (connectionThread == null) {
             connectionThread = new Thread(new Runnable() {

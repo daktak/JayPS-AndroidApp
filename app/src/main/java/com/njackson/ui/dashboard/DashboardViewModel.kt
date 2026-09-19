@@ -236,6 +236,7 @@ class DashboardViewModel(
                         val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
                         _state.value = cur.copy(trainer = cur.trainer.copy(
                             address = addr,
+                            connected = true,
                             instantaneousPower = e.getInstantaneousPower(),
                             instantaneousCadence = cadenceRpm,
                             instantaneousSpeed = speedKmh,
@@ -369,7 +370,14 @@ class DashboardViewModel(
     }
     fun setTrainerErgMode(enabled: Boolean) {
         val addr = _state.value.trainer.address
-        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, 0, enabled, false))
+        val trainer = _state.value.trainer
+        if (addr.isNotEmpty()) {
+            if (trainer.isWahooProprietaryControl) {
+                bus.post(WahooTrainerControlRequest(addr, 0, 0, enabled))
+            } else {
+                bus.post(TrainerControlRequest(addr, 0, 0, enabled, false))
+            }
+        }
     }
     fun requestTrainerControl() {
         val addr = _state.value.trainer.address
