@@ -67,10 +67,9 @@ public class IntervalsIcuUpload {
             @Override
             public void run() {
                 String message;
-                AdvancedLocation advancedLocation = null;
                 try {
                     Log.i(TAG, "upload start (apiKeyLen=" + apiKey.trim().length() + ")");
-                    advancedLocation = new AdvancedLocation(_context);
+                    AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
                     String filename;
                     String data;
@@ -85,10 +84,6 @@ public class IntervalsIcuUpload {
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e, e);
                     message = "Error - " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
-                } finally {
-                    if (advancedLocation != null) {
-                        advancedLocation.close();
-                    }
                 }
                 final String result = message;
                 Log.i(TAG, "RESULT: " + result);
