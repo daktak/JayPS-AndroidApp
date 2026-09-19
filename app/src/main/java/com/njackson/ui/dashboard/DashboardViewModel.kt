@@ -209,11 +209,19 @@ class DashboardViewModel(
                     power = true
                     val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
                     powerReduce.addValue(p, elapsedMs)
-                    _state.value = _state.value.copy(power = p, powerGraph = powerReduce.getGraphData().toList())
+                    _state.value = _state.value.copy(
+                        power = p, 
+                        powerGraph = powerReduce.getGraphData().toList(),
+                        trainer = _state.value.trainer.copy(instantaneousPower = p)
+                    )
                 } else if (p == 0 && power) {
                     val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
                     powerReduce.addValue(0, elapsedMs)
-                    _state.value = _state.value.copy(power = 0, powerGraph = powerReduce.getGraphData().toList())
+                    _state.value = _state.value.copy(
+                        power = 0, 
+                        powerGraph = powerReduce.getGraphData().toList(),
+                        trainer = _state.value.trainer.copy(instantaneousPower = 0)
+                    )
                 }
             }
             BleSensorData.SENSOR_CSC_CADENCE, BleSensorData.SENSOR_RSC -> {
@@ -222,37 +230,39 @@ class DashboardViewModel(
                     cadence = true
                     val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
                     cadenceReduce.addValue(c, elapsedMs)
-                    _state.value = _state.value.copy(cadence = c, cadenceGraph = cadenceReduce.getGraphData().toList())
+                    _state.value = _state.value.copy(
+                        cadence = c, 
+                        cadenceGraph = cadenceReduce.getGraphData().toList(),
+                        trainer = _state.value.trainer.copy(instantaneousCadence = c)
+                    )
                 }
             }
             BleSensorData.SENSOR_FTMS_INDOOR_BIKE -> {
                 val addr = e.getBleAddress()
                 val cur = _state.value
-                // Only update if this is a confirmation (hasControl=true means confirmed) or initial data
-                val isConfirmed = e.getHasControl()
+                // Always update trainer state when receiving FTMS indoor bike data for this trainer
+                // For Wahoo proprietary trainer, the event itself indicates control capability
                 if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
-                    if (isConfirmed || cur.trainer.instantaneousPower == 0) {
-                        val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
-                        val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
-                        _state.value = cur.copy(trainer = cur.trainer.copy(
-                            address = addr,
-                            connected = true,
-                            instantaneousPower = e.getInstantaneousPower(),
-                            instantaneousCadence = cadenceRpm,
-                            instantaneousSpeed = speedKmh,
-                            resistanceLevel = e.getResistanceLevel(),
-                            targetPower = e.getTargetPower(),
-                            minResistance = e.getMinResistance(),
-                            maxResistance = e.getMaxResistance(),
-                            minPower = e.getMinPower(),
-                            maxPower = e.getMaxPower(),
-                            minSpeed = e.getMinSpeed() / 100f,
-                            maxSpeed = e.getMaxSpeed() / 100f,
-                            isWahooProprietary = true,
-                            isWahooProprietaryControl = true,
-                            hasControl = true,
-                        ))
-                    }
+                    val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
+                    val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
+                    _state.value = cur.copy(trainer = cur.trainer.copy(
+                        address = addr,
+                        connected = true,
+                        instantaneousPower = e.getInstantaneousPower(),
+                        instantaneousCadence = cadenceRpm,
+                        instantaneousSpeed = speedKmh,
+                        resistanceLevel = e.getResistanceLevel(),
+                        targetPower = e.getTargetPower(),
+                        minResistance = e.getMinResistance(),
+                        maxResistance = e.getMaxResistance(),
+                        minPower = e.getMinPower(),
+                        maxPower = e.getMaxPower(),
+                        minSpeed = e.getMinSpeed() / 100f,
+                        maxSpeed = e.getMaxSpeed() / 100f,
+                        isWahooProprietary = true,
+                        isWahooProprietaryControl = true,
+                        hasControl = true,
+                    ))
                 }
             }
             BleSensorData.SENSOR_FTMS_SUPPORTED_RANGES -> {
