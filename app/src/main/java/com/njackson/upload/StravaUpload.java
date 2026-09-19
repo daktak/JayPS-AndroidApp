@@ -72,9 +72,10 @@ public class StravaUpload {
             @Override
             public void run() {
                 String message;
-                 try {
+                AdvancedLocation advancedLocation = null;
+                try {
                     Log.i(TAG, "upload start (sessionLen=" + session.trim().length() + ")");
-                    AdvancedLocation advancedLocation = new AdvancedLocation(_context);
+                    advancedLocation = new AdvancedLocation(_context);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
                     String filename;
                     String data;
@@ -89,6 +90,10 @@ public class StravaUpload {
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e, e);
                     message = "Error - " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+                } finally {
+                    if (advancedLocation != null) {
+                        advancedLocation.close();
+                    }
                 }
                 final String result = message;
                 Log.i(TAG, "RESULT: " + result);
