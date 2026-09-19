@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -199,7 +201,8 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                             Toast.makeText(this@MainActivity, "Strava: uploading...", Toast.LENGTH_SHORT).show()
                             StravaUpload(applicationContext).upload(stravaSession) { result ->
                                 results.add("Strava: $result")
-                                runNextUpload(1)
+                                // Small delay to allow Strava's AdvancedLocation database to close
+                                Handler(Looper.getMainLooper()).postDelayed({ runNextUpload(1) }, 500)
                             }
                         } else if (index == 1 && hasIntervals) {
                             Toast.makeText(this@MainActivity, "intervals.icu: uploading...", Toast.LENGTH_SHORT).show()
