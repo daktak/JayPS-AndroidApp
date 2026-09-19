@@ -7,8 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -189,33 +187,30 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                     Toast.makeText(applicationContext, "No upload services configured. Set Strava session or intervals.icu API key in settings.", Toast.LENGTH_LONG).show()
                 } else {
                     val results = mutableListOf<String>()
+                    var completed = 0
+                    val total = (if (hasStrava) 1 else 0) + (if (hasIntervals) 1 else 0)
                     
-                    fun runNextUpload(index: Int) {
-                        if (index >= 2) {
-                            // Both done - show combined result
+                    fun checkComplete() {
+                        completed++
+                        if (completed >= total) {
                             Toast.makeText(this@MainActivity, results.joinToString("\n"), Toast.LENGTH_LONG).show()
-                            return
-                        }
-                        
-                        if (index == 0 && hasStrava) {
-                            Toast.makeText(this@MainActivity, "Strava: uploading...", Toast.LENGTH_SHORT).show()
-                            StravaUpload(applicationContext).upload(stravaSession) { result ->
-                                results.add("Strava: $result")
-                                // Small delay to allow Strava's AdvancedLocation database to close
-                                Handler(Looper.getMainLooper()).postDelayed({ runNextUpload(1) }, 500)
-                            }
-                        } else if (index == 1 && hasIntervals) {
-                            Toast.makeText(this@MainActivity, "intervals.icu: uploading...", Toast.LENGTH_SHORT).show()
-                            IntervalsIcuUpload(applicationContext).upload(intervalsKey) { result ->
-                                results.add("intervals.icu: $result")
-                                runNextUpload(2)
-                            }
-                        } else {
-                            runNextUpload(index + 1)
                         }
                     }
                     
-                    runNextUpload(0)
+                    if (hasStrava) {
+                        Toast.makeText(this@MainActivity, "Strava: uploading...", Toast.LENGTH_SHORT).show()
+                        StravaUpload(applicationContext).upload(stravaSession) { result ->
+                            results.add("Strava: $result")
+                            checkComplete()
+                        }
+                    }
+                    if (hasIntervals) {
+                        Toast.makeText(this@MainActivity, "intervals.icu: uploading...", Toast.LENGTH_SHORT).show()
+                        IntervalsIcuUpload(applicationContext).upload(intervalsKey) { result ->
+                            results.add("intervals.icu: $result")
+                            checkComplete()
+                        }
+                    }
                 }
             } else Toast.makeText(applicationContext, "Please enable tracks in the settings to save GPX before uploading", Toast.LENGTH_SHORT).show()
         }
