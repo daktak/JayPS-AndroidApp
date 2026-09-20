@@ -133,6 +133,8 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<String, BluetoothGattCharacteristic> wahooExtensionChar = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> wahooMinPower = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> wahooMaxPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, WahooCommandQueue> wahooCommandQueues = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> wahooInitStarted = new ConcurrentHashMap<>();
 
     private Set<String> _ble_addresses;
 
@@ -353,6 +355,9 @@ public class Ble implements IBle, ITimerHandler {
                             try { postLightState(gatt); postGoProState(gatt); } catch (Exception e) {}
                             gatt.close();
                             mGatts.remove(gatt.getDevice().getAddress());
+                            // Unlock handshake must be re-sent on the next (re)connect
+                            wahooInitStarted.remove(gatt.getDevice().getAddress());
+                            wahooExtensionChar.remove(gatt.getDevice().getAddress());
                             try { postLightState(gatt); postGoProState(gatt); } catch (Exception e) {}
                             if (_bleStarted) {
                                 reconnectLater(gatt);
@@ -1154,23 +1159,30 @@ public class Ble implements IBle, ITimerHandler {
         } else if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(characteristic.getUuid())) {
             // Wahoo Extension indication (command response)
             byte[] data = characteristic.getValue();
-            if (data != null && data.length >= 2) {
-                int echoOpcode = data[0] & 0xFF;
-                int result = data[1] & 0xFF;
+            if (data != null) {
                 String addr = gatt.getDevice().getAddress();
-                if (result == 0) {
+                Log.d(TAG, "Wahoo indication from " + addr + ": " + hex(data));
+            }
+            // Legacy KICKR confirms as [01, opcode, result, 00, valLo, valHi]; result 0x01 = success
+            if (data != null && data.length >= 3) {
+                int echoOpcode = data[1] & 0xFF;
+                int result = data[2] & 0xFF;
+                String addr = gatt.getDevice().getAddress();
+                if (result == 1) {
                     Log.d(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " confirmed");
                     // Update TrainerInfo with confirmed value
                     if (echoOpcode == 0x42) { // Set ERG Power
                         int confirmedPower = 0;
-                        if (data.length >= 4) {
-                            confirmedPower = (data[2] & 0xFF) | ((data[3] & 0xFF) << 8);
+                        if (data.length >= 6) {
+                            confirmedPower = (data[4] & 0xFF) | ((data[5] & 0xFF) << 8);
                         }
                         postTrainerPowerConfirmed(addr, confirmedPower);
                     } else if (echoOpcode == 0x41) { // Set Level
-                        int confirmedLevel = data.length >= 3 ? (data[2] & 0xFF) : 0;
+                        int confirmedLevel = data.length >= 5 ? (data[4] & 0xFF) : 0;
                         postTrainerLevelConfirmed(addr, confirmedLevel);
                     }
+                } else if (result == 0x40) {
+                    Log.w(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " not supported");
                 } else {
                     Log.w(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " failed: " + result);
                 }
@@ -1320,6 +1332,8 @@ public class Ble implements IBle, ITimerHandler {
                 trainerAddress = addr;
                 // Read CPS Feature for power range
                 readCPSFeatureForRange(gatt);
+                // Send the 0x20 unlock + init handshake so control writes are accepted
+                initWahooControl(addr);
                 // Post initial trainer state with proprietary control capability
                 postTrainerState(gatt, true, true);
             }
@@ -1390,7 +1404,12 @@ public class Ble implements IBle, ITimerHandler {
             || UUID_RSC_MEASUREMENT.equals(characteristic.getUuid())
         ) {*/
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(BLESampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(characteristic.getUuid())) {
+                // Wahoo trainer confirmations arrive as indications (CCCD value 0x0002), not notifications
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+            } else {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            }
             writeGattDescriptor(gatt, descriptor);
         /*} else {
             if (debug) Log.i(TAG, "unused characteristics2:" + display(gatt, characteristic));
@@ -1676,18 +1695,104 @@ public class Ble implements IBle, ITimerHandler {
     private void writeWahooExtension(String address, byte[] data) {
         BluetoothGattCharacteristic chr = wahooExtensionChar.get(address);
         if (chr != null) {
-            BluetoothGatt gatt = mGatts.get(address);
-            if (gatt == null) gatt = mGattsConnectionPending.get(address);
-            if (gatt != null) {
-                // Use a default write unless the characteristic only supports write-without-response
-                int writeType = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0
-                        ? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                        : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
-                chr.setWriteType(writeType);
-                chr.setValue(data);
-                characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, chr));
-                triggerNextWrite();
+            // Ensure the unlock handshake (0x20 EE FC) has been sent before any control writes;
+            // the legacy KICKR firmware silently ignores control commands until it is unlocked.
+            queueWahooCommand(address, data);
+        }
+    }
+
+    // Queue a Wahoo extension command. Commands are written on a dedicated thread with enough
+    // spacing for the legacy KICKR firmware, which drops writes that arrive back-to-back.
+    private void queueWahooCommand(String address, byte[] data) {
+        WahooCommandQueue queue = wahooCommandQueues.get(address);
+        if (queue == null) {
+            queue = new WahooCommandQueue(address);
+            wahooCommandQueues.put(address, queue);
+        }
+        queue.add(data);
+    }
+
+    // Send the trainer init/control-session handshake. Must be re-sent on every (re)connect.
+    private void initWahooControl(String address) {
+        if (Boolean.TRUE.equals(wahooInitStarted.get(address))) return;
+        wahooInitStarted.put(address, true);
+        queueWahooCommand(address, new byte[] { 0x20, (byte)0xEE, (byte)0xFC }); // 0x20: unlock
+        // 0x43: set sim mode params (weight 80kg, crr 0.004, drag 0.4) - matches reference apps
+        queueWahooCommand(address, new byte[] { 0x43, 0x40, 0x1F, 0x04, 0x00, (byte)0x90, 0x01 });
+        // 0x47: wind speed 0 m/s (u16LE: (0 + 32.768) * 1000 = 32768 = 0x8000)
+        queueWahooCommand(address, new byte[] { 0x47, 0x00, (byte)0x80 });
+    }
+
+    private class WahooCommandQueue {
+        private final LinkedList<byte[]> commands = new LinkedList<>();
+
+        WahooCommandQueue(final String address) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        byte[] cmd = null;
+                        synchronized (commands) {
+                            if (!commands.isEmpty()) cmd = commands.removeFirst();
+                        }
+                        if (cmd == null) {
+                            synchronized (commands) {
+                                try {
+                                    if (commands.isEmpty()) commands.wait();
+                                } catch (InterruptedException e) {
+                                    return;
+                                }
+                            }
+                            continue;
+                        }
+                        try {
+                            BluetoothGattCharacteristic chr = wahooExtensionChar.get(address);
+                            if (chr != null) {
+                                BluetoothGatt gatt = mGatts.get(address);
+                                if (gatt == null) gatt = mGattsConnectionPending.get(address);
+                                if (gatt != null) {
+                                    // write-with-response is required by the legacy KICKR firmware
+                                    int writeType = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0
+                                            ? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                                            : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+                                    chr.setWriteType(writeType);
+                                    chr.setValue(cmd);
+                                    boolean ok = gatt.writeCharacteristic(chr);
+                                    Log.d(TAG, "wahoo write " + hex(cmd) + " ok=" + ok);
+                                } else {
+                                    Log.w(TAG, "wahoo write " + hex(cmd) + " dropped: no gatt");
+                                }
+                            } else {
+                                Log.w(TAG, "wahoo write " + hex(cmd) + " dropped: no char");
+                            }
+                            // The KICKR needs breathing room between writes (>=50ms; longer after unlock)
+                            Thread.sleep(cmd[0] == 0x20 ? 800 : 100);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
+                }
+            }, "wahoo-cmd-" + address);
+            thread.setDaemon(true);
+            thread.start();
+        }
+
+        void add(byte[] cmd) {
+            synchronized (commands) {
+                // Coalesce: drop any queued command with the same opcode (stale slider value)
+                Iterator<byte[]> it = commands.iterator();
+                while (it.hasNext()) {
+                    if (it.next()[0] == cmd[0]) it.remove();
+                }
+                commands.addLast(cmd);
+                commands.notifyAll();
             }
         }
+    }
+
+    private String hex(byte[] data) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : data) sb.append(String.format("%02x ", b));
+        return sb.toString().trim();
     }
 }
