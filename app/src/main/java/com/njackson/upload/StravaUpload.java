@@ -42,6 +42,10 @@ import fr.jayps.android.AdvancedLocation;
  */
 public class StravaUpload {
 
+    public interface UploadCallback {
+        void onComplete(String result);
+    }
+
     private static final String TAG = "PB-StravaUpload";
     private static final String UA = "Mozilla/5.0 (Linux; Android) KayPS";
     private static final String SELECT_URL = "https://www.strava.com/upload/select";
@@ -58,9 +62,9 @@ public class StravaUpload {
         _context = context.getApplicationContext();
     }
 
-    public void upload(final String session) {
+    public void upload(final String session, final UploadCallback callback) {
         if (session == null || session.trim().isEmpty()) {
-            toast("Strava: no session cookie set");
+            if (callback != null) callback.onComplete("Strava: no session cookie set");
             return;
         }
         toast("Strava: uploading... Please wait");
@@ -68,7 +72,7 @@ public class StravaUpload {
             @Override
             public void run() {
                 String message;
-                 try {
+                try {
                     Log.i(TAG, "upload start (sessionLen=" + session.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
@@ -88,7 +92,9 @@ public class StravaUpload {
                 }
                 final String result = message;
                 Log.i(TAG, "RESULT: " + result);
-                toast("Strava: " + result);
+                if (callback != null) {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onComplete(result));
+                }
             }
         }).start();
     }

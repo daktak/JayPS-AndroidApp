@@ -28,6 +28,8 @@ data class SettingsUiState(
     val oruxAuto: String = "disable",
     val stravaSession: String = "",
     val stravaAuto: String = "disable",
+    val intervalsIcuApiKey: String = "",
+    val intervalsIcuAuto: String = "disable",
     val debug: Boolean = false,
     val pressureAvailable: Boolean = false,
     val geoidHeight: Float = 0f,

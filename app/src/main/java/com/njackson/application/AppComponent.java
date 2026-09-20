@@ -22,6 +22,9 @@ import dagger.Component;
 
 import javax.inject.Singleton;
 
+import com.njackson.upload.IntervalsIcuUpload;
+import com.njackson.upload.StravaUpload;
+
 @Singleton
 @Component(modules = com.njackson.application.modules.AndroidModule.class)
 public interface AppComponent {
@@ -43,4 +46,5 @@ public interface AppComponent {
     void inject(ActivityRecognitionServiceCommand a);
     void inject(PebbleBikeApplication a);
     void inject(StravaUpload a);
+    void inject(IntervalsIcuUpload a);
 }

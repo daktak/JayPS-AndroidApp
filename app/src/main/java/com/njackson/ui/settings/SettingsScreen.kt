@@ -87,6 +87,7 @@ fun SettingsNavHost(rootNav: NavController, vm: SettingsViewModel, onPickGpx: ()
         composable("live_mmt") { MmtGroup(nav, vm) }
         composable("orux") { OruxGroup(nav, vm) }
         composable("strava") { StravaGroup(nav, vm) }
+        composable("intervals_icu") { IntervalsIcuGroup(nav, vm) }
         composable("advanced") { AdvancedGroup(nav, vm) }
         composable("about") { AboutGroup(nav, vm) }
     }
@@ -212,6 +213,7 @@ private fun IntegrationRoot(nav: NavController, vm: SettingsViewModel) {
             } }
             item { GroupCard(stringResource(R.string.settings_orux_integration), Icons.Filled.Map) { ClickRow(stringResource(R.string.settings_orux_integration), oruxLabel(vm.state.collectAsState().value.oruxAuto)) { nav.navigate("orux") } } }
             item { GroupCard(stringResource(R.string.settings_strava), Icons.Filled.Download) { ClickRow(stringResource(R.string.settings_strava), stravaSummary(vm.state.collectAsState().value)) { nav.navigate("strava") } } }
+            item { GroupCard(stringResource(R.string.settings_intervals_icu), Icons.Filled.Download) { ClickRow(stringResource(R.string.settings_intervals_icu), intervalsIcuSummary(vm.state.collectAsState().value)) { nav.navigate("intervals_icu") } } }
         }
     }
 }
@@ -275,6 +277,22 @@ private fun StravaGroup(nav: NavController, vm: SettingsViewModel) {
             } }
         }
         if (open) ListDialog(stringResource(R.string.STRAVA_AUTO_TITLE), arrayOf("Disable","At the end of the track"), arrayOf("disable","end_track"), s.stravaAuto, { open = false }, { vm.putString("STRAVA_AUTO", it); open = false })
+    }
+}
+
+@Composable
+private fun IntervalsIcuGroup(nav: NavController, vm: SettingsViewModel) {
+    val s by vm.state.collectAsState()
+    var open by remember { mutableStateOf(false) }
+    val summary = if (s.intervalsIcuApiKey.isEmpty()) stringResource(R.string.intervals_icu_not_set) else stringResource(R.string.intervals_icu_set_length, s.intervalsIcuApiKey.length)
+    SettingsScaffold(stringResource(R.string.settings_intervals_icu), nav) {
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            item { GroupCard(stringResource(R.string.settings_intervals_icu), Icons.Filled.Download) {
+                EditRowWithSummary(title = stringResource(R.string.PREF_INTERVALS_ICU_API_KEY_TITLE), summary = summary, value = s.intervalsIcuApiKey, onSave = { vm.putString("INTERVALS_ICU_API_KEY", it) })
+                ClickRow(stringResource(R.string.INTERVALS_ICU_AUTO_TITLE), if (s.intervalsIcuAuto == "disable") "Disable" else "At the end of the track") { open = true }
+            } }
+        }
+        if (open) ListDialog(stringResource(R.string.INTERVALS_ICU_AUTO_TITLE), arrayOf("Disable","At the end of the track"), arrayOf("disable","end_track"), s.intervalsIcuAuto, { open = false }, { vm.putString("INTERVALS_ICU_AUTO", it); open = false })
     }
 }
 
@@ -383,3 +401,5 @@ private fun oruxLabel(v: String) = when(v){"disable"->"Disable";"continue"->"Con
     }
 
     private fun stravaSummary(s: SettingsUiState) = "Session " + (if (s.stravaSession.isEmpty()) "not set" else "set") + if (s.stravaAuto != "disable") " - Auto upload" else ""
+
+    private fun intervalsIcuSummary(s: SettingsUiState) = "API key " + (if (s.intervalsIcuApiKey.isEmpty()) "not set" else "set") + if (s.intervalsIcuAuto != "disable") " - Auto upload" else ""

@@ -37,6 +37,7 @@ import com.njackson.ui.settings.SettingsNavHost
 import com.njackson.ui.settings.SettingsViewModel
 import com.njackson.ui.theme.KaypsTheme
 import com.njackson.upload.StravaUpload
+import com.njackson.upload.IntervalsIcuUpload
 import com.njackson.utils.UpdateTask
 import com.njackson.utils.gpx.GpxExport
 import com.njackson.utils.services.IServiceStarter
@@ -177,10 +178,41 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                 val lat = _dataStore.getLastLocationLatitude(); val lon = _dataStore.getLastLocationLongitude()
                 if (lat != 0f && lon != 0f) startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:$lat,$lon?q=$lat,$lon")))
             }
-            "action_upload_strava" -> if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
-                val session = _sharedPreferences.getString("STRAVA_SESSION", "")
-                if (!session.isNullOrEmpty()) StravaUpload(applicationContext).upload(session) else Toast.makeText(applicationContext, "Please set the Strava session cookie in the settings", Toast.LENGTH_LONG).show()
-            } else Toast.makeText(applicationContext, "Please enable tracks in the settings to save GPX before uploading to Strava", Toast.LENGTH_SHORT).show()
+            "action_upload_activity" -> if (_sharedPreferences.getBoolean("ENABLE_TRACKS", false)) {
+                val stravaSession = _sharedPreferences.getString("STRAVA_SESSION", "") ?: ""
+                val intervalsKey = _sharedPreferences.getString("INTERVALS_ICU_API_KEY", "") ?: ""
+                val hasStrava = stravaSession.isNotEmpty()
+                val hasIntervals = intervalsKey.isNotEmpty()
+                if (!hasStrava && !hasIntervals) {
+                    Toast.makeText(applicationContext, "No upload services configured. Set Strava session or intervals.icu API key in settings.", Toast.LENGTH_LONG).show()
+                } else {
+                    val results = mutableListOf<String>()
+                    var completed = 0
+                    val total = (if (hasStrava) 1 else 0) + (if (hasIntervals) 1 else 0)
+                    
+                    fun checkComplete() {
+                        completed++
+                        if (completed >= total) {
+                            Toast.makeText(this@MainActivity, results.joinToString("\n"), Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    
+                    if (hasStrava) {
+                        Toast.makeText(this@MainActivity, "Strava: uploading...", Toast.LENGTH_SHORT).show()
+                        StravaUpload(applicationContext).upload(stravaSession) { result ->
+                            results.add("Strava: $result")
+                            checkComplete()
+                        }
+                    }
+                    if (hasIntervals) {
+                        Toast.makeText(this@MainActivity, "intervals.icu: uploading...", Toast.LENGTH_SHORT).show()
+                        IntervalsIcuUpload(applicationContext).upload(intervalsKey) { result ->
+                            results.add("intervals.icu: $result")
+                            checkComplete()
+                        }
+                    }
+                }
+            } else Toast.makeText(applicationContext, "Please enable tracks in the settings to save GPX before uploading", Toast.LENGTH_SHORT).show()
         }
     }
 
