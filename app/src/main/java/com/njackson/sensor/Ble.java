@@ -1651,18 +1651,32 @@ public class Ble implements IBle, ITimerHandler {
     }
 
     private void postTrainerPowerConfirmed(String addr, int watts) {
-        BleSensorData sensorData = new BleSensorData(addr);
-        sensorData.setFtmsIndoorBikeData(0, 0, watts, 0, watts);
-        sensorData.setHasControl(true);
-        sensorData.setWahooProprietaryControl(true);
-        _bus.post(sensorData);
+        // ERG confirmation: report target power (level cleared to 0)
+        postTrainerStateConfirmed(addr, watts, 0, watts);
     }
 
     private void postTrainerLevelConfirmed(String addr, int level) {
+        // Level confirmation: report resistance level (watts cleared to 0)
+        postTrainerStateConfirmed(addr, 0, level, 0);
+    }
+
+    private void postTrainerStateConfirmed(String addr, int watts, int level, int targetPower) {
         BleSensorData sensorData = new BleSensorData(addr);
-        sensorData.setFtmsIndoorBikeData(0, 0, 0, level, 0);
+        int minPower = wahooMinPower.getOrDefault(addr, 0);
+        int maxPower = wahooMaxPower.getOrDefault(addr, 2000);
+        // Ranges must be preserved on EVERY confirmation so the sliders keep their full range
+        // and stay movable (otherwise an indoor-bike event with zeroed ranges collapses the
+        // slider to 0..1 and shows 0 W). Set individual fields first, then combined methods
+        // in order: supported ranges FIRST, indoor bike data LAST -> type ends as
+        // SENSOR_FTMS_INDOOR_BIKE (7).
+        sensorData.setMinPower(minPower);
+        sensorData.setMaxPower(maxPower);
+        sensorData.setMinResistance(0);
+        sensorData.setMaxResistance(100);
         sensorData.setHasControl(true);
         sensorData.setWahooProprietaryControl(true);
+        sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
+        sensorData.setFtmsIndoorBikeData(0, 0, watts, level, targetPower);
         _bus.post(sensorData);
     }
 
