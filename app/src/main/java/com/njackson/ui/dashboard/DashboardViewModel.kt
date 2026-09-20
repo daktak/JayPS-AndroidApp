@@ -259,8 +259,11 @@ class DashboardViewModel(
                         maxPower = e.getMaxPower(),
                         minSpeed = e.getMinSpeed() / 100f,
                         maxSpeed = e.getMaxSpeed() / 100f,
-                        isWahooProprietary = true,
-                        isWahooProprietaryControl = true,
+                        // The Wahoo proprietary flag comes from the BLE layer: it is set ONLY when
+                        // a pre-FTMS Wahoo KICKR was detected (proprietary fallback). Genuine
+                        // FTMS trainers keep it false, so FTMS control always takes precedence.
+                        isWahooProprietary = e.getWahooProprietaryControl(),
+                        isWahooProprietaryControl = e.getWahooProprietaryControl(),
                         hasControl = true,
                         // A reported target power > 0 means the trainer is in ERG mode
                         isErgMode = e.getTargetPower() > 0,

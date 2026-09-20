@@ -1641,6 +1641,9 @@ public class Ble implements IBle, ITimerHandler {
         sensorData.setMinResistance(0);
         sensorData.setMaxResistance(100);
         sensorData.setHasControl(true);
+        // Wahoo proprietary flag: true ONLY on this pre-FTMS KICKR path; the genuine-FTMS
+        // measurement path never calls postTrainerState, so this stays false there (FTMS precedence).
+        sensorData.setWahooProprietaryControl(isWahooProprietary);
         // These must be called in order: ranges first, then indoor bike data LAST
         sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
         sensorData.setFtmsIndoorBikeData(0, 0, 0, 0, 0);
@@ -1651,6 +1654,7 @@ public class Ble implements IBle, ITimerHandler {
         BleSensorData sensorData = new BleSensorData(addr);
         sensorData.setFtmsIndoorBikeData(0, 0, watts, 0, watts);
         sensorData.setHasControl(true);
+        sensorData.setWahooProprietaryControl(true);
         _bus.post(sensorData);
     }
 
@@ -1658,6 +1662,7 @@ public class Ble implements IBle, ITimerHandler {
         BleSensorData sensorData = new BleSensorData(addr);
         sensorData.setFtmsIndoorBikeData(0, 0, 0, level, 0);
         sensorData.setHasControl(true);
+        sensorData.setWahooProprietaryControl(true);
         _bus.post(sensorData);
     }
 

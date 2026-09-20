@@ -94,6 +94,13 @@ public class BleSensorData {
     private int _maxSpeed = 0;
     private boolean _hasControl = false;
 
+    // True only when this device is a pre-FTMS Wahoo KICKR (proprietary CPS-extension control).
+    // Set by Ble.java ONLY in the Wahoo fallback path; genuine FTMS trainers keep this false so
+    // the controls keep routing through the standard FTMS control point (FTMS takes precedence).
+    private boolean _isWahooProprietaryControl = false;
+    public boolean getWahooProprietaryControl() { return _isWahooProprietaryControl; }
+    public void setWahooProprietaryControl(boolean v) { _isWahooProprietaryControl = v; }
+
     public int getInstantaneousSpeed() { return _instantaneousSpeed; }
     public void setInstantaneousSpeed(int v) { _instantaneousSpeed = v; }
     public int getInstantaneousCadence() { return _instantaneousCadence; }
