@@ -1313,7 +1313,9 @@ public class Ble implements IBle, ITimerHandler {
                 && wahooExtensionChar.containsKey(gatt.getDevice().getAddress())) {
             String addr = gatt.getDevice().getAddress();
             String deviceName = gatt.getDevice().getName();
-            boolean isKickr = deviceName != null && deviceName.toLowerCase().contains("kickr");
+            String modelName = deviceModels.get(addr);
+            boolean isKickr = (deviceName != null && deviceName.toLowerCase().contains("kickr"))
+                    || (modelName != null && modelName.toLowerCase().contains("kickr"));
             if (isKickr) {
                 trainerAddress = addr;
                 // Read CPS Feature for power range
@@ -1583,9 +1585,8 @@ public class Ble implements IBle, ITimerHandler {
         if (gatt == null) gatt = mGattsConnectionPending.get(addr);
         if (gatt == null) return;
         if (req.isErgMode()) {
-            if (req.getTargetPower() > 0) {
-                setWahooTargetPower(gatt, req.getTargetPower());
-            }
+            // Always send the target power so ERG mode is entered even at 0 W
+            setWahooTargetPower(gatt, req.getTargetPower());
         } else {
             if (req.getResistanceLevel() > 0) {
                 setWahooResistanceLevel(gatt, req.getResistanceLevel());
@@ -1678,6 +1679,11 @@ public class Ble implements IBle, ITimerHandler {
             BluetoothGatt gatt = mGatts.get(address);
             if (gatt == null) gatt = mGattsConnectionPending.get(address);
             if (gatt != null) {
+                // Use a default write unless the characteristic only supports write-without-response
+                int writeType = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0
+                        ? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                        : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+                chr.setWriteType(writeType);
                 chr.setValue(data);
                 characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, chr));
                 triggerNextWrite();

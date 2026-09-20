@@ -440,7 +440,7 @@ private fun TrainerCard(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("ERG Mode", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.weight(1f))
-                Switch(checked = trainer.isErgMode, onCheckedChange = onErgModeChange, enabled = trainer.hasControl)
+                Switch(checked = trainer.isErgMode, onCheckedChange = onErgModeChange, enabled = trainer.hasControl || trainer.isWahooProprietaryControl)
             }
 
             // Control section
@@ -457,7 +457,7 @@ private fun TrainerCard(
                         onValueChange = { onTargetPowerChange(it.roundToInt()) },
                         valueRange = (trainer.minPower.toFloat())..(trainer.maxPower.toFloat().coerceAtLeast(trainer.minPower.toFloat() + 1f)),
                         steps = ((trainer.maxPower - trainer.minPower) / 10).coerceAtLeast(1),
-                        enabled = trainer.hasControl
+                        enabled = trainer.hasControl || trainer.isWahooProprietaryControl
                     )
                 }
             } else {
@@ -480,7 +480,7 @@ private fun TrainerCard(
                         value = trainer.resistanceLevel.toFloat(),
                         onValueChange = { onResistanceChange(it.roundToInt()) },
                         valueRange = (trainer.minResistance.toFloat())..(trainer.maxResistance.toFloat().coerceAtLeast(trainer.minResistance.toFloat() + 1f)),
-                        enabled = trainer.hasControl
+                        enabled = trainer.hasControl || trainer.isWahooProprietaryControl
                     )
                 }
             }

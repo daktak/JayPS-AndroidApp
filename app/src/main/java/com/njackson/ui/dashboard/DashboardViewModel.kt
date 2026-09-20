@@ -262,6 +262,8 @@ class DashboardViewModel(
                         isWahooProprietary = true,
                         isWahooProprietaryControl = true,
                         hasControl = true,
+                        // A reported target power > 0 means the trainer is in ERG mode
+                        isErgMode = e.getTargetPower() > 0,
                     ))
                 }
             }
@@ -362,7 +364,11 @@ class DashboardViewModel(
         val addr = _state.value.trainer.address
         val trainer = _state.value.trainer
         if (addr.isNotEmpty()) {
-            if (trainer.isWahooProprietaryControl) {
+            // Optimistic UI update so the slider responds immediately; the trainer confirmation
+            // (Wahoo indication / FTMS response) refines the state afterwards.
+            _state.value = _state.value.copy(trainer = trainer.copy(targetPower = watts, isErgMode = true))
+            val t = _state.value.trainer
+            if (t.isWahooProprietaryControl) {
                 bus.post(WahooTrainerControlRequest(addr, watts, 0, true))
             } else {
                 bus.post(TrainerControlRequest(addr, watts, 0, true, false))
@@ -373,7 +379,10 @@ class DashboardViewModel(
         val addr = _state.value.trainer.address
         val trainer = _state.value.trainer
         if (addr.isNotEmpty()) {
-            if (trainer.isWahooProprietaryControl) {
+            // Optimistic UI update so the slider responds immediately.
+            _state.value = _state.value.copy(trainer = trainer.copy(resistanceLevel = level, isErgMode = false))
+            val t = _state.value.trainer
+            if (t.isWahooProprietaryControl) {
                 bus.post(WahooTrainerControlRequest(addr, 0, level, false))
             } else {
                 bus.post(TrainerControlRequest(addr, 0, level, false, false))
@@ -384,12 +393,20 @@ class DashboardViewModel(
         val addr = _state.value.trainer.address
         val trainer = _state.value.trainer
         if (addr.isNotEmpty()) {
-            if (trainer.isWahooProprietaryControl) {
-                // When enabling ERG mode, send current target power; when disabling, send current resistance level
+            // Optimistic UI update so the toggle responds immediately.
+            _state.value = _state.value.copy(trainer = trainer.copy(isErgMode = enabled))
+            val t = _state.value.trainer
+            if (t.isWahooProprietaryControl) {
+                // When enabling ERG mode, send the current target power (defaulting to a real,
+                // non-zero value so the KICKR actually leaves level mode). When disabling, send
+                // the current resistance level so the trainer exits ERG mode.
                 if (enabled) {
-                    bus.post(WahooTrainerControlRequest(addr, trainer.targetPower, 0, true))
+                    val power = if (trainer.targetPower > 0) trainer.targetPower else 100
+                    _state.value = _state.value.copy(trainer = t.copy(targetPower = power))
+                    bus.post(WahooTrainerControlRequest(addr, power, 0, true))
                 } else {
-                    bus.post(WahooTrainerControlRequest(addr, 0, trainer.resistanceLevel, false))
+                    val level = if (trainer.resistanceLevel > 0) trainer.resistanceLevel else 50
+                    bus.post(WahooTrainerControlRequest(addr, 0, level, false))
                 }
             } else {
                 bus.post(TrainerControlRequest(addr, 0, 0, enabled, false))
