@@ -445,18 +445,21 @@ private fun TrainerCard(
 
             // Control section
             if (trainer.isErgMode) {
-                // Target Power Slider
+                // Target Power Slider — cap the UI range at 500 W for finer control. The real
+                // trainer.maxPower (e.g. 2000 W capability) is left untouched so genuine FTMS
+                // trainers keep their full reported range; only the ERG slider is capped.
+                val ergMax = minOf(trainer.maxPower, 500).coerceAtLeast(trainer.minPower + 1)
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Target Power: ${trainer.targetPower} W", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.weight(1f))
-                        Text("${trainer.minPower}–${trainer.maxPower} W", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${trainer.minPower}–$ergMax W", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Slider(
                         value = trainer.targetPower.toFloat(),
                         onValueChange = { onTargetPowerChange(it.roundToInt()) },
-                        valueRange = (trainer.minPower.toFloat())..(trainer.maxPower.toFloat().coerceAtLeast(trainer.minPower.toFloat() + 1f)),
-                        steps = ((trainer.maxPower - trainer.minPower) / 10).coerceAtLeast(1),
+                        valueRange = (trainer.minPower.toFloat())..(ergMax.toFloat().coerceAtLeast(trainer.minPower.toFloat() + 1f)),
+                        steps = ((ergMax - trainer.minPower) / 10).coerceAtLeast(1),
                         enabled = trainer.hasControl || trainer.isWahooProprietaryControl
                     )
                 }
