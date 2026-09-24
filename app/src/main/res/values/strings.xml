@@ -48,6 +48,7 @@
     <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_URL">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE">Installation from the developers website</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE_SUMMARY" />
+    <string name="PREF_INSTALL_SCREEN_SUMMARY">Install the watchapp on your Pebble</string>
     <string name="PREF_RESET_DATA">Reset data &amp; GPX</string>
     <string name="PREF_RESET_DATA_SUMMARY">Distance, time, speed and ascent</string>
     <string name="ALERT_RESET_DATA_TITLE">Reset data and GPX</string>
@@ -60,6 +61,8 @@
     <string name="PREF_EXPORT_GPX_SUMMARY" />
     <string name="PREF_EXPORT_TCX_TITLE">Export as TCX</string>
     <string name="PREF_EXPORT_TCX_SUMMARY" />
+    <string name="PREF_ADVANCED_GPX_TITLE">Advanced GPX Export</string>
+    <string name="PREF_ADVANCED_GPX_SUMMARY">Add ascent, GPS and pressure sensor altitudes</string>
     <string name="PREF_RESET_TRACKS_TITLE">Reset tracks</string>
     <string name="PREF_RESET_TRACKS_SUMMARY">Delete all saved tracks</string>
 
@@ -234,8 +237,12 @@
     <string name="runkeeper_upload_success">Your activity has been created</string>
     <string name="alert_generating_file_please_wait">Please wait while generating the file</string>
     <string name="PREF_PRESSURE_SENSOR_AVAILABLE">Pressure sensor available</string>
+    <string name="PREF_PRESSURE_SENSOR_TITLE">Altimeter Pressure sensor</string>
+    <string name="PREF_GEOID_HEIGHT_TITLE">Altitude correction (WGS84)</string>
     <string name="PREF_NAV_SCREEN_TITLE">Navigation</string>
     <string name="PREF_ADV_SCREEN_TITLE">Advanced</string>
+    <string name="PREF_NAV_NOTIFICATION_TITLE">Indicate next change</string>
+    <string name="PREF_NAV_NOTIFICATION_SUMMARY">Vibrate if the direction has changed (experimental)</string>
     <string name="PREF_PRESSURE_SENSOR_NOT_AVAILABLE">No pressure sensor</string>
     <string name="PREF_EXPORT_EMAIL_TITLE">Export email</string>
     <string name="PREF_EXPORT_EMAIL_SUMMARY">Email address to export your gpx file</string>
@@ -279,7 +286,7 @@
     <string name="settings_navigation_title">Navigation</string>
     <string name="settings_navigation_summary">Follow a route</string>
     <string name="settings_integration_title">Integration</string>
-    <string name="settings_integration_summary">Strava, Live Tracking, OruxMaps</string>
+    <string name="settings_integration_summary">Strava, Intervals.icu, Live Tracking, OruxMaps</string>
     <string name="settings_advanced_title">Advanced</string>
     <string name="settings_advanced_summary">Debug options</string>
     <string name="settings_about_title">About</string>
