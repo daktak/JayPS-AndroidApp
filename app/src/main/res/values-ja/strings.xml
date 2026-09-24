@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="MAIN_EXPORT_TCX">TCX エクスポート</string>
+
+    <string name="checking_new_version">新しいバージョンを確認中…</string>
+    <string name="update_already_latest">アップデートはありません</string>
+    <string name="update_error">アップデートの取得に失敗しました</string>
+    <string name="app_update_notification_content_title">KayPS のアップデートが利用可能です!</string>
+    <string name="app_update_notification_content_text">バージョンページを開くにはタップしてください</string>
+    <string name="action_settings">設定</string>
+    <string name="action_export_gpx">GPX エクスポート</string>
+    <string name="action_upload_activity">アクティビティをアップロード</string>
+    <string name="action_load_route">ルートを読み込んで案内</string>
+    <string name="action_reset">データと GPX をリセット</string>
+    <string name="action_share_location">位置情報を共有</string>
+    <string name="speedfragment_time_label">時間</string>
+    <string name="speedfragment_distance_label">距離</string>
+    <string name="speedfragment_speed_label">速度</string>
+    <string name="speedfragment_avgspeed_label">平均</string>
+    <string name="speedfragment_hr_label">心拍数</string>
+    <string name="speedfragment_power_label">パワー</string>
+    <string name="speedfragment_cadence_label">ケイデンス</string>
+    <string name="startbuttonfragment_start">スタート</string>
+    <string name="startbuttonfragment_stop">ストップ</string>
+    <string name="altiudefragment_altitude">高度</string>
+    <string name="altiudefragment_gpsstatus">GPS ステータス</string>
+    <string name="altitude_status_excellent">非常に良い</string>
+    <string name="altitude_status_good">良い</string>
+    <string name="altitude_status_medium">普通</string>
+    <string name="altitude_status_poor">悪い</string>
+    <string name="PREF_INSTALL_DEFAULT_CATEGORY_TITLE">標準の方法</string>
+    <string name="PREF_INSTALL_OTHERS_CATEGORY_TITLE">他のバージョン</string>
+    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK">Pebble Store からインストール [標準]</string>
+    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_SUMMARY">アプリに投票お願いします</string>
+    <string name="PREF_INSTALL_WATCHFACE_WEBSITE">開発者のウェブサイトからインストール</string>
+    <string name="PREF_INSTALL_SCREEN_SUMMARY">Pebble にウォッチアプリをインストール</string>
+    <string name="PREF_RESET_DATA">データと GPX をリセット</string>
+    <string name="PREF_RESET_DATA_SUMMARY">距離、時間、速度、高度</string>
+    <string name="ALERT_RESET_DATA_TITLE">データと GPX をリセット</string>
+    <string name="ALERT_RESET_DATA_MESSAGE">距離、時間、速度、高度、GPX を本当にリセットしますか?</string>
+
+    <string name="PREF_TRACKS_CATEGORY_TITLE">トラック</string>
+    <string name="PREF_ENABLE_TRACKS_TITLE">トラックを有効にする</string>
+    <string name="PREF_ENABLE_TRACKS_SUMMARY">GPS 開始時に位置を自動保存する</string>
+    <string name="PREF_EXPORT_GPX_TITLE">GPX としてエクスポート</string>
+    <string name="PREF_EXPORT_TCX_TITLE">TCX としてエクスポート</string>
+    <string name="PREF_ADVANCED_GPX_TITLE">詳細な GPX エクスポート</string>
+    <string name="PREF_ADVANCED_GPX_SUMMARY">高度、GPS、気圧センサー高度を追加</string>
+    <string name="PREF_RESET_TRACKS_TITLE">トラックをリセット</string>
+    <string name="PREF_RESET_TRACKS_SUMMARY">保存されたすべてのトラックを削除</string>
+
+    <string name="ALERT_RESET_TRACKS_TITLE">トラックをリセット</string>
+    <string name="ALERT_RESET_TRACKS_MESSAGE">保存されたすべてのトラックを本当に削除しますか?</string>
+
+    <string name="PREF_OPTIONS_CATEGORY_TITLE">オプション</string>
+    <string name="PREF_ABOUT_CATEGORY_TITLE">情報</string>
+
+    <string name="PREF_AUTOSTART_TITLE">自動スタート</string>
+    <string name="PREF_AUTOSTART_SUMMARY">サイクリング開始時に KayPS を自動起動する場合はオンにしてください
+    </string>
+    <string name="PREF_AUTOSTART_WALKING_SUMMARY">ウォーキング/ランニングも含める</string>
+    <string name="PREF_UNITS_TITLE">単位</string>
+    <string name="PREF_UNITS_DIALOG_TITLE">単位</string>
+    <string name="PREF_UNITS_UNIT_IMPERIAL">ヤードポンド法 (マイル)</string>
+    <string name="PREF_UNITS_UNIT_METRIC">メートル法 (km/h)</string>
+    <string name="PREF_UNITS_UNIT_NAUTICAL_IMPERIAL">海里/ヤードポンド法 (ノット + フィート)</string>
+    <string name="PREF_UNITS_UNIT_NAUTICAL_METRIC">海里/メートル法 (ノット + メートル)</string>
+    <string name="PREF_UNITS_UNIT_RUNNING_IMPERIAL">ランニング/ヤードポンド法 (ペース: 分/マイル)</string>
+    <string name="PREF_UNITS_UNIT_RUNNING_METRIC">ランニング/メートル法 (ペース: 分/km)</string>
+
+    <string name="REFRESH_INTERVAL_TITLE">最小 GPS 間隔</string>
+    <string name="REFRESH_INTERVAL_DIALOG_TITLE">最小 GPS 間隔</string>
+
+    <string name="INDOOR_MODE_TITLE">屋内モード</string>
+    <string name="INDOOR_MODE_SUMMARY">GPS なし。停止中も時間は進み、速度と距離はセンサーから取得します。</string>
+
+    <string name="ORUXMAPS_AUTO_TITLE">OruxMaps の起動と連携</string>
+    <string name="ORUXMAPS_AUTO_DIALOG_TITLE">OruxMaps の起動と連携</string>
+
+    <string name="PREF_ORUXMAPS">OruxMaps をインストール</string>
+    <string name="PREF_ORUXMAPS_SUMMARY">Google Play からアプリをインストール</string>
+
+    <string name="PREF_BLE_CATEGORY_TITLE">BLE 心拍計 (HRM)、自転車速度・ケイデンス (CSC)、ライト、GoPro</string>
+    <string name="PREF_BLE_TITLE">センサー</string>
+    <string name="PREF_BLE_TITLE1">センサー 1</string>
+    <string name="PREF_BLE_TITLE2">センサー 2</string>
+    <string name="PREF_BLE_TITLE3">センサー 3</string>
+    <string name="PREF_BLE_TITLE4">センサー 4</string>
+    <string name="PREF_BLE_TITLE5">センサー 5</string>
+    <string name="PREF_BLE_TITLE6">センサー 6</string>
+    <string name="PREF_BLE_HRM_HRMAX">HRM: 最大心拍数</string>
+    <string name="PREF_BLE_HRM_HRMAX_SUMMARY">例: 220 − 年齢</string>
+    <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: ゾーンアラーム</string>
+    <string name="PREF_FTP">FTP (機能的閾値パワー)</string>
+    <string name="PREF_FTP_SUMMARY">閾値のワット数、例 250</string>
+    <string name="PREF_PEBBLE_HRM_TITLE">Pebble の心拍計を使用</string>
+    <string name="PREF_PEBBLE_HRM_SUMMARY">記録中は Bluetooth HRM の代わりにウォッチ内蔵の心拍センサーを使用</string>
+    <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: 車輪周長 (mm)</string>
+    <string name="PREF_BLE_CSC_WHEEL_SIZE_SUMMARY">例: 700x23C => 2133mm</string>
+    <string name="PREF_BLE_CSC_WHEEL_PRESET_TITLE">CSC: 車輪サイズプリセット</string>
+
+    <string name="PREF_PEBBLE_STORE">Pebble Store</string>
+    <string name="PREF_PEBBLE_STORE_SUMMARY">アプリに投票お願いします</string>
+
+    <string name="PREF_DEBUG_TITLE">デバッグ</string>
+    <string name="PREF_DEBUG_SUMMARY">開発者向けに詳細なログ</string>
+
+    <string name="PREF_STRAVA_TITLE">Strava</string>
+    <string name="PREF_STRAVA_SESSION_TITLE">Strava セッションクッキー</string>
+    <string name="PREF_STRAVA_SESSION_SUMMARY">ログイン済み Strava セッションの _strava4_session クッキー値を入力</string>
+    <string name="STRAVA_AUTO_TITLE">自動アップロード</string>
+    <string name="STRAVA_AUTO_DIALOG_TITLE">Strava 自動アップロード</string>
+    <string name="TCX_ACTIVITY_TYPE_TITLE">TCX アクティビティタイプ</string>
+    <string name="TCX_ACTIVITY_TYPE_DIALOG_TITLE">TCX 宣言で設定されたアクティビティタイプ</string>
+    <string name="PREF_STRAVA_VENTOO_CLUB_TITLE">Strava KayPS クラブ</string>
+    <string name="PREF_STRAVA_VENTOO_CLUB_SUMMARY">他の KayPS ユーザーと一緒に</string>
+
+    <string name="PREF_INTERVALS_ICU_CATEGORIE_TITLE">intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_TITLE">intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_API_KEY_TITLE">intervals.icu API キー</string>
+    <string name="PREF_INTERVALS_ICU_API_KEY_SUMMARY">intervals.icu の設定 (開発者設定) から API キーを入力</string>
+    <string name="INTERVALS_ICU_AUTO_TITLE">自動アップロード</string>
+    <string name="INTERVALS_ICU_AUTO_DIALOG_TITLE">intervals.icu 自動アップロード</string>
+
+    <string name="PREF_RUNKEEPER_CATEGORIE_TITLE">Runkeeper 連携</string>
+    <string name="PREF_RUNKEEPER_TITLE">Runkeeper</string>
+    <string name="RUNKEEPER_ACTIVITY_TYPE_TITLE">アクティビティ</string>
+    <string name="RUNKEEPER_ACTIVITY_TYPE_DIALOG_TITLE">Runkeeper アクティビティ</string>
+    <string name="PREF_RUNKEEPER_NOTIFICATION_TITLE">通知</string>
+    <string name="PREF_RUNKEEPER_NOTIFICATION_SUMMARY">アップロードごとに Pebble に通知を表示</string>
+    <string name="RUNKEEPER_AUTO_TITLE">自動アップロード</string>
+    <string name="RUNKEEPER_AUTO_DIALOG_TITLE">Runkeeper 自動アップロード</string>
+
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_CATEGORIE_TITLE">Nextcloud ライブトラッキング</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TITLE">Nextcloud でライブトラッキング</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SUMMARY">Nextcloud PhoneTrack アプリ</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_URL_TITLE">Nextcloud URL</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TOKEN_TITLE">セッショントークン</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_DEVICE_TITLE">デバイス名</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SHARE_TITLE">Nextcloud トラッキングリンクを共有</string>
+
+    <string name="PREF_LIVE_TRACKING_MMT_CATEGORIE_TITLE">Map My Tracks ライブトラッキング</string>
+    <string name="PREF_LIVE_TRACKING_MMT_TITLE">Map My Tracks でライブトラッキング</string>
+    <string name="PREF_LIVE_TRACKING_MMT_LOGIN_TITLE">ログイン</string>
+    <string name="PREF_LIVE_TRACKING_MMT_PASSWORD_TITLE">パスワード</string>
+
+    <string name="PREF_CHANGE_LOG_TITLE">変更履歴</string>
+    <string name="PREF_CHANGE_LOG_SUMMARY">変更履歴を表示</string>
+
+    <!-- BLE HRM items -->
+    <string name="ble_unknown_device">不明なデバイス</string>
+    <string name="ble_error_bluetooth_not_supported">Bluetooth はサポートされていません。</string>
+    <string name="ble_not_supported">BLE はサポートされていません</string>
+    <string name="ble_connect">接続</string>
+    <string name="ble_disconnect">切断</string>
+    <string name="ble_scan">検索</string>
+    <string name="ble_stop">停止</string>
+    <string name="ble_unknown_characteristic">不明なキャラクタリスティック</string>
+    <string name="ble_unknown_service">不明なサービス</string>
+
+    <!-- messages -->
+    <string name="message_pebble_new_watchapp">新しいウォッチアプリが利用可能です。KayPS Android アプリの設定からインストールしてください</string>
+
+    <!-- strava/runkeeper -->
+    <string name="get_token">トークンを取得</string>
+    <string name="delete_token">トークンを削除</string>
+    <string name="delete_cookies">クッキーを削除</string>
+
+    <string name="alert_google_play_not_available">Google Play Services が利用できません</string>
+    <string name="alert_gps_off_enable_it">デバイスで GPS がオフになっています。オンにしますか?</string>
+    <string name="alert_gps_go_to_settings">GPS をオンにするには設定を開いてください</string>
+    <string name="alert_tracks_gpx_export">エクスポートを使用する前に、GPX を保存するため設定でトラックを有効にしてください</string>
+    <string name="alert_open_gpx_file">GPX ファイルを開く</string>
+    <string name="alert_select_txt_file">TXT ファイルを選択</string>
+    <string name="alert_unable_to_open_file">ファイルを開けません</string>
+    <string name="alert_route_loaded">ルートを読み込みました</string>
+    <string name="alert_nav_stopped">ナビゲーションが停止されました</string>
+    <string name="alert_nav_not_started">ナビゲーションは開始されていません</string>
+    <string name="pref_choose_sensor">タップしてセンサーを選択</string>
+    <string name="strava_upload_description">JayPS が生成した GPS トラック、http://www.pebblebike.com</string>
+    <string name="export_gpx_extra_text">JayPS が生成した GPS トラック、http://www.pebblebike.com</string>
+    <string name="strava_upload_success">アクティビティが作成されました</string>
+    <string name="runkeeper_upload_success">アクティビティが作成されました</string>
+    <string name="alert_generating_file_please_wait">ファイルを生成しています。お待ちください</string>
+    <string name="PREF_PRESSURE_SENSOR_AVAILABLE">気圧センサー利用可能</string>
+    <string name="PREF_PRESSURE_SENSOR_TITLE">気圧式高度計</string>
+    <string name="PREF_GEOID_HEIGHT_TITLE">高度補正 (WGS84)</string>
+    <string name="PREF_NAV_SCREEN_TITLE">ナビゲーション</string>
+    <string name="PREF_ADV_SCREEN_TITLE">詳細</string>
+    <string name="PREF_NAV_NOTIFICATION_TITLE">次の方向転換を表示</string>
+    <string name="PREF_NAV_NOTIFICATION_SUMMARY">方向が変わったときに振動 (実験的)</string>
+    <string name="PREF_PRESSURE_SENSOR_NOT_AVAILABLE">気圧センサーなし</string>
+    <string name="PREF_EXPORT_EMAIL_TITLE">エクスポートメール</string>
+    <string name="PREF_EXPORT_EMAIL_SUMMARY">GPX ファイルをエクスポートするメールアドレス</string>
+
+    <string name="indoor_mode_map_disabled">屋内モードではマップは無効です</string>
+
+    <!-- Dashboard / Map (Compose) -->
+    <string name="dashboard_ready_title">走る準備はできました</string>
+    <string name="dashboard_ready_subtitle">スタートをタップ — GPS とセンサーがウォッチとスマホにライブで表示されます</string>
+    <string name="dashboard_pace">ペース</string>
+    <string name="dashboard_speed">速度</string>
+    <string name="dashboard_gps_off">GPS OFF</string>
+    <string name="dashboard_elapsed">経過</string>
+    <string name="dashboard_distance">距離</string>
+    <string name="dashboard_ascent">登坂</string>
+    <string name="dashboard_time">時間</string>
+    <string name="dashboard_max_speed">最高速度</string>
+    <string name="dashboard_heart_rate">心拍数</string>
+    <string name="dashboard_cadence">ケイデンス</string>
+    <string name="dashboard_power">パワー</string>
+    <string name="dashboard_elevation">高度</string>
+    <string name="dashboard_no_elevation">まだ高度なし</string>
+    <string name="dashboard_avg_format">平均 %1$s %2$s</string>
+    <string name="map_title">マップ</string>
+    <string name="map_no_track">まだトラックなし</string>
+    <string name="map_center">中央へ</string>
+    <string name="map_placeholder">アクティビティを開始すると、ここにトラックが表示されます</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">キャンセル</string>
+    <plurals name="map_points">
+        <item quantity="one">%d ポイント</item>
+        <item quantity="other">%d ポイント</item>
+    </plurals>
+
+    <!-- Settings Compose groups (new, plus reuse existing PREF_*) -->
+    <string name="settings_title">設定</string>
+    <string name="settings_general_title">一般</string>
+    <string name="settings_tracks_units_title">トラック &amp; 単位</string>
+    <string name="settings_tracks_units_summary">単位、GPX、自動スタート</string>
+    <string name="settings_sensors_title">センサー</string>
+    <string name="settings_sensors_summary">GPS、HRM/VCM、高度計、ライト</string>
+    <string name="settings_navigation_title">ナビゲーション</string>
+    <string name="settings_navigation_summary">ルートに従う</string>
+    <string name="settings_integration_title">連携</string>
+    <string name="settings_integration_summary">Strava、Intervals.icu、ライブトラッキング、OruxMaps</string>
+    <string name="settings_advanced_title">詳細</string>
+    <string name="settings_advanced_summary">デバッグオプション</string>
+    <string name="settings_about_title">情報</string>
+    <string name="settings_about_summary">詳細情報</string>
+    <string name="settings_install_title">インストール</string>
+    <string name="settings_units_title">単位</string>
+    <string name="settings_tracks_title">トラック</string>
+    <string name="settings_autostart_title">自動スタート</string>
+    <string name="settings_gps_title">GPS</string>
+    <string name="settings_ble_title">BLE 心拍数 / VCM</string>
+    <string name="settings_altitude_title">高度計</string>
+    <string name="settings_nav_load_route">ナビを開始 - ルートを読み込む</string>
+    <string name="settings_nav_load_route_summary">GPX ファイルをインポート</string>
+    <string name="settings_nav_stop">ナビを停止</string>
+    <string name="settings_nav_stop_summary">現在のナビゲーションを停止</string>
+    <string name="settings_nav_online_planner">オンラインプランナー</string>
+    <string name="settings_nav_online_summary">Google Directions でルートを作成</string>
+    <string name="settings_nav_export_orux">OruxMaps にエクスポート</string>
+    <string name="settings_nav_export_summary">現在のルートを OruxMaps にエクスポート</string>
+    <string name="settings_live_nextcloud">Nextcloud ライブトラッキング</string>
+    <string name="settings_live_mmt">Map My Tracks ライブトラッキング</string>
+    <string name="settings_orux_integration">OruxMaps 連携</string>
+    <string name="settings_strava">Strava</string>
+    <string name="settings_intervals_icu">intervals.icu</string>
+    <string name="settings_advanced_debug">デバッグ</string>
+    <string name="dashboard_no_hr_data">まだ心拍数なし</string>
+    <string name="dashboard_no_power_data">まだパワーなし</string>
+    <string name="dashboard_no_cadence_data">まだケイデンスなし</string>
+    <string name="strava_not_set">未設定</string>
+    <string name="strava_set_length">セッション設定済み (長さ %d)</string>
+    <string name="intervals_icu_not_set">未設定</string>
+    <string name="intervals_icu_set_length">API キー設定済み (長さ %d)</string>
+    <string name="autostart_lights_title">GPS に合わせてライトを自動起動</string>
+    <string name="autostart_lights_summary">開始時に昼光点滅、停止時に消灯</string>
+    <string name="autostart_gopro_title">GPS に合わせて GoPro を自動起動</string>
+    <string name="autostart_gopro_summary">開始時に録画、停止時に停止</string>
+    <string name="gopro_wake_record">起動して録画</string>
+    <string name="gopro_wake_photo">起動して写真</string>
+
+</resources>

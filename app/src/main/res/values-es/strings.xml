@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="MAIN_EXPORT_TCX">Exportar TCX</string>
+
+    <string name="checking_new_version">Comprobando nueva versión…</string>
+    <string name="update_already_latest">No se encontró ninguna actualización</string>
+    <string name="update_error">Error al recuperar la actualización</string>
+    <string name="app_update_notification_content_title">¡Actualización de KayPS disponible!</string>
+    <string name="app_update_notification_content_text">Toca para abrir la página de versiones</string>
+    <string name="action_settings">Configuración</string>
+    <string name="action_export_gpx">Exportar GPX</string>
+    <string name="action_upload_activity">Subir actividad</string>
+    <string name="action_load_route">Cargar la ruta a seguir</string>
+    <string name="action_reset">Restablecer datos y GPX</string>
+    <string name="action_share_location">Compartir ubicación</string>
+    <string name="speedfragment_time_label">TIEMPO</string>
+    <string name="speedfragment_distance_label">DISTANCIA</string>
+    <string name="speedfragment_speed_label">VELOCIDAD</string>
+    <string name="speedfragment_avgspeed_label">MEDIA</string>
+    <string name="speedfragment_hr_label">FRECUENCIA CARDÍACA</string>
+    <string name="speedfragment_power_label">POTENCIA</string>
+    <string name="speedfragment_cadence_label">CADENCIA</string>
+    <string name="startbuttonfragment_start">INICIO</string>
+    <string name="startbuttonfragment_stop">PARADA</string>
+    <string name="altiudefragment_altitude">ALTITUD</string>
+    <string name="altiudefragment_gpsstatus">ESTADO GPS</string>
+    <string name="altitude_status_excellent">EXCELENTE</string>
+    <string name="altitude_status_good">BUENO</string>
+    <string name="altitude_status_medium">MEDIO</string>
+    <string name="altitude_status_poor">BAJO</string>
+    <string name="PREF_INSTALL_DEFAULT_CATEGORY_TITLE">Método por defecto</string>
+    <string name="PREF_INSTALL_OTHERS_CATEGORY_TITLE">Otras versiones</string>
+    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK">Instalación desde Pebble Store [Por defecto]</string>
+    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_SUMMARY">Por favor, votad por la app</string>
+    <string name="PREF_INSTALL_WATCHFACE_WEBSITE">Instalación desde el sitio del desarrollador</string>
+    <string name="PREF_INSTALL_SCREEN_SUMMARY">Instala la watchapp en tu Pebble</string>
+    <string name="PREF_RESET_DATA">Restablecer datos y GPX</string>
+    <string name="PREF_RESET_DATA_SUMMARY">Distancia, tiempo, velocidad y altitud</string>
+    <string name="ALERT_RESET_DATA_TITLE">Restablecer datos y GPX</string>
+    <string name="ALERT_RESET_DATA_MESSAGE">¿Seguro que deseas restablecer distancia, tiempo, velocidad, altitud y GPX?</string>
+
+    <string name="PREF_TRACKS_CATEGORY_TITLE">Tracks</string>
+    <string name="PREF_ENABLE_TRACKS_TITLE">Habilitar tracks</string>
+    <string name="PREF_ENABLE_TRACKS_SUMMARY">Guardar posiciones automáticamente cuando se inicia el GPS</string>
+    <string name="PREF_EXPORT_GPX_TITLE">Exportar como GPX</string>
+    <string name="PREF_EXPORT_TCX_TITLE">Exportar como TCX</string>
+    <string name="PREF_ADVANCED_GPX_TITLE">Exportación GPX avanzada</string>
+    <string name="PREF_ADVANCED_GPX_SUMMARY">Añadir altitud, GPS y altitud del sensor de presión</string>
+    <string name="PREF_RESET_TRACKS_TITLE">Restablecer tracks</string>
+    <string name="PREF_RESET_TRACKS_SUMMARY">Borrar todos los tracks guardados</string>
+
+    <string name="ALERT_RESET_TRACKS_TITLE">Restablecer tracks</string>
+    <string name="ALERT_RESET_TRACKS_MESSAGE">¿Seguro que deseas borrar todos los tracks guardados?</string>
+
+    <string name="PREF_OPTIONS_CATEGORY_TITLE">Opciones</string>
+    <string name="PREF_ABOUT_CATEGORY_TITLE">Acerca de</string>
+
+    <string name="PREF_AUTOSTART_TITLE">Inicio automático</string>
+    <string name="PREF_AUTOSTART_SUMMARY">Actívalo si deseas que KayPS arranque automáticamente en cada inicio de ciclismo
+    </string>
+    <string name="PREF_AUTOSTART_WALKING_SUMMARY">Incluir también caminar/correr</string>
+    <string name="PREF_UNITS_TITLE">Unidades</string>
+    <string name="PREF_UNITS_DIALOG_TITLE">Unidades</string>
+    <string name="PREF_UNITS_UNIT_IMPERIAL">Imperial (millas)</string>
+    <string name="PREF_UNITS_UNIT_METRIC">Métrico (km/h)</string>
+    <string name="PREF_UNITS_UNIT_NAUTICAL_IMPERIAL">Náutico/Imperial (nudos + pies)</string>
+    <string name="PREF_UNITS_UNIT_NAUTICAL_METRIC">Náutico/Métrico (nudos + metros)</string>
+    <string name="PREF_UNITS_UNIT_RUNNING_IMPERIAL">Correr/Imperial (ritmo: min/milla)</string>
+    <string name="PREF_UNITS_UNIT_RUNNING_METRIC">Correr/Métrico (ritmo: min/km)</string>
+
+    <string name="REFRESH_INTERVAL_TITLE">Intervalo mínimo de GPS</string>
+    <string name="REFRESH_INTERVAL_DIALOG_TITLE">Intervalo mínimo de GPS</string>
+
+    <string name="INDOOR_MODE_TITLE">Modo indoor</string>
+    <string name="INDOOR_MODE_SUMMARY">Sin GPS. El tiempo sigue corriendo parado; velocidad y distancia vienen de los sensores.</string>
+
+    <string name="ORUXMAPS_AUTO_TITLE">Vincular el inicio de OruxMaps</string>
+    <string name="ORUXMAPS_AUTO_DIALOG_TITLE">Vincular el inicio de OruxMaps</string>
+
+    <string name="PREF_ORUXMAPS">Instalar OruxMaps</string>
+    <string name="PREF_ORUXMAPS_SUMMARY">Instalar la app desde Google Play</string>
+
+    <string name="PREF_BLE_CATEGORY_TITLE">BLE: monitor de frecuencia cardíaca (HRM), velocidad y cadencia de bici (CSC), luces y GoPro</string>
+    <string name="PREF_BLE_TITLE">Sensor</string>
+    <string name="PREF_BLE_TITLE1">Sensor 1</string>
+    <string name="PREF_BLE_TITLE2">Sensor 2</string>
+    <string name="PREF_BLE_TITLE3">Sensor 3</string>
+    <string name="PREF_BLE_TITLE4">Sensor 4</string>
+    <string name="PREF_BLE_TITLE5">Sensor 5</string>
+    <string name="PREF_BLE_TITLE6">Sensor 6</string>
+    <string name="PREF_BLE_HRM_HRMAX">HRM: frecuencia cardíaca máxima</string>
+    <string name="PREF_BLE_HRM_HRMAX_SUMMARY">Ejemplo: 220 menos la edad</string>
+    <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: alarmas de zona</string>
+    <string name="PREF_FTP">FTP (umbral funcional)</string>
+    <string name="PREF_FTP_SUMMARY">Vatios en el umbral, por ejemplo 250</string>
+    <string name="PREF_PEBBLE_HRM_TITLE">Usar el monitor cardíaco del Pebble</string>
+    <string name="PREF_PEBBLE_HRM_SUMMARY">Durante la grabación, usar el sensor cardíaco integrado del reloj en lugar de un HRM Bluetooth</string>
+    <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: circunferencia de la rueda (mm)</string>
+    <string name="PREF_BLE_CSC_WHEEL_SIZE_SUMMARY">Ejemplo: 700x23C => 2133mm</string>
+    <string name="PREF_BLE_CSC_WHEEL_PRESET_TITLE">CSC: ajuste predefinido del tamaño de rueda</string>
+
+    <string name="PREF_PEBBLE_STORE">Pebble Store</string>
+    <string name="PREF_PEBBLE_STORE_SUMMARY">Por favor, votad por la app</string>
+
+    <string name="PREF_DEBUG_TITLE">Depuración</string>
+    <string name="PREF_DEBUG_SUMMARY">Más registros para desarrolladores</string>
+
+    <string name="PREF_STRAVA_TITLE">Strava</string>
+    <string name="PREF_STRAVA_SESSION_TITLE">Cookie de sesión de Strava</string>
+    <string name="PREF_STRAVA_SESSION_SUMMARY">Introduce el valor de la cookie _strava4_session de una sesión de Strava iniciada</string>
+    <string name="STRAVA_AUTO_TITLE">Subida automática</string>
+    <string name="STRAVA_AUTO_DIALOG_TITLE">Subida automática a Strava</string>
+    <string name="TCX_ACTIVITY_TYPE_TITLE">Tipo de actividad TCX</string>
+    <string name="TCX_ACTIVITY_TYPE_DIALOG_TITLE">Tipo de actividad tal y como se declara en el TCX</string>
+    <string name="PREF_STRAVA_VENTOO_CLUB_TITLE">Club Strava de KayPS</string>
+    <string name="PREF_STRAVA_VENTOO_CLUB_SUMMARY">Únete a otros usuarios de KayPS</string>
+
+    <string name="PREF_INTERVALS_ICU_CATEGORIE_TITLE">intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_TITLE">intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_API_KEY_TITLE">Clave API de intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_API_KEY_SUMMARY">Introduce tu clave API desde los ajustes de intervals.icu (Developer settings)</string>
+    <string name="INTERVALS_ICU_AUTO_TITLE">Subida automática</string>
+    <string name="INTERVALS_ICU_AUTO_DIALOG_TITLE">Subida automática a intervals.icu</string>
+
+    <string name="PREF_RUNKEEPER_CATEGORIE_TITLE">Integración con Runkeeper</string>
+    <string name="PREF_RUNKEEPER_TITLE">Runkeeper</string>
+    <string name="RUNKEEPER_ACTIVITY_TYPE_TITLE">Actividad</string>
+    <string name="RUNKEEPER_ACTIVITY_TYPE_DIALOG_TITLE">Actividad de Runkeeper</string>
+    <string name="PREF_RUNKEEPER_NOTIFICATION_TITLE">Notificación</string>
+    <string name="PREF_RUNKEEPER_NOTIFICATION_SUMMARY">Mostrar una notificación en tu Pebble después de cada subida</string>
+    <string name="RUNKEEPER_AUTO_TITLE">Subida automática</string>
+    <string name="RUNKEEPER_AUTO_DIALOG_TITLE">Subida automática a Runkeeper</string>
+
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_CATEGORIE_TITLE">Seguimiento en vivo de Nextcloud</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TITLE">Seguimiento en vivo con Nextcloud</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SUMMARY">App PhoneTrack de Nextcloud</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_URL_TITLE">URL de Nextcloud</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TOKEN_TITLE">Token de sesión</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_DEVICE_TITLE">Nombre del dispositivo</string>
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SHARE_TITLE">Compartir el enlace de seguimiento de Nextcloud</string>
+
+    <string name="PREF_LIVE_TRACKING_MMT_CATEGORIE_TITLE">Seguimiento en vivo de Map My Tracks</string>
+    <string name="PREF_LIVE_TRACKING_MMT_TITLE">Seguimiento en vivo con Map My Tracks</string>
+    <string name="PREF_LIVE_TRACKING_MMT_LOGIN_TITLE">Iniciar sesión</string>
+    <string name="PREF_LIVE_TRACKING_MMT_PASSWORD_TITLE">Contraseña</string>
+
+    <string name="PREF_CHANGE_LOG_TITLE">Registro de cambios</string>
+    <string name="PREF_CHANGE_LOG_SUMMARY">Muestra el historial de cambios</string>
+
+    <!-- BLE HRM items -->
+    <string name="ble_unknown_device">Dispositivo desconocido</string>
+    <string name="ble_error_bluetooth_not_supported">Bluetooth no está soportado.</string>
+    <string name="ble_not_supported">BLE no está soportado</string>
+    <string name="ble_connect">Conectar</string>
+    <string name="ble_disconnect">Desconectar</string>
+    <string name="ble_scan">Buscar</string>
+    <string name="ble_stop">Detener</string>
+    <string name="ble_unknown_characteristic">Característica desconocida</string>
+    <string name="ble_unknown_service">Servicio desconocido</string>
+
+    <!-- messages -->
+    <string name="message_pebble_new_watchapp">Hay una nueva watchapp disponible. Instálala desde los ajustes de la app Android de KayPS</string>
+
+    <!-- strava/runkeeper -->
+    <string name="get_token">Obtener token</string>
+    <string name="delete_token">Borrar token</string>
+    <string name="delete_cookies">Borrar cookies</string>
+
+    <string name="alert_google_play_not_available">Google Play Services no está disponible</string>
+    <string name="alert_gps_off_enable_it">El GPS está desactivado en tu dispositivo. ¿Deseas activarlo?</string>
+    <string name="alert_gps_go_to_settings">Ve a los ajustes para activar el GPS</string>
+    <string name="alert_tracks_gpx_export">Activa los tracks en los ajustes para guardar el GPX antes de usar la exportación</string>
+    <string name="alert_open_gpx_file">Abrir archivo GPX</string>
+    <string name="alert_select_txt_file">Seleccionar archivo TXT</string>
+    <string name="alert_unable_to_open_file">No se puede abrir el archivo</string>
+    <string name="alert_route_loaded">Ruta cargada</string>
+    <string name="alert_nav_stopped">La navegación se ha detenido</string>
+    <string name="alert_nav_not_started">La navegación no se ha iniciado</string>
+    <string name="pref_choose_sensor">Toca para elegir un sensor</string>
+    <string name="strava_upload_description">Track GPS generado por JayPS, http://www.pebblebike.com</string>
+    <string name="export_gpx_extra_text">Track GPS generado por JayPS, http://www.pebblebike.com</string>
+    <string name="strava_upload_success">Tu actividad ha sido creada</string>
+    <string name="runkeeper_upload_success">Tu actividad ha sido creada</string>
+    <string name="alert_generating_file_please_wait">Espera mientras se genera el archivo</string>
+    <string name="PREF_PRESSURE_SENSOR_AVAILABLE">Sensor de presión disponible</string>
+    <string name="PREF_PRESSURE_SENSOR_TITLE">Altímetro barométrico</string>
+    <string name="PREF_GEOID_HEIGHT_TITLE">Corrección de altitud (WGS84)</string>
+    <string name="PREF_NAV_SCREEN_TITLE">Navegación</string>
+    <string name="PREF_ADV_SCREEN_TITLE">Avanzado</string>
+    <string name="PREF_NAV_NOTIFICATION_TITLE">Mostrar el siguiente cambio</string>
+    <string name="PREF_NAV_NOTIFICATION_SUMMARY">Vibrar cuando cambie la dirección (experimental)</string>
+    <string name="PREF_PRESSURE_SENSOR_NOT_AVAILABLE">Sin sensor de presión</string>
+    <string name="PREF_EXPORT_EMAIL_TITLE">Correo de exportación</string>
+    <string name="PREF_EXPORT_EMAIL_SUMMARY">Dirección de correo para exportar tu archivo GPX</string>
+
+    <string name="indoor_mode_map_disabled">Mapa desactivado en modo indoor</string>
+
+    <!-- Dashboard / Map (Compose) -->
+    <string name="dashboard_ready_title">Listo para salir</string>
+    <string name="dashboard_ready_subtitle">Toca START — GPS y sensores aparecerán aquí en vivo en tu reloj y teléfono</string>
+    <string name="dashboard_pace">RITMO</string>
+    <string name="dashboard_speed">VELOCIDAD</string>
+    <string name="dashboard_gps_off">GPS OFF</string>
+    <string name="dashboard_elapsed">TRANSCURRIDO</string>
+    <string name="dashboard_distance">DISTANCIA</string>
+    <string name="dashboard_ascent">DESCENSO</string>
+    <string name="dashboard_time">TIEMPO</string>
+    <string name="dashboard_max_speed">VELOCIDAD MÁX.</string>
+    <string name="dashboard_heart_rate">FRECUENCIA CARDÍACA</string>
+    <string name="dashboard_cadence">CADENCIA</string>
+    <string name="dashboard_power">POTENCIA</string>
+    <string name="dashboard_elevation">ALTITUD</string>
+    <string name="dashboard_no_elevation">Aún sin altitud</string>
+    <string name="dashboard_avg_format">Media %1$s %2$s</string>
+    <string name="map_title">MAPA</string>
+    <string name="map_no_track">Aún sin track</string>
+    <string name="map_center">Centrar</string>
+    <string name="map_placeholder">Inicia una actividad — tu track aparecerá aquí</string>
+    <string name="dialog_ok">Aceptar</string>
+    <string name="dialog_cancel">Cancelar</string>
+    <plurals name="map_points">
+        <item quantity="one">%d punto</item>
+        <item quantity="other">%d puntos</item>
+    </plurals>
+
+    <!-- Settings Compose groups (new, plus reuse existing PREF_*) -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_general_title">General</string>
+    <string name="settings_tracks_units_title">Tracks &amp; unidades</string>
+    <string name="settings_tracks_units_summary">Unidades, GPX, inicio automático</string>
+    <string name="settings_sensors_title">Sensores</string>
+    <string name="settings_sensors_summary">GPS, HRM/VCM, altímetro, luces</string>
+    <string name="settings_navigation_title">Navegación</string>
+    <string name="settings_navigation_summary">Seguir una ruta</string>
+    <string name="settings_integration_title">Integración</string>
+    <string name="settings_integration_summary">Strava, Intervals.icu, seguimiento en vivo, OruxMaps</string>
+    <string name="settings_advanced_title">Avanzado</string>
+    <string name="settings_advanced_summary">Opciones de depuración</string>
+    <string name="settings_about_title">Acerca de</string>
+    <string name="settings_about_summary">Más información</string>
+    <string name="settings_install_title">Instalar</string>
+    <string name="settings_units_title">Unidades</string>
+    <string name="settings_tracks_title">Tracks</string>
+    <string name="settings_autostart_title">Inicio automático</string>
+    <string name="settings_gps_title">GPS</string>
+    <string name="settings_ble_title">BLE frecuencia cardíaca / VCM</string>
+    <string name="settings_altitude_title">Altímetro</string>
+    <string name="settings_nav_load_route">Iniciar navegación - cargar ruta</string>
+    <string name="settings_nav_load_route_summary">Importar archivo GPX</string>
+    <string name="settings_nav_stop">Detener navegación</string>
+    <string name="settings_nav_stop_summary">Detener la navegación actual</string>
+    <string name="settings_nav_online_planner">Planificador en línea</string>
+    <string name="settings_nav_online_summary">Crear una ruta con Google Directions</string>
+    <string name="settings_nav_export_orux">Exportar a OruxMaps</string>
+    <string name="settings_nav_export_summary">Exportar la ruta actual a OruxMaps</string>
+    <string name="settings_live_nextcloud">Seguimiento en vivo de Nextcloud</string>
+    <string name="settings_live_mmt">Seguimiento en vivo de Map My Tracks</string>
+    <string name="settings_orux_integration">Integración con OruxMaps</string>
+    <string name="settings_strava">Strava</string>
+    <string name="settings_intervals_icu">intervals.icu</string>
+    <string name="settings_advanced_debug">Depuración</string>
+    <string name="dashboard_no_hr_data">Aún sin frecuencia cardíaca</string>
+    <string name="dashboard_no_power_data">Aún sin potencia</string>
+    <string name="dashboard_no_cadence_data">Aún sin cadencia</string>
+    <string name="strava_not_set">Sin configurar</string>
+    <string name="strava_set_length">Sesión configurada (longitud %d)</string>
+    <string name="intervals_icu_not_set">Sin configurar</string>
+    <string name="intervals_icu_set_length">Clave API configurada (longitud %d)</string>
+    <string name="autostart_lights_title">Iniciar luces automáticamente con el GPS</string>
+    <string name="autostart_lights_summary">Destello diurno al iniciar, apagado al parar</string>
+    <string name="autostart_gopro_title">Iniciar GoPro automáticamente con el GPS</string>
+    <string name="autostart_gopro_summary">Grabar al iniciar, parar al detener</string>
+    <string name="gopro_wake_record">Despertar &amp; grabar</string>
+    <string name="gopro_wake_photo">Despertar &amp; foto</string>
+
+</resources>

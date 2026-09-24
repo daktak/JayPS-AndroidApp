@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="REFRESH_INTERVAL_ENTRIES">
+        <item>Adaptiv normal (3s-30s)</item>
+        <item>Adaptiv mittel (3s-30s)</item>
+        <item>Adaptiv niedrig (5s-30s)</item>
+        <item>Normal (1s)</item>
+        <item>2s</item>
+        <item>5s</item>
+        <item>Batteriesparmodus (10s)</item>
+        <item>Batteriesparmodus (30s)</item>
+    </string-array>
+
+    <string-array name="STRAVA_AUTO_ENTRIES">
+        <item>Deaktivieren</item>
+        <item>Am Ende der Fahrt</item>
+    </string-array>
+
+    <string-array name="ORUXMAPS_AUTO_ENTRIES">
+        <item>Deaktivieren</item>
+        <item>Aufnahme fortsetzen</item>
+        <item>Neues Segment starten</item>
+        <item>Neue Strecke starten</item>
+        <item>Neues Segment starten (unter 12 Std.) oder neue Strecke</item>
+    </string-array>
+
+    <string-array name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_ENTRIES">
+        <item>Deaktivieren</item>
+        <item>Bei jedem Zonenwechsel vibrieren (mindestens 30s in der vorherigen Zone)</item>
+        <item>Beim Eintritt in die Maximalzone vibrieren</item>
+    </string-array>
+
+    <string-array name="CSC_WHEEL_PRESET_ENTRIES">
+        <item>Benutzerdefiniert</item>
+        <item>29" 2.6</item>
+        <item>29" 2.4</item>
+        <item>29" 2.2</item>
+        <item>700c 55mm</item>
+        <item>700c 50mm</item>
+        <item>700c 45mm</item>
+        <item>700c 40mm</item>
+        <item>700c 35mm</item>
+        <item>700c 32mm</item>
+        <item>700c 30mm</item>
+        <item>700c 28mm</item>
+        <item>700c 25mm</item>
+        <item>27.5" 2.2</item>
+        <item>27.5" 2.4</item>
+        <item>27.5" 2.6</item>
+        <item>650b 45mm</item>
+    </string-array>
+
+</resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation">
     <string-array name="PREF_UNITS_ENTRIES">
         <item>@string/PREF_UNITS_UNIT_IMPERIAL</item>
         <item>@string/PREF_UNITS_UNIT_METRIC</item>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="MAIN_TITLE">KayPS</string>
+    <string name="MAIN_TITLE" translatable="false">KayPS</string>
     <string name="MAIN_EXPORT_TCX">Export TCX</string>
-    <string name="PREF_INSTALL_WATCHFACE_URL">https://github.com/daktak/JayPS-WatchFace/releases</string>
+    <string name="PREF_INSTALL_WATCHFACE_URL" translatable="false">https://github.com/daktak/JayPS-WatchFace/releases</string>
 
-    <string name="app_name">KayPS</string>
+    <string name="app_name" translatable="false">KayPS</string>
 
     <string name="checking_new_version">Checking for new version…</string>
     <string name="update_already_latest">No update found</string>
@@ -19,24 +19,24 @@
     <string name="action_reset">Reset data &amp; GPX</string>
     <string name="action_share_location">Share Location</string>
     <string name="speedfragment_time_label">TIME</string>
-    <string name="speedfragment_time_value">00:00</string>
+    <string name="speedfragment_time_value" translatable="false">00:00</string>
     <string name="speedfragment_distance_label">DISTANCE</string>
-    <string name="speedfragment_distance_value">0.0</string>
+    <string name="speedfragment_distance_value" translatable="false">0.0</string>
     <string name="speedfragment_speed_label">SPEED</string>
-    <string name="speedfragment_speed_value">0.0</string>
+    <string name="speedfragment_speed_value" translatable="false">0.0</string>
     <string name="speedfragment_avgspeed_label">AVERAGE</string>
-    <string name="speedfragment_avgspeed_value">0.0</string>
+    <string name="speedfragment_avgspeed_value" translatable="false">0.0</string>
     <string name="speedfragment_hr_label">HEART RATE</string>
-    <string name="speedfragment_hr_value">-</string>
+    <string name="speedfragment_hr_value" translatable="false">-</string>
     <string name="speedfragment_power_label">POWER</string>
-    <string name="speedfragment_power_value">-</string>
+    <string name="speedfragment_power_value" translatable="false">-</string>
     <string name="speedfragment_cadence_label">CADENCE</string>
-    <string name="speedfragment_cadence_value">-</string>
+    <string name="speedfragment_cadence_value" translatable="false">-</string>
     <string name="startbuttonfragment_start">START</string>
     <string name="startbuttonfragment_stop">STOP</string>
     <string name="altiudefragment_altitude">ALTITUDE</string>
     <string name="altiudefragment_gpsstatus">GPS STATUS</string>
-    <string name="altitude_status_disable">-</string>
+    <string name="altitude_status_disable" translatable="false">-</string>
     <string name="altitude_status_excellent">EXCELLENT</string>
     <string name="altitude_status_good">GOOD</string>
     <string name="altitude_status_medium">MEDIUM</string>
@@ -45,9 +45,9 @@
     <string name="PREF_INSTALL_OTHERS_CATEGORY_TITLE">Other versions</string>
     <string name="PREF_INSTALL_WATCHFACE_DEEPLINK">Installation from the Pebble Store [default]</string>
     <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_SUMMARY">Please vote for the app</string>
-    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_URL">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
+    <string name="PREF_INSTALL_WATCHFACE_DEEPLINK_URL" translatable="false">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
     <string name="PREF_INSTALL_WATCHFACE_WEBSITE">Installation from the developers website</string>
-    <string name="PREF_INSTALL_WATCHFACE_WEBSITE_SUMMARY" />
+    <string name="PREF_INSTALL_WATCHFACE_WEBSITE_SUMMARY" translatable="false" />
     <string name="PREF_INSTALL_SCREEN_SUMMARY">Install the watchapp on your Pebble</string>
     <string name="PREF_RESET_DATA">Reset data &amp; GPX</string>
     <string name="PREF_RESET_DATA_SUMMARY">Distance, time, speed and ascent</string>
@@ -58,9 +58,9 @@
     <string name="PREF_ENABLE_TRACKS_TITLE">Enable tracks</string>
     <string name="PREF_ENABLE_TRACKS_SUMMARY">Auto save locations when gps is started</string>
     <string name="PREF_EXPORT_GPX_TITLE">Export as GPX</string>
-    <string name="PREF_EXPORT_GPX_SUMMARY" />
+    <string name="PREF_EXPORT_GPX_SUMMARY" translatable="false" />
     <string name="PREF_EXPORT_TCX_TITLE">Export as TCX</string>
-    <string name="PREF_EXPORT_TCX_SUMMARY" />
+    <string name="PREF_EXPORT_TCX_SUMMARY" translatable="false" />
     <string name="PREF_ADVANCED_GPX_TITLE">Advanced GPX Export</string>
     <string name="PREF_ADVANCED_GPX_SUMMARY">Add ascent, GPS and pressure sensor altitudes</string>
     <string name="PREF_RESET_TRACKS_TITLE">Reset tracks</string>
@@ -79,7 +79,7 @@
     <string name="PREF_AUTOSTART_WALKING_SUMMARY">Also include walking/running</string>
     <string name="PREF_UNITS_TITLE">Units</string>
     <string name="PREF_UNITS_DIALOG_TITLE">Units</string>
-    <string name="PREF_UNITS_DEFAULT">1</string>
+    <string name="PREF_UNITS_DEFAULT" translatable="false">1</string>
     <string name="PREF_UNITS_UNIT_IMPERIAL">Imperial (miles)</string>
     <string name="PREF_UNITS_UNIT_METRIC">Metric (km/h)</string>
     <string name="PREF_UNITS_UNIT_NAUTICAL_IMPERIAL">Nautical/Imperial (knots + feet)</string>
@@ -90,18 +90,18 @@
 
     <string name="REFRESH_INTERVAL_TITLE">GPS Minimum time</string>
     <string name="REFRESH_INTERVAL_DIALOG_TITLE">GPS Minimum time</string>
-    <string name="REFRESH_INTERVAL_DEFAULT">103000</string>
+    <string name="REFRESH_INTERVAL_DEFAULT" translatable="false">103000</string>
 
     <string name="INDOOR_MODE_TITLE">Indoor mode</string>
     <string name="INDOOR_MODE_SUMMARY">No GPS. Time counts while stationary; speed and distance come from sensors.</string>
 
     <string name="ORUXMAPS_AUTO_TITLE">Link OruxMaps start</string>
     <string name="ORUXMAPS_AUTO_DIALOG_TITLE">Link OruxMaps start</string>
-    <string name="ORUXMAPS_AUTO_DEFAULT">disable</string>
+    <string name="ORUXMAPS_AUTO_DEFAULT" translatable="false">disable</string>
 
     <string name="PREF_ORUXMAPS">Install OruxMaps</string>
     <string name="PREF_ORUXMAPS_SUMMARY">Install app from Google Play</string>
-    <string name="PREF_ORUXMAPS_URL">https://play.google.com/store/apps/details?id=com.orux.oruxmapsDonate</string>
+    <string name="PREF_ORUXMAPS_URL" translatable="false">https://play.google.com/store/apps/details?id=com.orux.oruxmapsDonate</string>
 
     <string name="PREF_BLE_CATEGORY_TITLE">BLE Heart Rate Monitor (HRM), Cycling Speed and Cadence (CSC), Lights and GoPro</string>
     <string name="PREF_BLE_TITLE">Sensor</string>
@@ -116,82 +116,82 @@
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: Zone alarms</string>
     <string name="PREF_FTP">FTP (Functional Threshold Power)</string>
     <string name="PREF_FTP_SUMMARY">Watts at threshold, e.g. 250</string>
-    <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT">0</string>
+    <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT" translatable="false">0</string>
     <string name="PREF_PEBBLE_HRM_TITLE">Use Pebble heart rate monitor</string>
     <string name="PREF_PEBBLE_HRM_SUMMARY">Use the watch\'s built-in HR sensor instead of a Bluetooth HRM during recording</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: Wheel circumference (mm)</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE_SUMMARY">Example: 700x23C => 2133mm</string>
     <string name="PREF_BLE_CSC_WHEEL_PRESET_TITLE">CSC: Wheel size preset</string>
 
-    <string name="PREF_ABOUT_TITLE">@string/MAIN_TITLE</string>
-    <string name="PREF_ABOUT_SUMMARY"></string>
-    <string name="PREF_ABOUT_URL">https://github.com/daktak/jayps-AndroidApp</string>
+    <string name="PREF_ABOUT_TITLE" translatable="false">@string/MAIN_TITLE</string>
+    <string name="PREF_ABOUT_SUMMARY" translatable="false"></string>
+    <string name="PREF_ABOUT_URL" translatable="false">https://github.com/daktak/jayps-AndroidApp</string>
 
     <string name="PREF_PEBBLE_STORE">Pebble Store</string>
     <string name="PREF_PEBBLE_STORE_SUMMARY">Please vote for the app</string>
-    <string name="PREF_PEBBLE_STORE_URL">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
+    <string name="PREF_PEBBLE_STORE_URL" translatable="false">https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1</string>
 
     <string name="PREF_DEBUG_TITLE">Debug</string>
     <string name="PREF_DEBUG_SUMMARY">More logs for developers</string>
 
-    <string name="PREF_NAV_PLANNER_URL">http://pebblebike.com/planner/?utm_source=JayPSApp</string>
+    <string name="PREF_NAV_PLANNER_URL" translatable="false">http://pebblebike.com/planner/?utm_source=JayPSApp</string>
 
-    <string name="PREF_STRAVA_CATEGORIE_SUMMARY" />
+    <string name="PREF_STRAVA_CATEGORIE_SUMMARY" translatable="false" />
     <string name="PREF_STRAVA_TITLE">Strava</string>
     <string name="PREF_STRAVA_SESSION_TITLE">Strava session cookie</string>
     <string name="PREF_STRAVA_SESSION_SUMMARY">Paste the value of the _strava4_session cookie from a logged-in Strava session</string>
     <string name="STRAVA_AUTO_TITLE">Automatic upload</string>
     <string name="STRAVA_AUTO_DIALOG_TITLE">Strava automatic upload</string>
-    <string name="STRAVA_AUTO_DEFAULT">disable</string>
+    <string name="STRAVA_AUTO_DEFAULT" translatable="false">disable</string>
     <string name="TCX_ACTIVITY_TYPE_TITLE">TCX Activity Type</string>
     <string name="TCX_ACTIVITY_TYPE_DIALOG_TITLE">Type of activity as set in TCX file</string>
-    <string name="TCX_ACTIVITY_TYPE_DEFAULT">Biking</string>
+    <string name="TCX_ACTIVITY_TYPE_DEFAULT" translatable="false">Biking</string>
     <string name="PREF_STRAVA_VENTOO_CLUB_TITLE">Strava KayPS Club</string>
     <string name="PREF_STRAVA_VENTOO_CLUB_SUMMARY">Join other KayPS users</string>
-    <string name="PREF_STRAVA_URL_VENTOO_CLUB">https://www.strava.com/clubs/ventoo</string>
+    <string name="PREF_STRAVA_URL_VENTOO_CLUB" translatable="false">https://www.strava.com/clubs/ventoo</string>
 
     <string name="PREF_INTERVALS_ICU_CATEGORIE_TITLE">intervals.icu</string>
-    <string name="PREF_INTERVALS_ICU_CATEGORIE_SUMMARY" />
+    <string name="PREF_INTERVALS_ICU_CATEGORIE_SUMMARY" translatable="false" />
     <string name="PREF_INTERVALS_ICU_TITLE">intervals.icu</string>
     <string name="PREF_INTERVALS_ICU_API_KEY_TITLE">intervals.icu API Key</string>
     <string name="PREF_INTERVALS_ICU_API_KEY_SUMMARY">Paste your API key from intervals.icu settings (Developer Settings)</string>
     <string name="INTERVALS_ICU_AUTO_TITLE">Automatic upload</string>
     <string name="INTERVALS_ICU_AUTO_DIALOG_TITLE">intervals.icu automatic upload</string>
-    <string name="INTERVALS_ICU_AUTO_DEFAULT">disable</string>
+    <string name="INTERVALS_ICU_AUTO_DEFAULT" translatable="false">disable</string>
 
     <string name="PREF_RUNKEEPER_CATEGORIE_TITLE">Runkeeper Integration</string>
-    <string name="PREF_RUNKEEPER_CATEGORIE_SUMMARY" />
+    <string name="PREF_RUNKEEPER_CATEGORIE_SUMMARY" translatable="false" />
     <string name="PREF_RUNKEEPER_TITLE">Runkeeper</string>
     <string name="RUNKEEPER_ACTIVITY_TYPE_TITLE">Activity</string>
     <string name="RUNKEEPER_ACTIVITY_TYPE_DIALOG_TITLE">Runkeeper activity</string>
-    <string name="RUNKEEPER_ACTIVITY_TYPE_DEFAULT">Running</string>
+    <string name="RUNKEEPER_ACTIVITY_TYPE_DEFAULT" translatable="false">Running</string>
     <string name="PREF_RUNKEEPER_NOTIFICATION_TITLE">Notification</string>
     <string name="PREF_RUNKEEPER_NOTIFICATION_SUMMARY">Display a notification on your Pebble after each upload</string>
     <string name="RUNKEEPER_AUTO_TITLE">Automatic upload</string>
     <string name="RUNKEEPER_AUTO_DIALOG_TITLE">Runkeeper automatic upload</string>
-    <string name="RUNKEEPER_AUTO_DEFAULT">disable</string>
+    <string name="RUNKEEPER_AUTO_DEFAULT" translatable="false">disable</string>
 
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_CATEGORIE_TITLE">Nextcloud Live Tracking</string>
-    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_CATEGORIE_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_CATEGORIE_SUMMARY" translatable="false" />
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TITLE">Live Tracking with Nextcloud</string>
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SUMMARY">PhoneTrack Nextcloud app</string>
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_URL_TITLE">Nextcloud URL</string>
-    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_URL_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_URL_SUMMARY" translatable="false" />
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TOKEN_TITLE">Session Token</string>
-    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TOKEN_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_TOKEN_SUMMARY" translatable="false" />
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_DEVICE_TITLE">Device Name</string>
-    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_DEVICE_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_DEVICE_SUMMARY" translatable="false" />
     <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SHARE_TITLE">Share Nextcloud Tracking Link</string>
-    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SHARE_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_NEXTCLOUD_SHARE_SUMMARY" translatable="false" />
 
     <string name="PREF_LIVE_TRACKING_MMT_CATEGORIE_TITLE">Map My Tracks Live Tracking</string>
-    <string name="PREF_LIVE_TRACKING_MMT_CATEGORIE_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_MMT_CATEGORIE_SUMMARY" translatable="false" />
     <string name="PREF_LIVE_TRACKING_MMT_TITLE">Live Tracking with Map My Tracks</string>
-    <string name="PREF_LIVE_TRACKING_MMT_SUMMARY">http://www.mapmytracks.com</string>
+    <string name="PREF_LIVE_TRACKING_MMT_SUMMARY" translatable="false">http://www.mapmytracks.com</string>
     <string name="PREF_LIVE_TRACKING_MMT_LOGIN_TITLE">Login</string>
-    <string name="PREF_LIVE_TRACKING_MMT_LOGIN_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_MMT_LOGIN_SUMMARY" translatable="false" />
     <string name="PREF_LIVE_TRACKING_MMT_PASSWORD_TITLE">Password</string>
-    <string name="PREF_LIVE_TRACKING_MMT_PASSWORD_SUMMARY" />
+    <string name="PREF_LIVE_TRACKING_MMT_PASSWORD_SUMMARY" translatable="false" />
 
     <string name="PREF_CHANGE_LOG_TITLE">Change Log</string>
     <string name="PREF_CHANGE_LOG_SUMMARY">Displays changes history</string>
@@ -211,14 +211,14 @@
     <string name="message_pebble_new_watchapp">A new watchapp is available. Please install it from the KayPS android application settings</string>
 
     <!-- strava/runkeeper -->
-    <string name="token_strava">strava</string>
-    <string name="token_runkeeper">runkeeper</string>
+    <string name="token_strava" translatable="false">strava</string>
+    <string name="token_runkeeper" translatable="false">runkeeper</string>
     <string name="get_token">Get Token</string>
     <string name="delete_token">Delete Token</string>
     <string name="delete_cookies">Delete cookies</string>
 
-    <string name="parse_server_url">http://s.jayps.fr/index.php</string>
-    <string name="parse_app_id">413475423</string>
+    <string name="parse_server_url" translatable="false">http://s.jayps.fr/index.php</string>
+    <string name="parse_app_id" translatable="false">413475423</string>
 
     <string name="alert_google_play_not_available">Google Play Services is not available</string>
     <string name="alert_gps_off_enable_it">GPS is disabled in your device. Would you like to enable it?</string>
@@ -268,11 +268,13 @@
     <string name="dashboard_avg_format">avg %1$s %2$s</string>
     <string name="map_title">MAP</string>
     <string name="map_no_track">No track yet</string>
-    <string name="map_one_point">1 point</string>
-    <string name="map_points">%d points</string>
+    <plurals name="map_points">
+        <item quantity="one">%d point</item>
+        <item quantity="other">%d points</item>
+    </plurals>
     <string name="map_center">Center</string>
     <string name="map_placeholder">Start an activity — breadcrumb trail will appear here</string>
-    <string name="placeholder_dash">—</string>
+    <string name="placeholder_dash" translatable="false">—</string>
     <string name="dialog_ok">OK</string>
     <string name="dialog_cancel">Cancel</string>
 

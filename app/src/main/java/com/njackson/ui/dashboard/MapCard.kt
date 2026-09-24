@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -95,8 +96,7 @@ fun MapCard(trail: List<TrailPoint>, isIndoor: Boolean = false, modifier: Modifi
                 Text(
                     when {
                         !hasTrail -> stringResource(R.string.map_no_track)
-                        trail.size == 1 -> stringResource(R.string.map_one_point)
-                        else -> stringResource(R.string.map_points, trail.size)
+                        else -> pluralStringResource(R.plurals.map_points, trail.size, trail.size)
                     },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
