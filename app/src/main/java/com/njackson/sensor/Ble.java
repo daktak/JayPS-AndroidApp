@@ -1179,6 +1179,7 @@ public class Ble implements IBle, ITimerHandler {
                         postTrainerPowerConfirmed(addr, confirmedPower);
                     } else if (echoOpcode == 0x41) { // Set Level
                         int confirmedLevel = data.length >= 5 ? (data[4] & 0xFF) : 0;
+                        Log.d(TAG, "Wahoo level confirmed raw=" + confirmedLevel + " from " + hex(data));
                         postTrainerLevelConfirmed(addr, confirmedLevel);
                     }
                 } else if (result == 0x40) {
@@ -1330,6 +1331,21 @@ public class Ble implements IBle, ITimerHandler {
                     || (modelName != null && modelName.toLowerCase().contains("kickr"));
             if (isKickr) {
                 trainerAddress = addr;
+                Log.d(TAG, "Wahoo KICKR detected: name=" + deviceName + " model=" + modelName + " addr=" + addr);
+                // One-shot GATT dump so we can verify the control characteristic UUID and its
+                // properties (write vs write-without-response) against the real device.
+                for (BluetoothGattService svc : gatt.getServices()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("svc ").append(svc.getUuid())
+                      .append(" type=").append(svc.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY ? "primary" : "secondary")
+                      .append(" ->");
+                    for (BluetoothGattCharacteristic ch : svc.getCharacteristics()) {
+                        sb.append(" [").append(ch.getUuid())
+                          .append(" props=0x").append(Integer.toHexString(ch.getProperties()))
+                          .append("]");
+                    }
+                    Log.d(TAG, "KICKR GATT: " + sb);
+                }
                 // Read CPS Feature for power range
                 readCPSFeatureForRange(gatt);
                 // Send the 0x20 unlock + init handshake so control writes are accepted
@@ -1607,9 +1623,9 @@ public class Ble implements IBle, ITimerHandler {
             // Always send the target power so ERG mode is entered even at 0 W
             setWahooTargetPower(gatt, req.getTargetPower());
         } else {
-            if (req.getResistanceLevel() > 0) {
-                setWahooResistanceLevel(gatt, req.getResistanceLevel());
-            }
+            // Always send the level, even 0: writing 0x41 also switches the legacy KICKR
+            // out of ERG mode, and dropping to 0 must clear the resistance.
+            setWahooResistanceLevel(gatt, req.getResistanceLevel());
         }
     }
 
@@ -1704,9 +1720,12 @@ public class Ble implements IBle, ITimerHandler {
     private void setWahooResistanceLevel(BluetoothGatt gatt, int level) {
         BluetoothGattCharacteristic chr = wahooExtensionChar.get(gatt.getDevice().getAddress());
         if (chr != null) {
-            // OpCode 0x41: Set Level (1-9). Map 0-100 to 1-9.
-            int kickrLevel = Math.max(1, Math.min(9, (level * 9) / 100 + 1));
-            byte[] data = new byte[] { 0x41, (byte)kickrLevel };
+            // OpCode 0x41: Set Level, as a percent of brake resistance (0-100). The legacy
+            // KICKR applies the byte directly as resistance; a value of 1-9 would be ~1-9%
+            // (effectively freewheeling), which is why the slider seemed to do nothing.
+            int percent = Math.max(0, Math.min(100, level));
+            byte[] data = new byte[] { 0x41, (byte)percent };
+            Log.d(TAG, "Wahoo set level " + percent + "%");
             writeWahooExtension(gatt.getDevice().getAddress(), data);
         }
     }

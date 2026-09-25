@@ -468,13 +468,7 @@ private fun TrainerCard(
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         val estWatts = trainer.estimatedWattsAtResistance()
-                        val resistanceText = if (trainer.isWahooProprietaryControl) {
-                            // For Wahoo proprietary: 0-100 maps to levels 1-9
-                            val kickrLevel = Math.max(1, Math.min(9, (trainer.resistanceLevel * 9) / 100 + 1))
-                            "Resistance: ${trainer.resistanceLevel} (Level $kickrLevel) (~$estWatts W)"
-                        } else {
-                            "Resistance: ${trainer.resistanceLevel} (~$estWatts W)"
-                        }
+                        val resistanceText = "Resistance: ${trainer.resistanceLevel}% (~$estWatts W)"
                         Text(resistanceText, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.weight(1f))
                         Text("${trainer.minResistance}–${trainer.maxResistance}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
