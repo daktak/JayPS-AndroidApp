@@ -53,6 +53,14 @@ data class TrainerInfo(
         val ratio = (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance)
         return (minPower + ratio * (maxPower - minPower)).roundToInt()
     }
+
+    // Inverse of estimatedWattsAtResistance: the resistance % to send for a target wattage.
+    // Used to run the resistance slider in watts (capped ~500W) instead of % brake, which
+    // would otherwise ramp toward the trainer's full max power.
+    fun resistanceLevelForWatts(watts: Int): Int {
+        if (maxPower <= minPower) return 0
+        return ((watts - minPower) * 100 / (maxPower - minPower)).coerceIn(0, 100)
+    }
 }
 
 data class DashboardUiState(

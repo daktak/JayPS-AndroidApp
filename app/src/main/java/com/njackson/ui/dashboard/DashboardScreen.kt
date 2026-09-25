@@ -464,19 +464,24 @@ private fun TrainerCard(
                     )
                 }
             } else {
-                // Resistance Level Slider
+                // Resistance Slider — run in watts, capped at 500 W of effort. The full
+                // resistance range (0-100% brake) would ramp toward the trainer's max power
+                // (e.g. 2000W), far more than anyone wants; capping the slider keeps the
+                // findable range around a sensible wattage. The position is converted back
+                // to a resistance % and sent to both the pre-FTMS KICKR and FTMS trainers.
+                val resistanceMaxWatts = 500
+                val resistanceWatts = trainer.estimatedWattsAtResistance().coerceAtMost(resistanceMaxWatts)
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        val estWatts = trainer.estimatedWattsAtResistance()
-                        val resistanceText = "Resistance: ${trainer.resistanceLevel}% (~$estWatts W)"
-                        Text(resistanceText, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Resistance: $resistanceWatts W", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.weight(1f))
-                        Text("${trainer.minResistance}–${trainer.maxResistance}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("0–$resistanceMaxWatts W", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Slider(
-                        value = trainer.resistanceLevel.toFloat(),
-                        onValueChange = { onResistanceChange(it.roundToInt()) },
-                        valueRange = (trainer.minResistance.toFloat())..(trainer.maxResistance.toFloat().coerceAtLeast(trainer.minResistance.toFloat() + 1f)),
+                        value = resistanceWatts.toFloat(),
+                        onValueChange = { onResistanceChange(trainer.resistanceLevelForWatts(it.roundToInt())) },
+                        valueRange = 0f..resistanceMaxWatts.toFloat(),
+                        steps = 49,
                         enabled = trainer.hasControl || trainer.isWahooProprietaryControl
                     )
                 }
