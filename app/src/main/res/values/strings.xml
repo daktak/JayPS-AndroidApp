@@ -159,6 +159,15 @@
     <string name="INTERVALS_ICU_AUTO_DIALOG_TITLE">intervals.icu automatic upload</string>
     <string name="INTERVALS_ICU_AUTO_DEFAULT" translatable="false">disable</string>
 
+    <string name="PREF_INTERVALS_ICU_CATEGORIE_TITLE">intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_CATEGORIE_SUMMARY" />
+    <string name="PREF_INTERVALS_ICU_TITLE">intervals.icu</string>
+    <string name="PREF_INTERVALS_ICU_API_KEY_TITLE">intervals.icu API Key</string>
+    <string name="PREF_INTERVALS_ICU_API_KEY_SUMMARY">Paste your API key from intervals.icu settings (Developer Settings)</string>
+    <string name="INTERVALS_ICU_AUTO_TITLE">Automatic upload</string>
+    <string name="INTERVALS_ICU_AUTO_DIALOG_TITLE">intervals.icu automatic upload</string>
+    <string name="INTERVALS_ICU_AUTO_DEFAULT">disable</string>
+
     <string name="PREF_RUNKEEPER_CATEGORIE_TITLE">Runkeeper Integration</string>
     <string name="PREF_RUNKEEPER_CATEGORIE_SUMMARY" translatable="false" />
     <string name="PREF_RUNKEEPER_TITLE">Runkeeper</string>
