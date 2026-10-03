@@ -132,7 +132,7 @@ fun DashboardScreen(
                 TrainerCard(
                     trainer = state.trainer,
                     onTargetPowerChange = { vm.setTrainerTargetPower(it) },
-                    onResistanceChange = { vm.setTrainerResistance(it) },
+                    onGradientChange = { vm.setTrainerGradient(it) },
                     onErgModeChange = { vm.setTrainerErgMode(it) },
                     onRequestControl = { vm.requestTrainerControl() }
                 )
@@ -402,11 +402,13 @@ private fun GoProCard(gopro: GoProInfo, onShutter: (Boolean) -> Unit) {
     }
 }
 
+private fun formatGradient(pct: Float): String = String.format("%+.1f%%", pct)
+
 @Composable
 private fun TrainerCard(
     trainer: TrainerInfo,
     onTargetPowerChange: (Int) -> Unit,
-    onResistanceChange: (Int) -> Unit,
+    onGradientChange: (Int) -> Unit,
     onErgModeChange: (Boolean) -> Unit,
     onRequestControl: () -> Unit
 ) {
@@ -464,24 +466,26 @@ private fun TrainerCard(
                     )
                 }
             } else {
-                // Resistance Slider — run in watts, capped at 500 W of effort. The full
-                // resistance range (0-100% brake) would ramp toward the trainer's max power
-                // (e.g. 2000W), far more than anyone wants; capping the slider keeps the
-                // findable range around a sensible wattage. The position is converted back
-                // to a resistance % and sent to both the pre-FTMS KICKR and FTMS trainers.
-                val resistanceMaxWatts = 500
-                val resistanceWatts = trainer.estimatedWattsAtResistance().coerceAtMost(resistanceMaxWatts)
+// Gradient (SIM) Slider — sim mode holds a fixed surface grade while ERG holds
+                // fixed watts. Defaults to 0% (flat) and spans -3% (downhill) to +15% (climb),
+                // far beyond that being unreasonably hard for the KICKR/FTMS sim modes. The
+                // value is sent to both the pre-FTMS KICKR (0x43 sim) and FTMS trainers (0x04).
+                // Pre-FTMS KICKRs floor at the crr baseline and cannot simulate downhill, so
+                // their slider starts at 0% (negative grades are a no-op on those units).
+                val gradientMinPct = if (trainer.isWahooProprietaryControl) 0f else -3f
+                val gradientMaxPct = 15f
+                val gradientPct = (trainer.targetGrade / 10f).coerceIn(gradientMinPct, gradientMaxPct)
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("Resistance: $resistanceWatts W", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Gradient: ${formatGradient(gradientPct)}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.weight(1f))
-                        Text("0–$resistanceMaxWatts W", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(String.format("%.0f%% … +%.0f%%", gradientMinPct, gradientMaxPct), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Slider(
-                        value = resistanceWatts.toFloat(),
-                        onValueChange = { onResistanceChange(trainer.resistanceLevelForWatts(it.roundToInt())) },
-                        valueRange = 0f..resistanceMaxWatts.toFloat(),
-                        steps = 49,
+                        value = gradientPct,
+                        onValueChange = { onGradientChange((it * 10).roundToInt()) },
+                        valueRange = gradientMinPct..gradientMaxPct,
+                        steps = if (gradientMinPct == 0f) (gradientMaxPct / 0.5f).roundToInt() - 1 else 35,
                         enabled = trainer.hasControl || trainer.isWahooProprietaryControl
                     )
                 }

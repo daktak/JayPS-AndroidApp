@@ -94,6 +94,11 @@
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: ゾーンアラーム</string>
     <string name="PREF_FTP">FTP (機能的閾値パワー)</string>
     <string name="PREF_FTP_SUMMARY">閾値のワット数、例 250</string>
+    <string name="PREF_RIDER_HEIGHT">身長 (cm)</string>
+    <string name="PREF_RIDER_HEIGHT_SUMMARY">空気抵抗 (CdA) と仮想速度に使用。例 175</string>
+    <string name="PREF_RIDER_WEIGHT">体重 (kg)</string>
+    <string name="PREF_RIDER_WEIGHT_SUMMARY">シミュレーションモードと仮想速度の計算に使用。例 75</string>
+    <string name="PREF_RIDER_PHYSICS_INFO">物理モデル: CdA ~%1$s m²、Crr %2$s</string>
     <string name="PREF_PEBBLE_HRM_TITLE">Pebble の心拍計を使用</string>
     <string name="PREF_PEBBLE_HRM_SUMMARY">記録中は Bluetooth HRM の代わりにウォッチ内蔵の心拍センサーを使用</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: 車輪周長 (mm)</string>
@@ -246,6 +251,7 @@
     <string name="settings_gps_title">GPS</string>
     <string name="settings_ble_title">BLE 心拍数 / VCM</string>
     <string name="settings_altitude_title">高度計</string>
+    <string name="settings_rider_title">ライダーと物理</string>
     <string name="settings_nav_load_route">ナビを開始 - ルートを読み込む</string>
     <string name="settings_nav_load_route_summary">GPX ファイルをインポート</string>
     <string name="settings_nav_stop">ナビを停止</string>

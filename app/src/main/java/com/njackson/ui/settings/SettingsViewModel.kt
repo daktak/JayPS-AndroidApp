@@ -52,6 +52,8 @@ class SettingsViewModel(
             hrmZone = prefs.getString("PREF_BLE_HRM_ZONE_NOTIFICATION_MODE", "0") ?: "0",
             pebbleHrm = prefs.getBoolean(Constants.PREF_PEBBLE_HRM, false),
             ftp = prefs.getString(Constants.PREF_FTP, "0") ?: "0",
+            riderHeight = prefs.getString(Constants.PREF_RIDER_HEIGHT, "") ?: "",
+            riderWeight = prefs.getString(Constants.PREF_RIDER_WEIGHT, "") ?: "",
             wheelPreset = prefs.getString("PREF_BLE_CSC_WHEEL_PRESET", "") ?: "",
             wheelSize = prefs.getString("PREF_BLE_CSC_WHEEL_SIZE", "") ?: "",
             liveTracking = prefs.getBoolean("LIVE_TRACKING", false),

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Storage
@@ -72,6 +73,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.njackson.Constants
 import com.njackson.R
+import com.njackson.utils.RiderModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,6 +179,13 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
                 EditRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_SIZE), s.wheelSize) { vm.putString("PREF_BLE_CSC_WHEEL_SIZE", it) }
                 SwitchRow(stringResource(R.string.autostart_lights_title), stringResource(R.string.autostart_lights_summary), s.autostartLights) { vm.putBool(Constants.PREF_AUTOSTART_LIGHTS, it) }
                 SwitchRow(stringResource(R.string.autostart_gopro_title), stringResource(R.string.autostart_gopro_summary), s.autostartGoPro) { vm.putBool(Constants.PREF_AUTOSTART_GOPRO, it) }
+            } }
+            item { GroupCard(stringResource(R.string.settings_rider_title), Icons.Filled.Person) {
+                EditRow(stringResource(R.string.PREF_RIDER_HEIGHT), s.riderHeight) { vm.putString(Constants.PREF_RIDER_HEIGHT, it.filter { c -> c.isDigit() }) }
+                EditRow(stringResource(R.string.PREF_RIDER_WEIGHT), s.riderWeight) { vm.putString(Constants.PREF_RIDER_WEIGHT, it.filter { c -> c.isDigit() }) }
+                val riderParams = RiderModel.paramsFromPrefs(s.riderHeight, s.riderWeight)
+                val physicsInfo = stringResource(R.string.PREF_RIDER_PHYSICS_INFO, String.format("%.2f", riderParams.cda), String.format("%.4f", RiderModel.CRR))
+                ClickRow(physicsInfo, "", onClick = {})
             } }
             item { GroupCard(stringResource(R.string.settings_altitude_title), Icons.Filled.Landscape) {
                 ClickRow("Altimeter Pressure sensor", if (s.pressureAvailable) stringResource(R.string.PREF_PRESSURE_SENSOR_AVAILABLE) else stringResource(R.string.PREF_PRESSURE_SENSOR_NOT_AVAILABLE)) { }

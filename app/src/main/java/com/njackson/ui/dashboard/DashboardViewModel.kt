@@ -17,6 +17,7 @@ import com.njackson.events.GPSServiceCommand.ResetGPSState
 import com.njackson.events.GPSServiceCommand.SavedLocation
 import com.njackson.events.base.BaseStatus
 import com.njackson.state.IGPSDataStore
+import com.njackson.utils.RiderModel
 import com.njackson.utils.SensorGraphReduce
 import com.squareup.otto.Bus
 import com.squareup.otto.Subscribe
@@ -245,12 +246,28 @@ class DashboardViewModel(
                 if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
                     val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
                     val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
+                    // Virtual speed fallback: only used when the trainer reports no speed (e.g. the
+                    // legacy power-only KICKR). Computed from watts + gradient + rider model so the
+                    // displayed speed drops as the gradient slider goes uphill. Uses the current
+                    // target grade (confirmations) not the live grade, which Indoor Bike Data doesn't carry.
+                    val currentGradeTenths = cur.trainer.targetGrade
+                    val virtualKmh = if (speedKmh <= 0 && e.getInstantaneousPower() in 1..2000) {
+                        RiderModel.virtualSpeedKmh(
+                            e.getInstantaneousPower(),
+                            currentGradeTenths / 10f,
+                            RiderModel.paramsFromPrefs(
+                                prefs.getString(Constants.PREF_RIDER_HEIGHT, ""),
+                                prefs.getString(Constants.PREF_RIDER_WEIGHT, "")
+                            )
+                        )
+                    } else 0f
+                    val displaySpeedKmh = if (virtualKmh > 0) virtualKmh else speedKmh
                     _state.value = cur.copy(trainer = cur.trainer.copy(
                         address = addr,
                         connected = true,
                         instantaneousPower = e.getInstantaneousPower(),
                         instantaneousCadence = cadenceRpm,
-                        instantaneousSpeed = speedKmh,
+                        instantaneousSpeed = displaySpeedKmh,
                         resistanceLevel = e.getResistanceLevel(),
                         targetPower = e.getTargetPower(),
                         minResistance = e.getMinResistance(),
@@ -372,23 +389,23 @@ class DashboardViewModel(
             _state.value = _state.value.copy(trainer = trainer.copy(targetPower = watts, isErgMode = true))
             val t = _state.value.trainer
             if (t.isWahooProprietaryControl) {
-                bus.post(WahooTrainerControlRequest(addr, watts, 0, true))
+                bus.post(WahooTrainerControlRequest(addr, watts, 0, 0, true))
             } else {
-                bus.post(TrainerControlRequest(addr, watts, 0, true, false))
+                bus.post(TrainerControlRequest(addr, watts, 0, 0, true, false))
             }
         }
     }
-    fun setTrainerResistance(level: Int) {
+    fun setTrainerGradient(grade: Int) {
         val addr = _state.value.trainer.address
         val trainer = _state.value.trainer
         if (addr.isNotEmpty()) {
             // Optimistic UI update so the slider responds immediately.
-            _state.value = _state.value.copy(trainer = trainer.copy(resistanceLevel = level, isErgMode = false))
+            _state.value = _state.value.copy(trainer = trainer.copy(targetGrade = grade, isErgMode = false))
             val t = _state.value.trainer
             if (t.isWahooProprietaryControl) {
-                bus.post(WahooTrainerControlRequest(addr, 0, level, false))
+                bus.post(WahooTrainerControlRequest(addr, 0, 0, grade, false))
             } else {
-                bus.post(TrainerControlRequest(addr, 0, level, false, false))
+                bus.post(TrainerControlRequest(addr, 0, 0, grade, false, false))
             }
         }
     }
@@ -401,23 +418,28 @@ class DashboardViewModel(
             val t = _state.value.trainer
             if (t.isWahooProprietaryControl) {
                 // When enabling ERG mode, send the current target power (defaulting to a real,
-                // non-zero value so the KICKR actually leaves level mode). When disabling, send
-                // the current resistance level so the trainer exits ERG mode.
+                // non-zero value so the KICKR actually leaves gradient mode). When disabling,
+                // send the current gradient so the trainer exits ERG mode (starts flat at 0%).
                 if (enabled) {
                     val power = if (trainer.targetPower > 0) trainer.targetPower else 100
                     _state.value = _state.value.copy(trainer = t.copy(targetPower = power))
-                    bus.post(WahooTrainerControlRequest(addr, power, 0, true))
+                    bus.post(WahooTrainerControlRequest(addr, power, 0, 0, true))
                 } else {
-                    val level = if (trainer.resistanceLevel > 0) trainer.resistanceLevel else 50
-                    bus.post(WahooTrainerControlRequest(addr, 0, level, false))
+                    val grade = trainer.targetGrade
+                    bus.post(WahooTrainerControlRequest(addr, 0, 0, grade, false))
                 }
             } else {
-                bus.post(TrainerControlRequest(addr, 0, 0, enabled, false))
+                if (enabled) {
+                    bus.post(TrainerControlRequest(addr, 0, 0, 0, true, false))
+                } else {
+                    val grade = trainer.targetGrade
+                    bus.post(TrainerControlRequest(addr, 0, 0, grade, false, false))
+                }
             }
         }
     }
     fun requestTrainerControl() {
         val addr = _state.value.trainer.address
-        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, 0, false, true))
+        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, 0, 0, false, true))
     }
 }

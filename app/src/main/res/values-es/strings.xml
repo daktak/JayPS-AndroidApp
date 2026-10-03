@@ -94,6 +94,11 @@
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: alarmas de zona</string>
     <string name="PREF_FTP">FTP (umbral funcional)</string>
     <string name="PREF_FTP_SUMMARY">Vatios en el umbral, por ejemplo 250</string>
+    <string name="PREF_RIDER_HEIGHT">Altura del ciclista (cm)</string>
+    <string name="PREF_RIDER_HEIGHT_SUMMARY">Se usa para la aerodinámica (CdA) y la velocidad virtual, p. ej. 175</string>
+    <string name="PREF_RIDER_WEIGHT">Peso del ciclista (kg)</string>
+    <string name="PREF_RIDER_WEIGHT_SUMMARY">Se usa para el modo simulación y los cálculos de velocidad virtual, p. ej. 75</string>
+    <string name="PREF_RIDER_PHYSICS_INFO">Modelo físico: CdA ~%1$s m², Crr %2$s</string>
     <string name="PREF_PEBBLE_HRM_TITLE">Usar el monitor cardíaco del Pebble</string>
     <string name="PREF_PEBBLE_HRM_SUMMARY">Durante la grabación, usar el sensor cardíaco integrado del reloj en lugar de un HRM Bluetooth</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: circunferencia de la rueda (mm)</string>
@@ -246,6 +251,7 @@
     <string name="settings_gps_title">GPS</string>
     <string name="settings_ble_title">BLE frecuencia cardíaca / VCM</string>
     <string name="settings_altitude_title">Altímetro</string>
+    <string name="settings_rider_title">Ciclista y física</string>
     <string name="settings_nav_load_route">Iniciar navegación - cargar ruta</string>
     <string name="settings_nav_load_route_summary">Importar archivo GPX</string>
     <string name="settings_nav_stop">Detener navegación</string>

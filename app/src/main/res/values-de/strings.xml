@@ -94,6 +94,11 @@
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: Zonenalarme</string>
     <string name="PREF_FTP">FTP (funktionelle Leistungsschwelle)</string>
     <string name="PREF_FTP_SUMMARY">Watt an der Schwelle, z. B. 250</string>
+    <string name="PREF_RIDER_HEIGHT">Körpergröße (cm)</string>
+    <string name="PREF_RIDER_HEIGHT_SUMMARY">Für Aerodynamik (CdA) und virtuelle Geschwindigkeit, z. B. 175</string>
+    <string name="PREF_RIDER_WEIGHT">Körpergewicht (kg)</string>
+    <string name="PREF_RIDER_WEIGHT_SUMMARY">Für Simulationsmodus und Berechnung der virtuellen Geschwindigkeit, z. B. 75</string>
+    <string name="PREF_RIDER_PHYSICS_INFO">Physikmodell: CdA ~%1$s m², Crr %2$s</string>
     <string name="PREF_PEBBLE_HRM_TITLE">Pebble-Herzfrequenzmesser verwenden</string>
     <string name="PREF_PEBBLE_HRM_SUMMARY">Während der Aufzeichnung den integrierten HR-Sensor der Uhr statt eines Bluetooth-HRM verwenden</string>
     <string name="PREF_BLE_CSC_WHEEL_SIZE">CSC: Radumfang (mm)</string>
@@ -246,6 +251,7 @@
     <string name="settings_gps_title">GPS</string>
     <string name="settings_ble_title">BLE Herzfrequenz / VCM</string>
     <string name="settings_altitude_title">Höhenmesser</string>
+    <string name="settings_rider_title">Fahrer &amp; Physik</string>
     <string name="settings_nav_load_route">Navigation starten - Route laden</string>
     <string name="settings_nav_load_route_summary">GPX-Datei importieren</string>
     <string name="settings_nav_stop">Navigation stoppen</string>

@@ -1,7 +1,5 @@
 package com.njackson.ui.dashboard
 
-import kotlin.math.roundToInt
-
 data class LightInfo(
     val address: String,
     val name: String,
@@ -34,6 +32,7 @@ data class TrainerInfo(
     val instantaneousSpeed: Float = 0f,
     val resistanceLevel: Int = 0,
     val targetPower: Int = 0,
+    val targetGrade: Int = 0,
     val minResistance: Int = 0,
     val maxResistance: Int = 0,
     val minPower: Int = 0,
@@ -47,20 +46,6 @@ data class TrainerInfo(
 ) {
     fun resistancePercent(): Float = if (maxResistance > minResistance)
         (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance) else 0f
-
-    fun estimatedWattsAtResistance(): Int {
-        if (maxResistance <= minResistance || maxPower <= minPower) return 0
-        val ratio = (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance)
-        return (minPower + ratio * (maxPower - minPower)).roundToInt()
-    }
-
-    // Inverse of estimatedWattsAtResistance: the resistance % to send for a target wattage.
-    // Used to run the resistance slider in watts (capped ~500W) instead of % brake, which
-    // would otherwise ramp toward the trainer's full max power.
-    fun resistanceLevelForWatts(watts: Int): Int {
-        if (maxPower <= minPower) return 0
-        return ((watts - minPower) * 100 / (maxPower - minPower)).coerceIn(0, 100)
-    }
 }
 
 data class DashboardUiState(

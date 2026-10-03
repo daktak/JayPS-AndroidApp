@@ -136,6 +136,12 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<String, WahooCommandQueue> wahooCommandQueues = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Boolean> wahooInitStarted = new ConcurrentHashMap<>();
 
+    // 0x43 simulation grade field units per 1% of gradient. App-internal grade is 0.1% units
+    // (+15.0% -> +150); the field sent is grade * this = percent * 100, i.e. 0.01%-per-unit,
+    // confirmed against the real legacy KICKR (init field 0x0004 = 0.04% ~ flat; 15% = 1500
+    // ramps proportionally hard; negatives floor at the crr baseline). Signed s16.
+    private static final int WAHOO_GRADE_UNITS_PER_PERCENT = 10;
+
     private Set<String> _ble_addresses;
 
     public Ble(Context context) {
@@ -1073,7 +1079,7 @@ public class Ble implements IBle, ITimerHandler {
                 if ((flags & 0x2000) != 0) offset += 2; // Remaining Time
                 // Target Power is not in standard Indoor Bike Data - may come from Training Status or Control Point
                 BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
-                sensorData.setFtmsIndoorBikeData(instSpeed, instCadence, instPower, resistance, targetPower);
+                sensorData.setFtmsIndoorBikeData(instSpeed, instCadence, instPower, resistance, targetPower, 0);
                 _bus.post(sensorData);
                 res = String.format("FTMS Indoor Bike: speed=%d cad=%d power=%d resistance=%d", instSpeed, instCadence, instPower, resistance);
             }
@@ -1170,7 +1176,7 @@ public class Ble implements IBle, ITimerHandler {
                 String addr = gatt.getDevice().getAddress();
                 if (result == 1) {
                     Log.d(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " confirmed");
-                    // Update TrainerInfo with confirmed value
+                    // update TrainerInfo with confirmed value
                     if (echoOpcode == 0x42) { // Set ERG Power
                         int confirmedPower = 0;
                         if (data.length >= 6) {
@@ -1181,6 +1187,18 @@ public class Ble implements IBle, ITimerHandler {
                         int confirmedLevel = data.length >= 5 ? (data[4] & 0xFF) : 0;
                         Log.d(TAG, "Wahoo level confirmed raw=" + confirmedLevel + " from " + hex(data));
                         postTrainerLevelConfirmed(addr, confirmedLevel);
+                    } else if (echoOpcode == 0x43) { // Set Simulation Grade
+                        // The legacy KICKR ack for 0x43 is a bare 4-byte [01, 43, 01, 00] with no
+                        // value bytes (unlike 0x47 which echoes the wind value). Only a 6-byte
+                        // indication carries a grade field, so a short ack is just acceptance.
+                        if (data.length >= 6) {
+                            int confirmedField = (short)((data[4] & 0xFF) | ((data[5] & 0xFF) << 8));
+                            int confirmedGrade = WAHOO_GRADE_UNITS_PER_PERCENT == 0 ? 0 : confirmedField / WAHOO_GRADE_UNITS_PER_PERCENT;
+                            Log.d(TAG, "Wahoo grade confirmed raw=" + confirmedField + " from " + hex(data) + " -> " + String.format("%.1f%%", confirmedGrade / 10.0));
+                            postTrainerGradientConfirmed(addr, confirmedGrade);
+                        } else {
+                            Log.d(TAG, "Wahoo ack 0x43 (no grade value in echo): " + hex(data));
+                        }
                     }
                 } else if (result == 0x40) {
                     Log.w(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " not supported");
@@ -1578,6 +1596,20 @@ public class Ble implements IBle, ITimerHandler {
         writeControlPoint(gatt, data);
     }
 
+    public void setTargetGradient(String address, int grade) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setTargetGradient(gatt, grade);
+    }
+
+    private void setTargetGradient(BluetoothGatt gatt, int grade) {
+        // OpCode 0x04: Set Target Gradient (sint16, 0.1% units: +150 = +15.0%)
+        int grad = Math.max(-300, Math.min(150, grade));
+        byte[] data = new byte[] { 0x04, (byte)(grad & 0xFF), (byte)((grad >> 8) & 0xFF) };
+        Log.d(TAG, "FTMS set gradient " + String.format("%.1f%%", grad / 10.0));
+        writeControlPoint(gatt, data);
+    }
+
     private void writeControlPoint(BluetoothGatt gatt, byte[] data) {
         BluetoothGattService ftmsService = gatt.getService(UUID_FITNESS_MACHINE_SERVICE);
         if (ftmsService == null) {
@@ -1602,14 +1634,16 @@ public class Ble implements IBle, ITimerHandler {
         if (gatt == null) return;
         if (req.isRequestControl()) {
             requestControl(gatt);
+            // Establish gradient (SIM) mode at 0% by default once control is granted.
+            setTargetGradient(gatt, 0);
         } else if (req.isErgMode()) {
             if (req.getTargetPower() > 0) {
                 setTargetPower(gatt, req.getTargetPower());
             }
         } else {
-            if (req.getResistanceLevel() > 0) {
-                setResistanceLevel(gatt, req.getResistanceLevel());
-            }
+            // Always send the gradient, even 0: writing 0x04 takes the trainer out of ERG
+            // mode and the slider range includes negatives, so "0 = not set" cannot apply.
+            setTargetGradient(gatt, req.getGrade());
         }
     }
 
@@ -1623,9 +1657,12 @@ public class Ble implements IBle, ITimerHandler {
             // Always send the target power so ERG mode is entered even at 0 W
             setWahooTargetPower(gatt, req.getTargetPower());
         } else {
-            // Always send the level, even 0: writing 0x41 also switches the legacy KICKR
-            // out of ERG mode, and dropping to 0 must clear the resistance.
-            setWahooResistanceLevel(gatt, req.getResistanceLevel());
+            // Always send the gradient, even 0: writing 0x43 (sim mode) also switches the
+            // legacy KICKR out of ERG mode. A direct field-0 write returns the trainer to
+            // true flat (init field 0x0004 is only 0.04%); the write queue spacing handles
+            // the brief ramp the trainer applies on large drops. Negative grades are clamped
+            // to 0: pre-FTMS KICKR sim mode floors at its crr baseline (downhill = no-op).
+            setWahooGradient(gatt, Math.max(0, req.getGrade()));
         }
     }
 
@@ -1662,21 +1699,26 @@ public class Ble implements IBle, ITimerHandler {
         sensorData.setWahooProprietaryControl(isWahooProprietary);
         // These must be called in order: ranges first, then indoor bike data LAST
         sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
-        sensorData.setFtmsIndoorBikeData(0, 0, 0, 0, 0);
+        sensorData.setFtmsIndoorBikeData(0, 0, 0, 0, 0, 0);
         _bus.post(sensorData);
     }
 
     private void postTrainerPowerConfirmed(String addr, int watts) {
-        // ERG confirmation: report target power (level cleared to 0)
-        postTrainerStateConfirmed(addr, watts, 0, watts);
+        // ERG confirmation: report target power (level and gradient cleared)
+        postTrainerStateConfirmed(addr, watts, 0, watts, 0);
     }
 
     private void postTrainerLevelConfirmed(String addr, int level) {
-        // Level confirmation: report resistance level (watts cleared to 0)
-        postTrainerStateConfirmed(addr, 0, level, 0);
+        // Level confirmation: report resistance level (watts and gradient cleared)
+        postTrainerStateConfirmed(addr, 0, level, 0, 0);
     }
 
-    private void postTrainerStateConfirmed(String addr, int watts, int level, int targetPower) {
+    private void postTrainerGradientConfirmed(String addr, int grade) {
+        // Gradient confirmation: report gradient (watts and level cleared)
+        postTrainerStateConfirmed(addr, 0, 0, 0, grade);
+    }
+
+    private void postTrainerStateConfirmed(String addr, int watts, int level, int targetPower, int grade) {
         BleSensorData sensorData = new BleSensorData(addr);
         int minPower = wahooMinPower.getOrDefault(addr, 0);
         int maxPower = wahooMaxPower.getOrDefault(addr, 2000);
@@ -1692,7 +1734,7 @@ public class Ble implements IBle, ITimerHandler {
         sensorData.setHasControl(true);
         sensorData.setWahooProprietaryControl(true);
         sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
-        sensorData.setFtmsIndoorBikeData(0, 0, watts, level, targetPower);
+        sensorData.setFtmsIndoorBikeData(0, 0, watts, level, targetPower, grade);
         _bus.post(sensorData);
     }
 
@@ -1730,6 +1772,32 @@ public class Ble implements IBle, ITimerHandler {
         }
     }
 
+    public void setWahooGradient(String address, int grade) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setWahooGradient(gatt, grade);
+    }
+
+    private void setWahooGradient(BluetoothGatt gatt, int grade) {
+        BluetoothGattCharacteristic chr = wahooExtensionChar.get(gatt.getDevice().getAddress());
+        if (chr != null) {
+            // OpCode 0x43: Set Simulation Mode Parameters. Same layout as the init handshake
+            // valued in the reference apps: [weight u16 LE][grade s16 LE][crr u8][cw u8].
+            // The grade field scale (WAHOO_GRADE_UNITS_PER_PERCENT) is tuned against the real
+            // legacy KICKR via the confirmation echo + pedaling feel; 10 units = 1% default.
+            int weight = 8000; // 80kg rider, matches the init handshake
+            int gradField = Math.max(-32768, Math.min(32767, grade * WAHOO_GRADE_UNITS_PER_PERCENT));
+            byte[] data = new byte[] {
+                0x43,
+                (byte)(weight & 0xFF), (byte)((weight >> 8) & 0xFF),
+                (byte)(gradField & 0xFF), (byte)((gradField >> 8) & 0xFF),
+                (byte)0x90, (byte)0x01
+            };
+            Log.d(TAG, "Wahoo set gradient " + String.format("%.1f%%", grade / 10.0) + " (0x43 field " + gradField + ")");
+            writeWahooExtension(gatt.getDevice().getAddress(), data);
+        }
+    }
+
     private void writeWahooExtension(String address, byte[] data) {
         BluetoothGattCharacteristic chr = wahooExtensionChar.get(address);
         if (chr != null) {
@@ -1754,6 +1822,12 @@ public class Ble implements IBle, ITimerHandler {
     private void initWahooControl(String address) {
         if (Boolean.TRUE.equals(wahooInitStarted.get(address))) return;
         wahooInitStarted.put(address, true);
+        sendWahooInitSequence(address);
+    }
+
+    // The full sim-mode handshake that the legacy KICKR accepts as flat (proven on hardware).
+    // Sent once on every (re)connect; in-ride gradient changes use direct 0x43 writes instead.
+    private void sendWahooInitSequence(String address) {
         queueWahooCommand(address, new byte[] { 0x20, (byte)0xEE, (byte)0xFC }); // 0x20: unlock
         // 0x43: set sim mode params (weight 80kg, crr 0.004, drag 0.4) - matches reference apps
         queueWahooCommand(address, new byte[] { 0x43, 0x40, 0x1F, 0x04, 0x00, (byte)0x90, 0x01 });

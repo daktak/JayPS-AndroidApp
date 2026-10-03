@@ -94,6 +94,11 @@ public class BleSensorData {
     private int _maxSpeed = 0;
     private boolean _hasControl = false;
 
+    private int _grade = 0;                    // gradient in 0.1% units (e.g. +150 = +15.0%)
+
+    public int getGrade() { return _grade; }
+    public void setGrade(int v) { _grade = v; }
+
     // True only when this device is a pre-FTMS Wahoo KICKR (proprietary CPS-extension control).
     // Set by Ble.java ONLY in the Wahoo fallback path; genuine FTMS trainers keep this false so
     // the controls keep routing through the standard FTMS control point (FTMS takes precedence).
@@ -126,13 +131,14 @@ public class BleSensorData {
     public boolean getHasControl() { return _hasControl; }
     public void setHasControl(boolean v) { _hasControl = v; }
 
-    public void setFtmsIndoorBikeData(int speed, int cadence, int power, int resistance, int targetPower) {
+    public void setFtmsIndoorBikeData(int speed, int cadence, int power, int resistance, int targetPower, int grade) {
         this._type = SENSOR_FTMS_INDOOR_BIKE;
         this._instantaneousSpeed = speed;
         this._instantaneousCadence = cadence;
         this._instantaneousPower = power;
         this._resistanceLevel = resistance;
         this._targetPower = targetPower;
+        this._grade = grade;
     }
 
     public void setFtmsSupportedRanges(int minRes, int maxRes, int minPwr, int maxPwr, int minSpd, int maxSpd) {
