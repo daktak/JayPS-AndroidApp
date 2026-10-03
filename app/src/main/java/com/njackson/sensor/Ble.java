@@ -135,6 +135,10 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<String, Integer> wahooMaxPower = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, WahooCommandQueue> wahooCommandQueues = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Boolean> wahooInitStarted = new ConcurrentHashMap<>();
+    // Last known trainer telemetry to preserve during control confirmations
+    private ConcurrentHashMap<String, Integer> trainerLastPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerLastCadence = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerLastSpeed = new ConcurrentHashMap<>();
 
     // 0x43 simulation grade field units per 1% of gradient. App-internal grade is 0.1% units
     // (+15.0% -> +150); the field sent is grade * this = percent * 100, i.e. 0.01%-per-unit,
@@ -1079,6 +1083,10 @@ public class Ble implements IBle, ITimerHandler {
                 if ((flags & 0x2000) != 0) offset += 2; // Remaining Time
                 // Target Power is not in standard Indoor Bike Data - may come from Training Status or Control Point
                 BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+                String addrIb = gatt.getDevice().getAddress();
+                trainerLastSpeed.put(addrIb, instSpeed);
+                trainerLastCadence.put(addrIb, instCadence);
+                trainerLastPower.put(addrIb, instPower);
                 sensorData.setFtmsIndoorBikeData(instSpeed, instCadence, instPower, resistance, targetPower, 0);
                 _bus.post(sensorData);
                 res = String.format("FTMS Indoor Bike: speed=%d cad=%d power=%d resistance=%d", instSpeed, instCadence, instPower, resistance);
@@ -1699,7 +1707,10 @@ public class Ble implements IBle, ITimerHandler {
         sensorData.setWahooProprietaryControl(isWahooProprietary);
         // These must be called in order: ranges first, then indoor bike data LAST
         sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
-        sensorData.setFtmsIndoorBikeData(0, 0, 0, 0, 0, 0);
+        int lastSpdInit = trainerLastSpeed.getOrDefault(addr, 0);
+        int lastCadInit = trainerLastCadence.getOrDefault(addr, 0);
+        int lastPwrInit = trainerLastPower.getOrDefault(addr, 0);
+        sensorData.setFtmsIndoorBikeData(lastSpdInit, lastCadInit, lastPwrInit, 0, 0, 0);
         _bus.post(sensorData);
     }
 
@@ -1722,6 +1733,11 @@ public class Ble implements IBle, ITimerHandler {
         BleSensorData sensorData = new BleSensorData(addr);
         int minPower = wahooMinPower.getOrDefault(addr, 0);
         int maxPower = wahooMaxPower.getOrDefault(addr, 2000);
+        // Preserve last known telemetry so virtual speed can be computed on Wahoo (SIM mode)
+        int lastWatts = trainerLastPower.getOrDefault(addr, watts);
+        int lastCad = trainerLastCadence.getOrDefault(addr, 0);
+        int lastSpd = trainerLastSpeed.getOrDefault(addr, 0);
+        int outWatts = (watts != 0) ? watts : lastWatts;
         // Ranges must be preserved on EVERY confirmation so the sliders keep their full range
         // and stay movable (otherwise an indoor-bike event with zeroed ranges collapses the
         // slider to 0..1 and shows 0 W). Set individual fields first, then combined methods
@@ -1734,7 +1750,8 @@ public class Ble implements IBle, ITimerHandler {
         sensorData.setHasControl(true);
         sensorData.setWahooProprietaryControl(true);
         sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
-        sensorData.setFtmsIndoorBikeData(0, 0, watts, level, targetPower, grade);
+        // For SIM (grade) confirmations, we don't have new power from trainer; keep last
+        sensorData.setFtmsIndoorBikeData(lastSpd, lastCad, outWatts, level, targetPower, grade);
         _bus.post(sensorData);
     }
 
