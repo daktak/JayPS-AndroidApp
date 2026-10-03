@@ -83,6 +83,7 @@ fun SettingsNavHost(rootNav: NavController, vm: SettingsViewModel, onPickGpx: ()
         composable("root") { SettingsRoot(nav, vm, onPickGpx, onScanBle, onExport, onResetData, onResetTracks) }
         composable("tracks") { TracksGroup(nav, vm) }
         composable("sensors") { SensorsGroup(nav, vm, onScanBle) }
+        composable("rider") { RiderGroup(nav, vm) }
         composable("navigation") { NavigationGroup(nav, vm, onPickGpx) }
         composable("integration") { IntegrationRoot(nav, vm) }
         composable("live_nextcloud") { NextcloudGroup(nav, vm) }
@@ -114,6 +115,7 @@ private fun SettingsRoot(nav: NavController, vm: SettingsViewModel, onPickGpx: (
             item { GroupCard(stringResource(R.string.settings_general_title), Icons.Filled.Tune) { ClickRow(stringResource(R.string.PREF_RESET_DATA), stringResource(R.string.PREF_RESET_DATA_SUMMARY), onResetData) } }
             item { GroupCard(stringResource(R.string.settings_tracks_units_title), Icons.Filled.Storage) { ClickRow(stringResource(R.string.settings_tracks_title), stringResource(R.string.settings_tracks_units_summary)) { nav.navigate("tracks") } } }
             item { GroupCard(stringResource(R.string.settings_sensors_title), Icons.Filled.Bluetooth) { ClickRow(stringResource(R.string.settings_sensors_title), stringResource(R.string.settings_sensors_summary)) { nav.navigate("sensors") } } }
+            item { GroupCard(stringResource(R.string.settings_rider_title), Icons.Filled.Person) { ClickRow(stringResource(R.string.settings_rider_title), stringResource(R.string.settings_rider_summary)) { nav.navigate("rider") } } }
             item { GroupCard(stringResource(R.string.settings_navigation_title), Icons.Filled.Navigation) { ClickRow(stringResource(R.string.settings_navigation_title), stringResource(R.string.settings_navigation_summary)) { nav.navigate("navigation") } } }
             item { GroupCard(stringResource(R.string.settings_integration_title), Icons.Filled.Share) { ClickRow(stringResource(R.string.settings_integration_title), stringResource(R.string.settings_integration_summary)) { nav.navigate("integration") } } }
             item { GroupCard(stringResource(R.string.settings_advanced_title), Icons.Filled.Memory) { ClickRow(stringResource(R.string.settings_advanced_title), stringResource(R.string.settings_advanced_summary)) { nav.navigate("advanced") } } }
@@ -158,7 +160,6 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
     val s by vm.state.collectAsState()
     var refreshOpen by remember { mutableStateOf(false) }
     var wheelPresetOpen by remember { mutableStateOf(false) }
-    var hrmZoneOpen by remember { mutableStateOf(false) }
     SettingsScaffold(stringResource(R.string.settings_sensors_title), nav) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { GroupCard(stringResource(R.string.settings_gps_title), Icons.Filled.Speed) {
@@ -171,21 +172,11 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
                     val summary = if (name.isEmpty()) stringResource(R.string.pref_choose_sensor) else name
                     ClickRow(stringResource(R.string.PREF_BLE_TITLE) + " ${i+1}", summary) { onScanBle(i) }
                 }
-                EditRow(stringResource(R.string.PREF_BLE_HRM_HRMAX), s.hrmMax) { vm.putString("PREF_BLE_HRM_HRMAX", it) }
-                ClickRow(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), hrmZoneLabel(s.hrmZone)) { hrmZoneOpen = true }
                 SwitchRow(stringResource(R.string.PREF_PEBBLE_HRM_TITLE), stringResource(R.string.PREF_PEBBLE_HRM_SUMMARY), s.pebbleHrm) { vm.putBool(Constants.PREF_PEBBLE_HRM, it) }
-                EditRow(stringResource(R.string.PREF_FTP), s.ftp) { vm.putString(Constants.PREF_FTP, it.filter { c -> c.isDigit() }) }
                 ClickRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_PRESET_TITLE), s.wheelPreset.ifEmpty { "Custom" }) { wheelPresetOpen = true }
                 EditRow(stringResource(R.string.PREF_BLE_CSC_WHEEL_SIZE), s.wheelSize) { vm.putString("PREF_BLE_CSC_WHEEL_SIZE", it) }
                 SwitchRow(stringResource(R.string.autostart_lights_title), stringResource(R.string.autostart_lights_summary), s.autostartLights) { vm.putBool(Constants.PREF_AUTOSTART_LIGHTS, it) }
                 SwitchRow(stringResource(R.string.autostart_gopro_title), stringResource(R.string.autostart_gopro_summary), s.autostartGoPro) { vm.putBool(Constants.PREF_AUTOSTART_GOPRO, it) }
-            } }
-            item { GroupCard(stringResource(R.string.settings_rider_title), Icons.Filled.Person) {
-                EditRow(stringResource(R.string.PREF_RIDER_HEIGHT), s.riderHeight) { vm.putString(Constants.PREF_RIDER_HEIGHT, it.filter { c -> c.isDigit() }) }
-                EditRow(stringResource(R.string.PREF_RIDER_WEIGHT), s.riderWeight) { vm.putString(Constants.PREF_RIDER_WEIGHT, it.filter { c -> c.isDigit() }) }
-                val riderParams = RiderModel.paramsFromPrefs(s.riderHeight, s.riderWeight)
-                val physicsInfo = stringResource(R.string.PREF_RIDER_PHYSICS_INFO, String.format("%.2f", riderParams.cda), String.format("%.4f", RiderModel.CRR))
-                ClickRow(physicsInfo, "", onClick = {})
             } }
             item { GroupCard(stringResource(R.string.settings_altitude_title), Icons.Filled.Landscape) {
                 ClickRow("Altimeter Pressure sensor", if (s.pressureAvailable) stringResource(R.string.PREF_PRESSURE_SENSOR_AVAILABLE) else stringResource(R.string.PREF_PRESSURE_SENSOR_NOT_AVAILABLE)) { }
@@ -194,6 +185,26 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
         }
         if (refreshOpen) ListDialog(stringResource(R.string.REFRESH_INTERVAL_TITLE), arrayOf("Adaptative Normal (3s-30s)","Adaptative Medium","Adaptative Low","Normal (1s)","2s","5s","Save battery (10s)","Save battery (30s)"), arrayOf("103000","203000","305000","1000","2000","5000","10000","30000"), s.refreshInterval, { refreshOpen = false }, { vm.putString("REFRESH_INTERVAL", it); refreshOpen = false })
         if (wheelPresetOpen) ListDialog(stringResource(R.string.PREF_BLE_CSC_WHEEL_PRESET_TITLE), arrayOf("Custom","29\" 2.6","29\" 2.4","29\" 2.2","700c 55mm","700c 50mm","700c 45mm","700c 40mm","700c 35mm","700c 32mm","700c 30mm","700c 28mm","700c 25mm","27.5\" 2.2","27.5\" 2.4","27.5\" 2.6","650b 45mm"), arrayOf("","2366","2333","2302","2325","2293","2234","2203","2168","2155","2146","2136","2105","2183","2216","2246","2199"), s.wheelPreset, { wheelPresetOpen = false }, { vm.putString("PREF_BLE_CSC_WHEEL_PRESET", it); wheelPresetOpen = false })
+    }
+}
+
+@Composable
+private fun RiderGroup(nav: NavController, vm: SettingsViewModel) {
+    val s by vm.state.collectAsState()
+    var hrmZoneOpen by remember { mutableStateOf(false) }
+    SettingsScaffold(stringResource(R.string.settings_rider_title), nav) {
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            item { GroupCard(stringResource(R.string.settings_rider_title), Icons.Filled.Person) {
+                EditRow(stringResource(R.string.PREF_RIDER_HEIGHT), s.riderHeight) { vm.putString(Constants.PREF_RIDER_HEIGHT, it.filter { c -> c.isDigit() }) }
+                EditRow(stringResource(R.string.PREF_RIDER_WEIGHT), s.riderWeight) { vm.putString(Constants.PREF_RIDER_WEIGHT, it.filter { c -> c.isDigit() }) }
+                EditRow(stringResource(R.string.PREF_FTP), s.ftp) { vm.putString(Constants.PREF_FTP, it.filter { c -> c.isDigit() }) }
+                EditRow(stringResource(R.string.PREF_BLE_HRM_HRMAX), s.hrmMax) { vm.putString("PREF_BLE_HRM_HRMAX", it) }
+                ClickRow(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), hrmZoneLabel(s.hrmZone)) { hrmZoneOpen = true }
+                val riderParams = RiderModel.paramsFromPrefs(s.riderHeight, s.riderWeight)
+                val physicsInfo = stringResource(R.string.PREF_RIDER_PHYSICS_INFO, String.format("%.2f", riderParams.cda), String.format("%.4f", RiderModel.CRR))
+                ClickRow(physicsInfo, "", onClick = {})
+            } }
+        }
         if (hrmZoneOpen) ListDialog(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), arrayOf("Disable","Vibrate at every zone change","Vibrate entering max zone"), arrayOf("0","1","2"), s.hrmZone, { hrmZoneOpen = false }, { vm.putString("PREF_BLE_HRM_ZONE_NOTIFICATION_MODE", it); hrmZoneOpen = false })
     }
 }
