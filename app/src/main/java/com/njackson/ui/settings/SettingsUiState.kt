@@ -16,6 +16,8 @@ data class SettingsUiState(
     val hrmZone: String = "0",
     val pebbleHrm: Boolean = false,
     val ftp: String = "0",
+    val riderHeight: String = "",
+    val riderWeight: String = "",
     val wheelPreset: String = "",
     val wheelSize: String = "",
     val liveTracking: Boolean = false,

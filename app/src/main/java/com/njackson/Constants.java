@@ -31,6 +31,8 @@ public class Constants {
     public static final int PEBBLE_MSG_HR_MONITOR_ENABLE = 0x2B;
 
     public static final String PREF_FTP = "PREF_FTP";
+    public static final String PREF_RIDER_HEIGHT = "PREF_RIDER_HEIGHT";
+    public static final String PREF_RIDER_WEIGHT = "PREF_RIDER_WEIGHT";
 
     public static final int PLAY_PRESS = 0x0;
     public static final int STOP_PRESS = 0x1;

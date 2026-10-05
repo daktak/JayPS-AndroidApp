@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+// import androidx.compose.foundation.layout.weight  // conflicts with RowColumnParentData.weight; use RowScope/ColumnScope.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,6 +52,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -59,6 +62,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,6 +94,7 @@ fun DashboardScreen(
     onMenu: (String) -> Unit,
     onLightMode: (String, String) -> Unit = { _, _ -> },
     onGoProShutter: (String, Boolean) -> Unit = { _, _ -> },
+    vm: DashboardViewModel,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -122,7 +127,18 @@ fun DashboardScreen(
             state.lights.forEach { light ->
                 LightCard(light = light, onModeSelected = { mode -> onLightMode(light.address, mode) }, onOff = { onLightMode(light.address, "Off") })
             }
-            MapCard(trail = state.trail, isIndoor = state.isIndoor)
+            // Show TrainerCard in indoor mode when FTMS trainer is connected, otherwise MapCard
+            if (state.isIndoor && state.trainer.connected) {
+                TrainerCard(
+                    trainer = state.trainer,
+                    onTargetPowerChange = { vm.setTrainerTargetPower(it) },
+                    onGradientChange = { vm.setTrainerGradient(it) },
+                    onErgModeChange = { vm.setTrainerErgMode(it) },
+                    onRequestControl = { vm.requestTrainerControl() }
+                )
+            } else {
+                MapCard(trail = state.trail, isIndoor = state.isIndoor)
+            }
             HeroCard(state)
             StatsGrid(state)
             SensorRow(state)
@@ -382,6 +398,117 @@ private fun GoProCard(gopro: GoProInfo, onShutter: (Boolean) -> Unit) {
                     }
                 )
             }
+        }
+    }
+}
+
+private fun formatGradient(pct: Float): String = String.format("%+.1f%%", pct)
+
+@Composable
+private fun TrainerCard(
+    trainer: TrainerInfo,
+    onTargetPowerChange: (Int) -> Unit,
+    onGradientChange: (Int) -> Unit,
+    onErgModeChange: (Boolean) -> Unit,
+    onRequestControl: () -> Unit
+) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Header
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Filled.PedalBike, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(6.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(trainer.name.ifEmpty { trainer.address }, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                    Text(trainer.model, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(if (trainer.connected) GpsExcellent else GpsDisabled))
+                Spacer(Modifier.width(8.dp))
+                if (trainer.isWahooProprietaryControl) {
+                    Text("Proprietary BLE Control", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                } else if (!trainer.hasControl) {
+                    Text("No Control", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            // Current metrics row
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                MetricPill("Power", "${trainer.instantaneousPower} W", Icons.Filled.Bolt, MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+                MetricPill("Cadence", "${trainer.instantaneousCadence} rpm", Icons.Filled.PedalBike, MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
+                MetricPill("Speed", String.format("%.1f", trainer.instantaneousSpeed) + " km/h", Icons.Filled.Speed, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+            }
+
+            // ERG Mode toggle
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("ERG Mode", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(Modifier.weight(1f))
+                Switch(checked = trainer.isErgMode, onCheckedChange = onErgModeChange, enabled = trainer.hasControl || trainer.isWahooProprietaryControl)
+            }
+
+            // Control section
+            if (trainer.isErgMode) {
+                // Target Power Slider — cap the UI range at 500 W for finer control. The real
+                // trainer.maxPower (e.g. 2000 W capability) is left untouched so genuine FTMS
+                // trainers keep their full reported range; only the ERG slider is capped.
+                val ergMax = minOf(trainer.maxPower, 500).coerceAtLeast(trainer.minPower + 1)
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Target Power: ${trainer.targetPower} W", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Spacer(Modifier.weight(1f))
+                        Text("${trainer.minPower}–$ergMax W", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Slider(
+                        value = trainer.targetPower.toFloat(),
+                        onValueChange = { onTargetPowerChange(it.roundToInt()) },
+                        valueRange = (trainer.minPower.toFloat())..(ergMax.toFloat().coerceAtLeast(trainer.minPower.toFloat() + 1f)),
+                        steps = ((ergMax - trainer.minPower) / 10).coerceAtLeast(1),
+                        enabled = trainer.hasControl || trainer.isWahooProprietaryControl
+                    )
+                }
+            } else {
+// Gradient (SIM) Slider — sim mode holds a fixed surface grade while ERG holds
+                // fixed watts. Defaults to 0% (flat) and spans -3% (downhill) to +15% (climb),
+                // far beyond that being unreasonably hard for the KICKR/FTMS sim modes. The
+                // value is sent to both the pre-FTMS KICKR (0x43 sim) and FTMS trainers (0x04).
+                // Pre-FTMS KICKRs floor at the crr baseline and cannot simulate downhill, so
+                // their slider starts at 0% (negative grades are a no-op on those units).
+                val gradientMinPct = if (trainer.isWahooProprietaryControl) 0f else -3f
+                val gradientMaxPct = 15f
+                val gradientPct = (trainer.targetGrade / 10f).coerceIn(gradientMinPct, gradientMaxPct)
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Gradient: ${formatGradient(gradientPct)}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Spacer(Modifier.weight(1f))
+                        Text(String.format("%.0f%% … +%.0f%%", gradientMinPct, gradientMaxPct), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Slider(
+                        value = gradientPct,
+                        onValueChange = { onGradientChange((it * 10).roundToInt()) },
+                        valueRange = gradientMinPct..gradientMaxPct,
+                        steps = if (gradientMinPct == 0f) (gradientMaxPct / 0.5f).roundToInt() - 1 else 35,
+                        enabled = trainer.hasControl || trainer.isWahooProprietaryControl
+                    )
+                }
+            }
+
+            // Request Control button (if needed)
+            if (!trainer.hasControl && !trainer.isWahooProprietaryControl) {
+                Button(onClick = onRequestControl, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
+                    Text("Request Control")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MetricPill(label: String, value: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier) {
+    Card(modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f)), shape = RoundedCornerShape(12.dp)) {
+        Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.height(2.dp))
+            Text(value, style = MaterialTheme.typography.titleSmall, color = color)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = color.copy(alpha = 0.7f))
         }
     }
 }

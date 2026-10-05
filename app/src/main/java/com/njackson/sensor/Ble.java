@@ -26,6 +26,8 @@ import com.njackson.events.BleServiceCommand.GoProControlRequest;
 import com.njackson.events.BleServiceCommand.GoProState;
 import com.njackson.events.BleServiceCommand.LightControlRequest;
 import com.njackson.events.BleServiceCommand.LightState;
+import com.njackson.events.BleServiceCommand.TrainerControlRequest;
+import com.njackson.events.BleServiceCommand.WahooTrainerControlRequest;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.utils.time.ITimer;
@@ -64,6 +66,7 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_BATTERY_LEVEL = UUID.fromString(BLESampleGattAttributes.BATTERY_LEVEL);
     public final static UUID UUID_TEMPERATURE_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.TEMPERATURE_MEASUREMENT);
     public final static UUID UUID_CYCLING_POWER_MEASUREMENT = UUID.fromString(BLESampleGattAttributes.CYCLING_POWER_MEASUREMENT);
+    public final static UUID UUID_CYCLING_POWER_SERVICE = UUID.fromString(BLESampleGattAttributes.CYCLING_POWER_SERVICE);
     public final static UUID UUID_LIGHT_MODE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE);
     public final static UUID UUID_LIGHT_MODE_SERVICE = UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE);
     public final static UUID UUID_GOPRO_SERVICE = UUID.fromString(BLESampleGattAttributes.GOPRO_SERVICE);
@@ -72,6 +75,19 @@ public class Ble implements IBle, ITimerHandler {
     public final static UUID UUID_GOPRO_RESPONSE = UUID.fromString("b5f90073-aa8d-11e3-9046-0002a5d5c51b");
     public final static UUID UUID_MODEL_NUMBER = UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_DEVICE_INFO_SERVICE = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
+
+    // FTMS (Fitness Machine Service)
+    public final static UUID UUID_FITNESS_MACHINE_SERVICE = UUID.fromString(BLESampleGattAttributes.FITNESS_MACHINE_SERVICE);
+    public final static UUID UUID_INDOOR_BIKE_DATA = UUID.fromString(BLESampleGattAttributes.INDOOR_BIKE_DATA);
+    public final static UUID UUID_FITNESS_MACHINE_CONTROL_POINT = UUID.fromString(BLESampleGattAttributes.FITNESS_MACHINE_CONTROL_POINT);
+    public final static UUID UUID_FITNESS_MACHINE_STATUS = UUID.fromString(BLESampleGattAttributes.FITNESS_MACHINE_STATUS);
+    public final static UUID UUID_TRAINING_STATUS = UUID.fromString(BLESampleGattAttributes.TRAINING_STATUS);
+    public final static UUID UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE = UUID.fromString(BLESampleGattAttributes.SUPPORTED_RESISTANCE_LEVEL_RANGE);
+    public final static UUID UUID_SUPPORTED_POWER_RANGE = UUID.fromString(BLESampleGattAttributes.SUPPORTED_POWER_RANGE);
+    public final static UUID UUID_SUPPORTED_SPEED_RANGE = UUID.fromString(BLESampleGattAttributes.SUPPORTED_SPEED_RANGE);
+
+    // Wahoo proprietary Cycling Power Extension (pre-FTMS KICKR control)
+    public final static UUID UUID_WAHOO_CYCLING_POWER_EXTENSION = UUID.fromString(BLESampleGattAttributes.WAHOO_CYCLING_POWER_EXTENSION);
 
     private final static int TIMEOUT_CONNECTGATT = 5 * 60 * 1000; // in ms
 
@@ -101,6 +117,35 @@ public class Ble implements IBle, ITimerHandler {
     private ConcurrentHashMap<String, Boolean> goproRecording = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, String> goproMode = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Boolean> goproPending = new ConcurrentHashMap<>();
+
+    // FTMS Trainer state
+    private ConcurrentHashMap<String, Integer> trainerMinResistance = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMaxResistance = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMinPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMaxPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMinSpeed = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerMaxSpeed = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> trainerHasControl = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> trainerControlRequested = new ConcurrentHashMap<>();
+    private String trainerAddress = "";
+
+    // Wahoo proprietary (pre-FTMS KICKR) state
+    private ConcurrentHashMap<String, BluetoothGattCharacteristic> wahooExtensionChar = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> wahooMinPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> wahooMaxPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, WahooCommandQueue> wahooCommandQueues = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> wahooInitStarted = new ConcurrentHashMap<>();
+    // Last known trainer telemetry to preserve during control confirmations
+    private ConcurrentHashMap<String, Integer> trainerLastPower = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerLastCadence = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> trainerLastSpeed = new ConcurrentHashMap<>();
+
+    // 0x43 simulation grade field units per 1% of gradient. App-internal grade is 0.1% units
+    // (+15.0% -> +150); the field sent is grade * this = percent * 100, i.e. 0.01%-per-unit,
+    // confirmed against the real legacy KICKR (init field 0x0004 = 0.04% ~ flat; 15% = 1500
+    // ramps proportionally hard; negatives floor at the crr baseline). Signed s16.
+    private static final int WAHOO_GRADE_UNITS_PER_PERCENT = 10;
+
     private Set<String> _ble_addresses;
 
     public Ble(Context context) {
@@ -320,6 +365,9 @@ public class Ble implements IBle, ITimerHandler {
                             try { postLightState(gatt); postGoProState(gatt); } catch (Exception e) {}
                             gatt.close();
                             mGatts.remove(gatt.getDevice().getAddress());
+                            // Unlock handshake must be re-sent on the next (re)connect
+                            wahooInitStarted.remove(gatt.getDevice().getAddress());
+                            wahooExtensionChar.remove(gatt.getDevice().getAddress());
                             try { postLightState(gatt); postGoProState(gatt); } catch (Exception e) {}
                             if (_bleStarted) {
                                 reconnectLater(gatt);
@@ -633,6 +681,16 @@ public class Ble implements IBle, ITimerHandler {
                 }
             } catch (Exception e) { Log.w(TAG, "GoPro wake queue failed "+e); }
         }
+    }
+
+    @Subscribe
+    public void onTrainerControl(TrainerControlRequest req) {
+        handleTrainerControlRequest(req);
+    }
+
+    @Subscribe
+    public void onWahooTrainerControl(WahooTrainerControlRequest req) {
+        handleWahooTrainerControlRequest(req);
     }
 
     private void ensureConnectionThread() {
@@ -966,6 +1024,197 @@ public class Ble implements IBle, ITimerHandler {
             }
             res = String.format("Received power: %d", instantaneousPower);
 
+        } else if (UUID_INDOOR_BIKE_DATA.equals(characteristic.getUuid())) {
+            // FTMS Indoor Bike Data - 0x2AD2
+            // Flags (uint16) followed by optional fields based on flags
+            // Bit 0: Instantaneous Speed (uint16, 0.01 km/h)
+            // Bit 1: Average Speed (uint16, 0.01 km/h)
+            // Bit 2: Instantaneous Cadence (uint16, 0.5 rpm)
+            // Bit 3: Average Cadence (uint16, 0.5 rpm)
+            // Bit 4: Total Distance (uint32, m)
+            // Bit 5: Instantaneous Power (sint16, watts)
+            // Bit 6: Average Power (sint16, watts)
+            // Bit 7: Instantaneous Resistance Level (sint16)
+            // Bit 8: Average Resistance Level (sint16)
+            // Bit 9: Instantaneous Heart Rate (uint8, bpm)
+            // Bit 10: Average Heart Rate (uint8, bpm)
+            // Bit 11: Instantaneous METs (uint8)
+            // Bit 12: Elapsed Time (uint16, s)
+            // Bit 13: Remaining Time (uint16, s)
+            // Bits 14-15: Reserved
+            byte[] data = characteristic.getValue();
+            if (data != null && data.length >= 2) {
+                int flags = data[0] & 0xFF | (data[1] & 0xFF) << 8;
+                int offset = 2;
+                int instSpeed = 0, instCadence = 0, instPower = 0, resistance = 0, targetPower = 0;
+                if ((flags & 0x01) != 0) { // Instantaneous Speed
+                    if (offset + 1 < data.length) {
+                        instSpeed = data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8;
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x02) != 0) offset += 2; // Average Speed
+                if ((flags & 0x04) != 0) { // Instantaneous Cadence
+                    if (offset + 1 < data.length) {
+                        instCadence = data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8;
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x08) != 0) offset += 2; // Average Cadence
+                if ((flags & 0x10) != 0) offset += 4; // Total Distance
+                if ((flags & 0x20) != 0) { // Instantaneous Power
+                    if (offset + 1 < data.length) {
+                        instPower = (short)(data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8);
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x40) != 0) offset += 2; // Average Power
+                if ((flags & 0x80) != 0) { // Instantaneous Resistance
+                    if (offset + 1 < data.length) {
+                        resistance = (short)(data[offset] & 0xFF | (data[offset + 1] & 0xFF) << 8);
+                    }
+                    offset += 2;
+                }
+                if ((flags & 0x100) != 0) offset += 2; // Average Resistance
+                if ((flags & 0x200) != 0) offset += 1; // Instantaneous HR
+                if ((flags & 0x400) != 0) offset += 1; // Average HR
+                if ((flags & 0x800) != 0) offset += 1; // METs
+                if ((flags & 0x1000) != 0) offset += 2; // Elapsed Time
+                if ((flags & 0x2000) != 0) offset += 2; // Remaining Time
+                // Target Power is not in standard Indoor Bike Data - may come from Training Status or Control Point
+                BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+                String addrIb = gatt.getDevice().getAddress();
+                trainerLastSpeed.put(addrIb, instSpeed);
+                trainerLastCadence.put(addrIb, instCadence);
+                trainerLastPower.put(addrIb, instPower);
+                sensorData.setFtmsIndoorBikeData(instSpeed, instCadence, instPower, resistance, targetPower, 0);
+                _bus.post(sensorData);
+                res = String.format("FTMS Indoor Bike: speed=%d cad=%d power=%d resistance=%d", instSpeed, instCadence, instPower, resistance);
+            }
+        } else if (UUID_FITNESS_MACHINE_STATUS.equals(characteristic.getUuid())) {
+            // Fitness Machine Status - 0x2ADA (uint16)
+            int status = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setFtmsStatus(status);
+            _bus.post(sensorData);
+            res = String.format("FTMS Status: %d", status);
+        } else if (UUID_TRAINING_STATUS.equals(characteristic.getUuid())) {
+            // Training Status - 0x2AD3 (uint8)
+            int status = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
+            sensorData.setFtmsTrainingStatus(status);
+            _bus.post(sensorData);
+            res = String.format("FTMS Training Status: %d", status);
+        } else if (UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE.equals(characteristic.getUuid())) {
+            // Supported Resistance Level Range - 0x2AD5 (uint16 min, uint16 max)
+            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
+                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+                String addr = gatt.getDevice().getAddress();
+                trainerMinResistance.put(addr, min);
+                trainerMaxResistance.put(addr, max);
+                Log.d(TAG, String.format("FTMS Resistance Range: min=%d max=%d for %s", min, max, addr));
+            }
+            // Read other ranges if not already read
+            readSupportedRanges(gatt);
+            res = "FTMS Resistance Range read";
+        } else if (UUID_SUPPORTED_POWER_RANGE.equals(characteristic.getUuid())) {
+            // Supported Power Range - 0x2AD6 (uint16 min, uint16 max)
+            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
+                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+                String addr = gatt.getDevice().getAddress();
+                trainerMinPower.put(addr, min);
+                trainerMaxPower.put(addr, max);
+                Log.d(TAG, String.format("FTMS Power Range: min=%d max=%d for %s", min, max, addr));
+            }
+            res = "FTMS Power Range read";
+        } else if (UUID_SUPPORTED_SPEED_RANGE.equals(characteristic.getUuid())) {
+            // Supported Speed Range - 0x2AD8 (uint16 min, uint16 max) in 0.01 km/h
+            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
+                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+                String addr = gatt.getDevice().getAddress();
+                trainerMinSpeed.put(addr, min);
+                trainerMaxSpeed.put(addr, max);
+                Log.d(TAG, String.format("FTMS Speed Range: min=%d max=%d for %s", min, max, addr));
+            }
+            res = "FTMS Speed Range read";
+        } else if (UUID_FITNESS_MACHINE_CONTROL_POINT.equals(characteristic.getUuid())) {
+            // Control Point Response - 0x2AD9
+            byte[] data = characteristic.getValue();
+            if (data != null && data.length >= 3) {
+                int requestOpcode = data[1] & 0xFF;
+                int responseCode = data[2] & 0xFF;
+                // Response codes: 1=Success, 2=Not Supported, 3=Invalid Parameter, 4=Operation Failed, 5=Control Not Permitted
+                String addr = gatt.getDevice().getAddress();
+                if (requestOpcode == 0x00 && responseCode == 1) { // Request Control success
+                    trainerHasControl.put(addr, true);
+                    Log.d(TAG, "FTMS Control granted for " + addr);
+                    // Post updated state
+                    BleSensorData sensorData = new BleSensorData(addr);
+                    sensorData.setHasControl(true);
+                    _bus.post(sensorData);
+                } else if (responseCode != 1) {
+                    Log.w(TAG, String.format("FTMS Control Point error: opcode=0x%02X response=%d", requestOpcode, responseCode));
+                }
+            }
+            res = "FTMS Control Point response";
+        } else if (UUID.fromString("00002a65-0000-1000-8000-00805f9b34fb").equals(characteristic.getUuid())) {
+            // CPS Feature (0x2A65) - read for power range info
+            // For Wahoo KICKR, use default range 0-2000W
+            String addr = gatt.getDevice().getAddress();
+            wahooMinPower.put(addr, 0);
+            wahooMaxPower.put(addr, 2000);
+            Log.d(TAG, "CPS Feature read for " + addr + ", default power range 0-2000W");
+            // Post updated trainer state with ranges
+            postTrainerState(gatt, true, true);
+            res = "CPS Feature read";
+        } else if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(characteristic.getUuid())) {
+            // Wahoo Extension indication (command response)
+            byte[] data = characteristic.getValue();
+            if (data != null) {
+                String addr = gatt.getDevice().getAddress();
+                Log.d(TAG, "Wahoo indication from " + addr + ": " + hex(data));
+            }
+            // Legacy KICKR confirms as [01, opcode, result, 00, valLo, valHi]; result 0x01 = success
+            if (data != null && data.length >= 3) {
+                int echoOpcode = data[1] & 0xFF;
+                int result = data[2] & 0xFF;
+                String addr = gatt.getDevice().getAddress();
+                if (result == 1) {
+                    Log.d(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " confirmed");
+                    // update TrainerInfo with confirmed value
+                    if (echoOpcode == 0x42) { // Set ERG Power
+                        int confirmedPower = 0;
+                        if (data.length >= 6) {
+                            confirmedPower = (data[4] & 0xFF) | ((data[5] & 0xFF) << 8);
+                        }
+                        postTrainerPowerConfirmed(addr, confirmedPower);
+                    } else if (echoOpcode == 0x41) { // Set Level
+                        int confirmedLevel = data.length >= 5 ? (data[4] & 0xFF) : 0;
+                        Log.d(TAG, "Wahoo level confirmed raw=" + confirmedLevel + " from " + hex(data));
+                        postTrainerLevelConfirmed(addr, confirmedLevel);
+                    } else if (echoOpcode == 0x43) { // Set Simulation Grade
+                        // The legacy KICKR ack for 0x43 is a bare 4-byte [01, 43, 01, 00] with no
+                        // value bytes (unlike 0x47 which echoes the wind value). Only a 6-byte
+                        // indication carries a grade field, so a short ack is just acceptance.
+                        if (data.length >= 6) {
+                            int confirmedField = (short)((data[4] & 0xFF) | ((data[5] & 0xFF) << 8));
+                            int confirmedGrade = WAHOO_GRADE_UNITS_PER_PERCENT == 0 ? 0 : confirmedField / WAHOO_GRADE_UNITS_PER_PERCENT;
+                            Log.d(TAG, "Wahoo grade confirmed raw=" + confirmedField + " from " + hex(data) + " -> " + String.format("%.1f%%", confirmedGrade / 10.0));
+                            postTrainerGradientConfirmed(addr, confirmedGrade);
+                        } else {
+                            Log.d(TAG, "Wahoo ack 0x43 (no grade value in echo): " + hex(data));
+                        }
+                    }
+                } else if (result == 0x40) {
+                    Log.w(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " not supported");
+                } else {
+                    Log.w(TAG, "Wahoo command 0x" + Integer.toHexString(echoOpcode) + " failed: " + result);
+                }
+            }
+            res = "Wahoo Extension indication";
         } else if (UUID_MODEL_NUMBER.equals(characteristic.getUuid())) {
             String model = characteristic.getStringValue(0);
             if (model != null) {
@@ -1049,12 +1298,88 @@ public class Ble implements IBle, ITimerHandler {
                 if (UUID_MODEL_NUMBER.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
                     readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, gattCharacteristic));
                 }
+                // FTMS Indoor Bike Data - enable notifications
+                if (UUID_INDOOR_BIKE_DATA.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Fitness Machine Status - enable notifications
+                if (UUID_FITNESS_MACHINE_STATUS.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Training Status - enable notifications
+                if (UUID_TRAINING_STATUS.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Control Point - enable notifications (for responses)
+                if (UUID_FITNESS_MACHINE_CONTROL_POINT.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    setCharacteristicNotification(gatt, gattCharacteristic, true);
+                }
+                // FTMS Supported Ranges - read them
+                if ((UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE.equals(gattCharacteristic.getUuid())
+                        || UUID_SUPPORTED_POWER_RANGE.equals(gattCharacteristic.getUuid())
+                        || UUID_SUPPORTED_SPEED_RANGE.equals(gattCharacteristic.getUuid()))
+                        && (charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, gattCharacteristic));
+                }
+                // Wahoo proprietary Cycling Power Extension - cache for control (pre-FTMS KICKR)
+                if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(gattCharacteristic.getUuid()) && (charaProp & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0) {
+                    String addr = gatt.getDevice().getAddress();
+                    wahooExtensionChar.put(addr, gattCharacteristic);
+                    // Enable indications for command responses
+                    if ((charaProp & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
+                        setCharacteristicNotification(gatt, gattCharacteristic, true);
+                    }
+                }
             }
         }
         if (!readCharacteristicQueue.isEmpty() && descriptorWriteQueue.isEmpty() && characteristicWriteQueue.isEmpty()) {
             try { PendingCharacteristicWrite r = readCharacteristicQueue.peek(); r.gatt.readCharacteristic(r.characteristic); } catch (Exception e) { Log.w(TAG, "read model failed "+e); }
         }
         try { postLightState(gatt); } catch (Exception e) {}
+        // FTMS: if this is a fitness machine, read supported ranges and request control
+        if (gatt.getService(UUID_FITNESS_MACHINE_SERVICE) != null) {
+            String addr = gatt.getDevice().getAddress();
+            trainerAddress = addr;
+            // Auto-request control if not already requested
+            if (!trainerControlRequested.getOrDefault(addr, false)) {
+                trainerControlRequested.put(addr, true);
+                requestControl(gatt);
+            }
+        }
+        // Wahoo proprietary (pre-FTMS KICKR v2/v3) fallback
+        if (gatt.getService(UUID_FITNESS_MACHINE_SERVICE) == null
+                && gatt.getService(UUID_CYCLING_POWER_SERVICE) != null
+                && wahooExtensionChar.containsKey(gatt.getDevice().getAddress())) {
+            String addr = gatt.getDevice().getAddress();
+            String deviceName = gatt.getDevice().getName();
+            String modelName = deviceModels.get(addr);
+            boolean isKickr = (deviceName != null && deviceName.toLowerCase().contains("kickr"))
+                    || (modelName != null && modelName.toLowerCase().contains("kickr"));
+            if (isKickr) {
+                trainerAddress = addr;
+                Log.d(TAG, "Wahoo KICKR detected: name=" + deviceName + " model=" + modelName + " addr=" + addr);
+                // One-shot GATT dump so we can verify the control characteristic UUID and its
+                // properties (write vs write-without-response) against the real device.
+                for (BluetoothGattService svc : gatt.getServices()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("svc ").append(svc.getUuid())
+                      .append(" type=").append(svc.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY ? "primary" : "secondary")
+                      .append(" ->");
+                    for (BluetoothGattCharacteristic ch : svc.getCharacteristics()) {
+                        sb.append(" [").append(ch.getUuid())
+                          .append(" props=0x").append(Integer.toHexString(ch.getProperties()))
+                          .append("]");
+                    }
+                    Log.d(TAG, "KICKR GATT: " + sb);
+                }
+                // Read CPS Feature for power range
+                readCPSFeatureForRange(gatt);
+                // Send the 0x20 unlock + init handshake so control writes are accepted
+                initWahooControl(addr);
+                // Post initial trainer state with proprietary control capability
+                postTrainerState(gatt, true, true);
+            }
+        }
         try { if (gatt.getService(UUID_GOPRO_SERVICE) != null) postGoProState(gatt); } catch (Exception e) {}
         try {
             if (gatt.getService(UUID_GOPRO_SERVICE) != null) {
@@ -1121,7 +1446,12 @@ public class Ble implements IBle, ITimerHandler {
             || UUID_RSC_MEASUREMENT.equals(characteristic.getUuid())
         ) {*/
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(BLESampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(characteristic.getUuid())) {
+                // Wahoo trainer confirmations arrive as indications (CCCD value 0x0002), not notifications
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+            } else {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            }
             writeGattDescriptor(gatt, descriptor);
         /*} else {
             if (debug) Log.i(TAG, "unused characteristics2:" + display(gatt, characteristic));
@@ -1216,5 +1546,382 @@ public class Ble implements IBle, ITimerHandler {
             if (!goproMode.containsKey(gatt.getDevice().getAddress())) goproMode.put(gatt.getDevice().getAddress(), "Video");
             postGoProState(gatt);
         }
+    }
+
+    // FTMS Trainer Control Methods
+    private void readSupportedRanges(BluetoothGatt gatt) {
+        String addr = gatt.getDevice().getAddress();
+        BluetoothGattService ftmsService = gatt.getService(UUID_FITNESS_MACHINE_SERVICE);
+        if (ftmsService == null) return;
+        // Read resistance range if not already read
+        if (!trainerMinResistance.containsKey(addr)) {
+            BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE);
+            if (chr != null) readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        }
+        // Read power range if not already read
+        if (!trainerMinPower.containsKey(addr)) {
+            BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_SUPPORTED_POWER_RANGE);
+            if (chr != null) readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        }
+        // Read speed range if not already read
+        if (!trainerMinSpeed.containsKey(addr)) {
+            BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_SUPPORTED_SPEED_RANGE);
+            if (chr != null) readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        }
+    }
+
+    public void requestControl(String address) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) requestControl(gatt);
+    }
+
+    private void requestControl(BluetoothGatt gatt) {
+        writeControlPoint(gatt, new byte[] { 0x00 }); // OpCode 0x00: Request Control
+    }
+
+    public void setTargetPower(String address, int watts) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setTargetPower(gatt, watts);
+    }
+
+    private void setTargetPower(BluetoothGatt gatt, int watts) {
+        // OpCode 0x02: Set Target Power (uint16, watts)
+        byte[] data = new byte[] { 0x02, (byte)(watts & 0xFF), (byte)((watts >> 8) & 0xFF) };
+        writeControlPoint(gatt, data);
+    }
+
+    public void setResistanceLevel(String address, int level) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setResistanceLevel(gatt, level);
+    }
+
+    private void setResistanceLevel(BluetoothGatt gatt, int level) {
+        // OpCode 0x03: Set Resistance Level (sint16)
+        byte[] data = new byte[] { 0x03, (byte)(level & 0xFF), (byte)((level >> 8) & 0xFF) };
+        writeControlPoint(gatt, data);
+    }
+
+    public void setTargetGradient(String address, int grade) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setTargetGradient(gatt, grade);
+    }
+
+    private void setTargetGradient(BluetoothGatt gatt, int grade) {
+        // OpCode 0x04: Set Target Gradient (sint16, 0.1% units: +150 = +15.0%)
+        int grad = Math.max(-300, Math.min(150, grade));
+        byte[] data = new byte[] { 0x04, (byte)(grad & 0xFF), (byte)((grad >> 8) & 0xFF) };
+        Log.d(TAG, "FTMS set gradient " + String.format("%.1f%%", grad / 10.0));
+        writeControlPoint(gatt, data);
+    }
+
+    private void writeControlPoint(BluetoothGatt gatt, byte[] data) {
+        BluetoothGattService ftmsService = gatt.getService(UUID_FITNESS_MACHINE_SERVICE);
+        if (ftmsService == null) {
+            Log.w(TAG, "FTMS service not found for control point write");
+            return;
+        }
+        BluetoothGattCharacteristic chr = ftmsService.getCharacteristic(UUID_FITNESS_MACHINE_CONTROL_POINT);
+        if (chr == null) {
+            Log.w(TAG, "FTMS Control Point characteristic not found");
+            return;
+        }
+        chr.setValue(data);
+        characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, chr));
+        triggerNextWrite();
+    }
+
+    // Called from DashboardViewModel via bus event
+    public void handleTrainerControlRequest(TrainerControlRequest req) {
+        String addr = req.getAddress();
+        BluetoothGatt gatt = mGatts.get(addr);
+        if (gatt == null) gatt = mGattsConnectionPending.get(addr);
+        if (gatt == null) return;
+        if (req.isRequestControl()) {
+            requestControl(gatt);
+            // Establish gradient (SIM) mode at 0% by default once control is granted.
+            setTargetGradient(gatt, 0);
+        } else if (req.isErgMode()) {
+            if (req.getTargetPower() > 0) {
+                setTargetPower(gatt, req.getTargetPower());
+            }
+        } else {
+            // Always send the gradient, even 0: writing 0x04 takes the trainer out of ERG
+            // mode and the slider range includes negatives, so "0 = not set" cannot apply.
+            setTargetGradient(gatt, req.getGrade());
+        }
+    }
+
+    // Wahoo proprietary (pre-FTMS KICKR) control methods
+    public void handleWahooTrainerControlRequest(WahooTrainerControlRequest req) {
+        String addr = req.getAddress();
+        BluetoothGatt gatt = mGatts.get(addr);
+        if (gatt == null) gatt = mGattsConnectionPending.get(addr);
+        if (gatt == null) return;
+        if (req.isErgMode()) {
+            // Always send the target power so ERG mode is entered even at 0 W
+            setWahooTargetPower(gatt, req.getTargetPower());
+        } else {
+            // Always send the gradient, even 0: writing 0x43 (sim mode) also switches the
+            // legacy KICKR out of ERG mode. A direct field-0 write returns the trainer to
+            // true flat (init field 0x0004 is only 0.04%); the write queue spacing handles
+            // the brief ramp the trainer applies on large drops. Negative grades are clamped
+            // to 0: pre-FTMS KICKR sim mode floors at its crr baseline (downhill = no-op).
+            setWahooGradient(gatt, Math.max(0, req.getGrade()));
+        }
+    }
+
+    private void readCPSFeatureForRange(BluetoothGatt gatt) {
+        BluetoothGattService cps = gatt.getService(UUID_CYCLING_POWER_SERVICE);
+        if (cps != null) {
+            // CPS Feature characteristic UUID: 00002a65-0000-1000-8000-00805f9b34fb
+            BluetoothGattCharacteristic feature = cps.getCharacteristic(UUID.fromString("00002a65-0000-1000-8000-00805f9b34fb"));
+            if (feature != null && (feature.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                readCharacteristicQueue.add(new PendingCharacteristicWrite(gatt, feature));
+            }
+        }
+    }
+
+    private void postTrainerState(BluetoothGatt gatt, boolean connected, boolean isWahooProprietary) {
+        String addr = gatt.getDevice().getAddress();
+        String name = "";
+        try { name = gatt.getDevice().getName(); } catch (Exception e) {}
+        if (name == null) name = addr;
+        String model = deviceModels.get(addr);
+        if (model == null) model = name;
+        int minPower = wahooMinPower.getOrDefault(addr, 0);
+        int maxPower = wahooMaxPower.getOrDefault(addr, 2000);
+        BleSensorData sensorData = new BleSensorData(addr);
+        // Set individual fields FIRST, then combined methods in correct order
+        // so event type ends up as SENSOR_FTMS_INDOOR_BIKE (7)
+        sensorData.setMinPower(minPower);
+        sensorData.setMaxPower(maxPower);
+        sensorData.setMinResistance(0);
+        sensorData.setMaxResistance(100);
+        sensorData.setHasControl(true);
+        // Wahoo proprietary flag: true ONLY on this pre-FTMS KICKR path; the genuine-FTMS
+        // measurement path never calls postTrainerState, so this stays false there (FTMS precedence).
+        sensorData.setWahooProprietaryControl(isWahooProprietary);
+        // These must be called in order: ranges first, then indoor bike data LAST
+        sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
+        int lastSpdInit = trainerLastSpeed.getOrDefault(addr, 0);
+        int lastCadInit = trainerLastCadence.getOrDefault(addr, 0);
+        int lastPwrInit = trainerLastPower.getOrDefault(addr, 0);
+        sensorData.setFtmsIndoorBikeData(lastSpdInit, lastCadInit, lastPwrInit, 0, 0, 0);
+        _bus.post(sensorData);
+    }
+
+    private void postTrainerPowerConfirmed(String addr, int watts) {
+        // ERG confirmation: report target power (level and gradient cleared)
+        postTrainerStateConfirmed(addr, watts, 0, watts, 0);
+    }
+
+    private void postTrainerLevelConfirmed(String addr, int level) {
+        // Level confirmation: report resistance level (watts and gradient cleared)
+        postTrainerStateConfirmed(addr, 0, level, 0, 0);
+    }
+
+    private void postTrainerGradientConfirmed(String addr, int grade) {
+        // Gradient confirmation: report gradient (watts and level cleared)
+        postTrainerStateConfirmed(addr, 0, 0, 0, grade);
+    }
+
+    private void postTrainerStateConfirmed(String addr, int watts, int level, int targetPower, int grade) {
+        BleSensorData sensorData = new BleSensorData(addr);
+        int minPower = wahooMinPower.getOrDefault(addr, 0);
+        int maxPower = wahooMaxPower.getOrDefault(addr, 2000);
+        // Preserve last known telemetry so virtual speed can be computed on Wahoo (SIM mode)
+        int lastWatts = trainerLastPower.getOrDefault(addr, watts);
+        int lastCad = trainerLastCadence.getOrDefault(addr, 0);
+        int lastSpd = trainerLastSpeed.getOrDefault(addr, 0);
+        int outWatts = (watts != 0) ? watts : lastWatts;
+        // Ranges must be preserved on EVERY confirmation so the sliders keep their full range
+        // and stay movable (otherwise an indoor-bike event with zeroed ranges collapses the
+        // slider to 0..1 and shows 0 W). Set individual fields first, then combined methods
+        // in order: supported ranges FIRST, indoor bike data LAST -> type ends as
+        // SENSOR_FTMS_INDOOR_BIKE (7).
+        sensorData.setMinPower(minPower);
+        sensorData.setMaxPower(maxPower);
+        sensorData.setMinResistance(0);
+        sensorData.setMaxResistance(100);
+        sensorData.setHasControl(true);
+        sensorData.setWahooProprietaryControl(true);
+        sensorData.setFtmsSupportedRanges(0, 100, minPower, maxPower, 0, 100);
+        // For SIM (grade) confirmations, we don't have new power from trainer; keep last
+        sensorData.setFtmsIndoorBikeData(lastSpd, lastCad, outWatts, level, targetPower, grade);
+        _bus.post(sensorData);
+    }
+
+    public void setWahooTargetPower(String address, int watts) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setWahooTargetPower(gatt, watts);
+    }
+
+    private void setWahooTargetPower(BluetoothGatt gatt, int watts) {
+        BluetoothGattCharacteristic chr = wahooExtensionChar.get(gatt.getDevice().getAddress());
+        if (chr != null) {
+            // OpCode 0x42: Set ERG Power (uint16 LE, watts)
+            byte[] data = new byte[] { 0x42, (byte)(watts & 0xFF), (byte)((watts >> 8) & 0xFF) };
+            writeWahooExtension(gatt.getDevice().getAddress(), data);
+        }
+    }
+
+    public void setWahooResistanceLevel(String address, int level) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setWahooResistanceLevel(gatt, level);
+    }
+
+    private void setWahooResistanceLevel(BluetoothGatt gatt, int level) {
+        BluetoothGattCharacteristic chr = wahooExtensionChar.get(gatt.getDevice().getAddress());
+        if (chr != null) {
+            // OpCode 0x41: Set Level, as a percent of brake resistance (0-100). The legacy
+            // KICKR applies the byte directly as resistance; a value of 1-9 would be ~1-9%
+            // (effectively freewheeling), which is why the slider seemed to do nothing.
+            int percent = Math.max(0, Math.min(100, level));
+            byte[] data = new byte[] { 0x41, (byte)percent };
+            Log.d(TAG, "Wahoo set level " + percent + "%");
+            writeWahooExtension(gatt.getDevice().getAddress(), data);
+        }
+    }
+
+    public void setWahooGradient(String address, int grade) {
+        BluetoothGatt gatt = mGatts.get(address);
+        if (gatt == null) gatt = mGattsConnectionPending.get(address);
+        if (gatt != null) setWahooGradient(gatt, grade);
+    }
+
+    private void setWahooGradient(BluetoothGatt gatt, int grade) {
+        BluetoothGattCharacteristic chr = wahooExtensionChar.get(gatt.getDevice().getAddress());
+        if (chr != null) {
+            // OpCode 0x43: Set Simulation Mode Parameters. Same layout as the init handshake
+            // valued in the reference apps: [weight u16 LE][grade s16 LE][crr u8][cw u8].
+            // The grade field scale (WAHOO_GRADE_UNITS_PER_PERCENT) is tuned against the real
+            // legacy KICKR via the confirmation echo + pedaling feel; 10 units = 1% default.
+            int weight = 8000; // 80kg rider, matches the init handshake
+            int gradField = Math.max(-32768, Math.min(32767, grade * WAHOO_GRADE_UNITS_PER_PERCENT));
+            byte[] data = new byte[] {
+                0x43,
+                (byte)(weight & 0xFF), (byte)((weight >> 8) & 0xFF),
+                (byte)(gradField & 0xFF), (byte)((gradField >> 8) & 0xFF),
+                (byte)0x90, (byte)0x01
+            };
+            Log.d(TAG, "Wahoo set gradient " + String.format("%.1f%%", grade / 10.0) + " (0x43 field " + gradField + ")");
+            writeWahooExtension(gatt.getDevice().getAddress(), data);
+        }
+    }
+
+    private void writeWahooExtension(String address, byte[] data) {
+        BluetoothGattCharacteristic chr = wahooExtensionChar.get(address);
+        if (chr != null) {
+            // Ensure the unlock handshake (0x20 EE FC) has been sent before any control writes;
+            // the legacy KICKR firmware silently ignores control commands until it is unlocked.
+            queueWahooCommand(address, data);
+        }
+    }
+
+    // Queue a Wahoo extension command. Commands are written on a dedicated thread with enough
+    // spacing for the legacy KICKR firmware, which drops writes that arrive back-to-back.
+    private void queueWahooCommand(String address, byte[] data) {
+        WahooCommandQueue queue = wahooCommandQueues.get(address);
+        if (queue == null) {
+            queue = new WahooCommandQueue(address);
+            wahooCommandQueues.put(address, queue);
+        }
+        queue.add(data);
+    }
+
+    // Send the trainer init/control-session handshake. Must be re-sent on every (re)connect.
+    private void initWahooControl(String address) {
+        if (Boolean.TRUE.equals(wahooInitStarted.get(address))) return;
+        wahooInitStarted.put(address, true);
+        sendWahooInitSequence(address);
+    }
+
+    // The full sim-mode handshake that the legacy KICKR accepts as flat (proven on hardware).
+    // Sent once on every (re)connect; in-ride gradient changes use direct 0x43 writes instead.
+    private void sendWahooInitSequence(String address) {
+        queueWahooCommand(address, new byte[] { 0x20, (byte)0xEE, (byte)0xFC }); // 0x20: unlock
+        // 0x43: set sim mode params (weight 80kg, crr 0.004, drag 0.4) - matches reference apps
+        queueWahooCommand(address, new byte[] { 0x43, 0x40, 0x1F, 0x04, 0x00, (byte)0x90, 0x01 });
+        // 0x47: wind speed 0 m/s (u16LE: (0 + 32.768) * 1000 = 32768 = 0x8000)
+        queueWahooCommand(address, new byte[] { 0x47, 0x00, (byte)0x80 });
+    }
+
+    private class WahooCommandQueue {
+        private final LinkedList<byte[]> commands = new LinkedList<>();
+
+        WahooCommandQueue(final String address) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        byte[] cmd = null;
+                        synchronized (commands) {
+                            if (!commands.isEmpty()) cmd = commands.removeFirst();
+                        }
+                        if (cmd == null) {
+                            synchronized (commands) {
+                                try {
+                                    if (commands.isEmpty()) commands.wait();
+                                } catch (InterruptedException e) {
+                                    return;
+                                }
+                            }
+                            continue;
+                        }
+                        try {
+                            BluetoothGattCharacteristic chr = wahooExtensionChar.get(address);
+                            if (chr != null) {
+                                BluetoothGatt gatt = mGatts.get(address);
+                                if (gatt == null) gatt = mGattsConnectionPending.get(address);
+                                if (gatt != null) {
+                                    // write-with-response is required by the legacy KICKR firmware
+                                    int writeType = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0
+                                            ? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                                            : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+                                    chr.setWriteType(writeType);
+                                    chr.setValue(cmd);
+                                    boolean ok = gatt.writeCharacteristic(chr);
+                                    Log.d(TAG, "wahoo write " + hex(cmd) + " ok=" + ok);
+                                } else {
+                                    Log.w(TAG, "wahoo write " + hex(cmd) + " dropped: no gatt");
+                                }
+                            } else {
+                                Log.w(TAG, "wahoo write " + hex(cmd) + " dropped: no char");
+                            }
+                            // The KICKR needs breathing room between writes (>=50ms; longer after unlock)
+                            Thread.sleep(cmd[0] == 0x20 ? 800 : 100);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
+                }
+            }, "wahoo-cmd-" + address);
+            thread.setDaemon(true);
+            thread.start();
+        }
+
+        void add(byte[] cmd) {
+            synchronized (commands) {
+                // Coalesce: drop any queued command with the same opcode (stale slider value)
+                Iterator<byte[]> it = commands.iterator();
+                while (it.hasNext()) {
+                    if (it.next()[0] == cmd[0]) it.remove();
+                }
+                commands.addLast(cmd);
+                commands.notifyAll();
+            }
+        }
+    }
+
+    private String hex(byte[] data) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : data) sb.append(String.format("%02x ", b));
+        return sb.toString().trim();
     }
 }

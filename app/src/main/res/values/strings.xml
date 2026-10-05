@@ -116,6 +116,13 @@
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE">HRM: Zone alarms</string>
     <string name="PREF_FTP">FTP (Functional Threshold Power)</string>
     <string name="PREF_FTP_SUMMARY">Watts at threshold, e.g. 250</string>
+    <string name="PREF_RIDER_HEIGHT">Rider height (cm)</string>
+    <string name="PREF_RIDER_HEIGHT_SUMMARY">Used for aerodynamics (CdA) and virtual speed, e.g. 175</string>
+    <string name="PREF_RIDER_WEIGHT">Rider weight (kg)</string>
+    <string name="PREF_RIDER_WEIGHT_SUMMARY">Used for sim mode and virtual speed calculations, e.g. 75</string>
+    <string name="PREF_RIDER_PHYSICS_INFO">Physics model: CdA ~%1$s m², Crr %2$s</string>
+    <string name="settings_rider_title">Rider &amp; Physics</string>
+    <string name="settings_rider_summary">Height, weight, FTP, max heart rate, zone alarms</string>
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT" translatable="false">0</string>
     <string name="PREF_PEBBLE_HRM_TITLE">Use Pebble heart rate monitor</string>
     <string name="PREF_PEBBLE_HRM_SUMMARY">Use the watch\'s built-in HR sensor instead of a Bluetooth HRM during recording</string>

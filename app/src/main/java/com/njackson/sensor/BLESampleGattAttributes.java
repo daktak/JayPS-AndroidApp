@@ -36,6 +36,19 @@ public class BLESampleGattAttributes {
     public static String GOPRO_COMMAND = "b5f90072-aa8d-11e3-9046-0002a5d5c51b";
     public static String GOPRO_SERVICE = "0000fea6-0000-1000-8000-00805f9b34fb";
 
+    // Fitness Machine Service (FTMS) - 0x1826
+    public static String FITNESS_MACHINE_SERVICE = "00001826-0000-1000-8000-00805f9b34fb";
+    public static String INDOOR_BIKE_DATA = "00002ad2-0000-1000-8000-00805f9b34fb";
+    public static String FITNESS_MACHINE_CONTROL_POINT = "00002ad9-0000-1000-8000-00805f9b34fb";
+    public static String FITNESS_MACHINE_STATUS = "00002ada-0000-1000-8000-00805f9b34fb";
+    public static String TRAINING_STATUS = "00002ad3-0000-1000-8000-00805f9b34fb";
+    public static String SUPPORTED_RESISTANCE_LEVEL_RANGE = "00002ad5-0000-1000-8000-00805f9b34fb";
+    public static String SUPPORTED_POWER_RANGE = "00002ad6-0000-1000-8000-00805f9b34fb";
+    public static String SUPPORTED_SPEED_RANGE = "00002ad8-0000-1000-8000-00805f9b34fb";
+
+    // Wahoo proprietary Cycling Power Extension (pre-FTMS KICKR control)
+    public static String WAHOO_CYCLING_POWER_EXTENSION = "a026e005-0a7d-4ab3-97fa-f1500f9feb8b";
+
     static {
         // Sample Services.
         // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
@@ -79,6 +92,19 @@ public class BLESampleGattAttributes {
         attributes.put("00002a5d-0000-1000-8000-00805f9b34fb", "Sensor Location");
 
         attributes.put("71261001-3692-ae93-e711-472ba41689c9", "Light Mode");
+
+        // Fitness Machine Service (FTMS)
+        attributes.put("00001826-0000-1000-8000-00805f9b34fb", "Fitness Machine");
+        attributes.put("00002ad2-0000-1000-8000-00805f9b34fb", "Indoor Bike Data");
+        attributes.put("00002ad9-0000-1000-8000-00805f9b34fb", "Fitness Machine Control Point");
+        attributes.put("00002ada-0000-1000-8000-00805f9b34fb", "Fitness Machine Status");
+        attributes.put("00002ad3-0000-1000-8000-00805f9b34fb", "Training Status");
+        attributes.put("00002ad5-0000-1000-8000-00805f9b34fb", "Supported Resistance Level Range");
+        attributes.put("00002ad6-0000-1000-8000-00805f9b34fb", "Supported Power Range");
+        attributes.put("00002ad8-0000-1000-8000-00805f9b34fb", "Supported Speed Range");
+
+        // Wahoo proprietary extension
+        attributes.put("a026e005-0a7d-4ab3-97fa-f1500f9feb8b", "Wahoo Cycling Power Extension");
     }
 
     public static String lookup(String uuid, String defaultName) {

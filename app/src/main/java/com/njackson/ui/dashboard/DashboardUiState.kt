@@ -22,6 +22,32 @@ data class GoProInfo(
     val connected: Boolean,
 )
 
+data class TrainerInfo(
+    val address: String = "",
+    val name: String = "",
+    val model: String = "",
+    val connected: Boolean = false,
+    val instantaneousPower: Int = 0,
+    val instantaneousCadence: Int = 0,
+    val instantaneousSpeed: Float = 0f,
+    val resistanceLevel: Int = 0,
+    val targetPower: Int = 0,
+    val targetGrade: Int = 0,
+    val minResistance: Int = 0,
+    val maxResistance: Int = 0,
+    val minPower: Int = 0,
+    val maxPower: Int = 0,
+    val minSpeed: Float = 0f,
+    val maxSpeed: Float = 0f,
+    val isErgMode: Boolean = false,
+    val hasControl: Boolean = false,
+    val isWahooProprietary: Boolean = false,
+    val isWahooProprietaryControl: Boolean = false,
+) {
+    fun resistancePercent(): Float = if (maxResistance > minResistance)
+        (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance) else 0f
+}
+
 data class DashboardUiState(
     val speed: Float = 0f,
     val avgSpeed: Float = 0f,
@@ -47,4 +73,5 @@ data class DashboardUiState(
     val isIndoor: Boolean = false,
     val lights: List<LightInfo> = emptyList(),
     val gopros: List<GoProInfo> = emptyList(),
+    val trainer: TrainerInfo = TrainerInfo(),
 )

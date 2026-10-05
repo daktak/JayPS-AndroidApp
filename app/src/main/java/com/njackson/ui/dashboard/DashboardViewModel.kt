@@ -8,6 +8,8 @@ import com.njackson.events.BleServiceCommand.GoProState
 import com.njackson.events.BleServiceCommand.GoProControlRequest
 import com.njackson.events.BleServiceCommand.LightControlRequest
 import com.njackson.events.BleServiceCommand.LightState
+import com.njackson.events.BleServiceCommand.TrainerControlRequest
+import com.njackson.events.BleServiceCommand.WahooTrainerControlRequest
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.NewAltitude
 import com.njackson.events.GPSServiceCommand.NewLocation
@@ -15,6 +17,7 @@ import com.njackson.events.GPSServiceCommand.ResetGPSState
 import com.njackson.events.GPSServiceCommand.SavedLocation
 import com.njackson.events.base.BaseStatus
 import com.njackson.state.IGPSDataStore
+import com.njackson.utils.RiderModel
 import com.njackson.utils.SensorGraphReduce
 import com.squareup.otto.Bus
 import com.squareup.otto.Subscribe
@@ -87,7 +90,7 @@ class DashboardViewModel(
                 if (appended.size > 5000) appended.takeLast(5000) else appended
             } else list
         } else cur.trail
-val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
+        val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         val totalMs = e.getTotalTimeSeconds().toLong() * 1000L
         val hr = e.getHeartRate()
         val pwr = e.getPower()
@@ -114,9 +117,16 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         if (pwr in 1..2000) powerReduce.addValue(pwr, elapsedMs)
         else if (pwr == 0 && power) powerReduce.addValue(0, elapsedMs)
         if (cad in 1..254) cadenceReduce.addValue(cad, elapsedMs)
-        val newCad = if (cad in 1..254) cad else cur.cadence
+        
+        // Prefer FTMS trainer data for speed/cadence when connected and available
+        val trainer = cur.trainer
+        val useFtmsSpeed = trainer.connected && trainer.instantaneousSpeed > 0
+        val useFtmsCadence = trainer.connected && trainer.instantaneousCadence > 0
+        val newSpeed = if (useFtmsSpeed) trainer.instantaneousSpeed else e.getSpeed()
+        val newCad = if (useFtmsCadence) trainer.instantaneousCadence else (if (cad in 1..254) cad else cur.cadence)
+        
         _state.value = cur.copy(
-            speed = e.getSpeed(),
+            speed = newSpeed,
             avgSpeed = e.getAverageSpeed(),
             distance = e.getDistance(),
             elapsedSec = e.getElapsedTimeSeconds(),
@@ -154,7 +164,7 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
         val allowed = allowedAddresses()
         val cur = _state.value
         val fresh = DashboardUiState(units = store.getMeasurementUnits(), isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
-        _state.value = fresh.copy(lights = cur.lights.filter { it.address in allowed }, gopros = cur.gopros.filter { it.address in allowed })
+        _state.value = fresh.copy(lights = cur.lights.filter { it.address in allowed }, gopros = cur.gopros.filter { it.address in allowed }, trainer = TrainerInfo())
     }
 
     @Subscribe fun onGPSStatus(e: GPSStatus) {
@@ -200,11 +210,19 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
                     power = true
                     val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
                     powerReduce.addValue(p, elapsedMs)
-                    _state.value = _state.value.copy(power = p, powerGraph = powerReduce.getGraphData().toList())
+                    _state.value = _state.value.copy(
+                        power = p, 
+                        powerGraph = powerReduce.getGraphData().toList(),
+                        trainer = _state.value.trainer.copy(instantaneousPower = p)
+                    )
                 } else if (p == 0 && power) {
                     val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
                     powerReduce.addValue(0, elapsedMs)
-                    _state.value = _state.value.copy(power = 0, powerGraph = powerReduce.getGraphData().toList())
+                    _state.value = _state.value.copy(
+                        power = 0, 
+                        powerGraph = powerReduce.getGraphData().toList(),
+                        trainer = _state.value.trainer.copy(instantaneousPower = 0)
+                    )
                 }
             }
             BleSensorData.SENSOR_CSC_CADENCE, BleSensorData.SENSOR_RSC -> {
@@ -213,8 +231,83 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
                     cadence = true
                     val elapsedMs = _state.value.elapsedSec.toLong() * 1000L
                     cadenceReduce.addValue(c, elapsedMs)
-                    _state.value = _state.value.copy(cadence = c, cadenceGraph = cadenceReduce.getGraphData().toList())
+                    _state.value = _state.value.copy(
+                        cadence = c, 
+                        cadenceGraph = cadenceReduce.getGraphData().toList(),
+                        trainer = _state.value.trainer.copy(instantaneousCadence = c)
+                    )
                 }
+            }
+            BleSensorData.SENSOR_FTMS_INDOOR_BIKE -> {
+                val addr = e.getBleAddress()
+                val cur = _state.value
+                // Always update trainer state when receiving FTMS indoor bike data for this trainer
+                // For Wahoo proprietary trainer, the event itself indicates control capability
+                if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
+                    val speedKmh = e.getInstantaneousSpeed() / 100f  // 0.01 km/h -> km/h
+                    val cadenceRpm = e.getInstantaneousCadence() / 2  // 0.5 rpm -> rpm
+                    // Virtual speed fallback: only used when the trainer reports no speed (e.g. the
+                    // legacy power-only KICKR). Computed from watts + gradient + rider model so the
+                    // displayed speed drops as the gradient slider goes uphill. Uses the current
+                    // target grade (confirmations) not the live grade, which Indoor Bike Data doesn't carry.
+                    val currentGradeTenths = cur.trainer.targetGrade
+                    val virtualKmh = if (speedKmh <= 0 && e.getInstantaneousPower() in 1..2000) {
+                        RiderModel.virtualSpeedKmh(
+                            e.getInstantaneousPower(),
+                            currentGradeTenths / 10f,
+                            RiderModel.paramsFromPrefs(
+                                prefs.getString(Constants.PREF_RIDER_HEIGHT, ""),
+                                prefs.getString(Constants.PREF_RIDER_WEIGHT, "")
+                            )
+                        )
+                    } else 0f
+                    val displaySpeedKmh = if (virtualKmh > 0) virtualKmh else speedKmh
+                    _state.value = cur.copy(trainer = cur.trainer.copy(
+                        address = addr,
+                        connected = true,
+                        instantaneousPower = e.getInstantaneousPower(),
+                        instantaneousCadence = cadenceRpm,
+                        instantaneousSpeed = displaySpeedKmh,
+                        resistanceLevel = e.getResistanceLevel(),
+                        targetPower = e.getTargetPower(),
+                        minResistance = e.getMinResistance(),
+                        maxResistance = e.getMaxResistance(),
+                        minPower = e.getMinPower(),
+                        maxPower = e.getMaxPower(),
+                        minSpeed = e.getMinSpeed() / 100f,
+                        maxSpeed = e.getMaxSpeed() / 100f,
+                        // The Wahoo proprietary flag comes from the BLE layer: it is set ONLY when
+                        // a pre-FTMS Wahoo KICKR was detected (proprietary fallback). Genuine
+                        // FTMS trainers keep it false, so FTMS control always takes precedence.
+                        isWahooProprietary = e.getWahooProprietaryControl(),
+                        isWahooProprietaryControl = e.getWahooProprietaryControl(),
+                        hasControl = true,
+                        // A reported target power > 0 means the trainer is in ERG mode
+                        isErgMode = e.getTargetPower() > 0,
+                    ))
+                }
+            }
+            BleSensorData.SENSOR_FTMS_SUPPORTED_RANGES -> {
+                val addr = e.getBleAddress()
+                val cur = _state.value
+                if (cur.trainer.address == addr || cur.trainer.address.isEmpty()) {
+                    _state.value = cur.copy(trainer = cur.trainer.copy(
+                        address = addr,
+                        minResistance = e.getMinResistance(),
+                        maxResistance = e.getMaxResistance(),
+                        minPower = e.getMinPower(),
+                        maxPower = e.getMaxPower(),
+                        minSpeed = e.getMinSpeed() / 100f,
+                        maxSpeed = e.getMaxSpeed() / 100f,
+                        hasControl = true,
+                    ))
+                }
+            }
+            BleSensorData.SENSOR_FTMS_STATUS -> {
+                // Fitness Machine Status - could indicate errors, etc.
+            }
+            BleSensorData.SENSOR_FTMS_TRAINING_STATUS -> {
+                // Training Status - could indicate session state
             }
         }
         updateHrm()
@@ -286,5 +379,67 @@ val elapsedMs = e.getElapsedTimeSeconds().toLong() * 1000L
     }
     fun setGoProRecording(address: String, start: Boolean) {
         bus.post(GoProControlRequest(address, start))
+    }
+    fun setTrainerTargetPower(watts: Int) {
+        val addr = _state.value.trainer.address
+        val trainer = _state.value.trainer
+        if (addr.isNotEmpty()) {
+            // Optimistic UI update so the slider responds immediately; the trainer confirmation
+            // (Wahoo indication / FTMS response) refines the state afterwards.
+            _state.value = _state.value.copy(trainer = trainer.copy(targetPower = watts, isErgMode = true))
+            val t = _state.value.trainer
+            if (t.isWahooProprietaryControl) {
+                bus.post(WahooTrainerControlRequest(addr, watts, 0, 0, true))
+            } else {
+                bus.post(TrainerControlRequest(addr, watts, 0, 0, true, false))
+            }
+        }
+    }
+    fun setTrainerGradient(grade: Int) {
+        val addr = _state.value.trainer.address
+        val trainer = _state.value.trainer
+        if (addr.isNotEmpty()) {
+            // Optimistic UI update so the slider responds immediately.
+            _state.value = _state.value.copy(trainer = trainer.copy(targetGrade = grade, isErgMode = false))
+            val t = _state.value.trainer
+            if (t.isWahooProprietaryControl) {
+                bus.post(WahooTrainerControlRequest(addr, 0, 0, grade, false))
+            } else {
+                bus.post(TrainerControlRequest(addr, 0, 0, grade, false, false))
+            }
+        }
+    }
+    fun setTrainerErgMode(enabled: Boolean) {
+        val addr = _state.value.trainer.address
+        val trainer = _state.value.trainer
+        if (addr.isNotEmpty()) {
+            // Optimistic UI update so the toggle responds immediately.
+            _state.value = _state.value.copy(trainer = trainer.copy(isErgMode = enabled))
+            val t = _state.value.trainer
+            if (t.isWahooProprietaryControl) {
+                // When enabling ERG mode, send the current target power (defaulting to a real,
+                // non-zero value so the KICKR actually leaves gradient mode). When disabling,
+                // send the current gradient so the trainer exits ERG mode (starts flat at 0%).
+                if (enabled) {
+                    val power = if (trainer.targetPower > 0) trainer.targetPower else 100
+                    _state.value = _state.value.copy(trainer = t.copy(targetPower = power))
+                    bus.post(WahooTrainerControlRequest(addr, power, 0, 0, true))
+                } else {
+                    val grade = trainer.targetGrade
+                    bus.post(WahooTrainerControlRequest(addr, 0, 0, grade, false))
+                }
+            } else {
+                if (enabled) {
+                    bus.post(TrainerControlRequest(addr, 0, 0, 0, true, false))
+                } else {
+                    val grade = trainer.targetGrade
+                    bus.post(TrainerControlRequest(addr, 0, 0, grade, false, false))
+                }
+            }
+        }
+    }
+    fun requestTrainerControl() {
+        val addr = _state.value.trainer.address
+        if (addr.isNotEmpty()) bus.post(TrainerControlRequest(addr, 0, 0, 0, false, true))
     }
 }
