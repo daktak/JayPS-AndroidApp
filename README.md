@@ -13,5 +13,6 @@ Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
 ## Watchface
 See also the [KayPS Watch Face](https://github.com/daktak/JayPS-WatchFace).
+[Rebble App Store](https://apps.rebble.io/en_US/application/6a8533eb6b779600084ed8e1)
 
 ![](screenshots/KayPS.png?raw=true)
