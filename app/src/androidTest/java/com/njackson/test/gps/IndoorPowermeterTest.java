@@ -105,6 +105,9 @@ public class IndoorPowermeterTest extends AndroidTestCase {
         String gpx = adv.getGPX(true);
         assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));
         assertTrue("GPX must contain cad", gpx.contains("<gpxtpx:cad>" + cad + "</gpxtpx:cad>"));
+        assertFalse("GPX must not contain watts when power is 0", gpx.contains("<gpxtpx:watts>"));
+        assertFalse("GPX must not contain pb10:power when power is 0", gpx.contains("<pb10:power>"));
+        assertFalse("GPX must not contain the literal null", gpx.contains(">null<"));
     }
 
     @SmallTest
@@ -132,6 +135,17 @@ public class IndoorPowermeterTest extends AndroidTestCase {
         assertTrue("TCX must contain Speed", tcx.contains("<ns3:Speed>"));
         assertTrue("TCX must contain DistanceMeters", tcx.contains("<DistanceMeters>"));
         assertTrue("TCX distance value must be >0", adv.getDistance() > 0f);
+
+        String gpx = adv.getGPX(true);
+        assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));
+        assertTrue("GPX must contain cad", gpx.contains("<gpxtpx:cad>" + cad + "</gpxtpx:cad>"));
+        assertTrue("GPX must contain watts " + power, gpx.contains("<gpxtpx:watts>" + power + "</gpxtpx:watts>"));
+        assertTrue("GPX must contain pb10 power " + power, gpx.contains("<pb10:power>" + power + "</pb10:power>"));
+        assertFalse("GPX must not contain the literal null", gpx.contains(">null<"));
+
+        String gpxPlain = adv.getGPX(false);
+        assertTrue("non-extended GPX must contain watts " + power, gpxPlain.contains("<gpxtpx:watts>" + power + "</gpxtpx:watts>"));
+        assertFalse("non-extended GPX must not contain pb10:power", gpxPlain.contains("<pb10:power>"));
     }
 
     private float estimateSpeedFromPower(int power) {

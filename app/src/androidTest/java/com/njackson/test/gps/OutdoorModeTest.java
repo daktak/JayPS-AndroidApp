@@ -98,6 +98,9 @@ public class OutdoorModeTest extends AndroidTestCase {
         String gpx = adv.getGPX(true);
         assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));
         assertTrue("GPX must contain cad", gpx.contains("<gpxtpx:cad>" + cad + "</gpxtpx:cad>"));
+        assertTrue("GPX must contain watts " + power, gpx.contains("<gpxtpx:watts>" + power + "</gpxtpx:watts>"));
+        assertTrue("GPX must contain pb10 power " + power, gpx.contains("<pb10:power>" + power + "</pb10:power>"));
+        assertFalse("GPX must not contain the literal null", gpx.contains(">null<"));
         assertTrue("GPX must have trkpt", gpx.contains("<trkpt"));
     }
 }
