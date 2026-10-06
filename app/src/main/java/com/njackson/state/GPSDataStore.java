@@ -7,12 +7,16 @@ import android.util.Log;
 import com.njackson.Constants;
 import com.njackson.R;
 
+import fr.jayps.android.AdvancedLocation;
+
 /**
  * Created by njackson on 30/01/15.
  */
 public class GPSDataStore implements IGPSDataStore {
 
     private static final String TAG = "PB-GPSDataStore";
+
+    private static final String KEY_LAPS = "GPS_LAPS";
 
     SharedPreferences _sharedPreferences;
     Context _context;
@@ -33,6 +37,8 @@ public class GPSDataStore implements IGPSDataStore {
     private float _lastLatitude;
     private float _lastLongitude;
     private int _units;
+    // in-memory copy, written out by commit(); null until the service has lap state to save
+    private AdvancedLocation.LapState _lapState;
 
 
     public GPSDataStore(SharedPreferences preferences, Context context) {
@@ -67,6 +73,7 @@ public class GPSDataStore implements IGPSDataStore {
         _longitude = _sharedPreferences.getFloat("GPS_FIRST_LOCATION_LON",0);
         _lastLatitude = _sharedPreferences.getFloat("GPS_LAST_LOCATION_LAT",0);
         _lastLongitude = _sharedPreferences.getFloat("GPS_LAST_LOCATION_LON",0);
+        _lapState = LapStateCodec.fromJson(_sharedPreferences.getString(KEY_LAPS, null));
     }
 
     @Override
@@ -221,6 +228,16 @@ public class GPSDataStore implements IGPSDataStore {
         _lastLongitude = value;
     }
 
+    @Override
+    public AdvancedLocation.LapState getLapState() {
+        return _lapState;
+    }
+
+    @Override
+    public void setLapState(AdvancedLocation.LapState value) {
+        _lapState = value;
+    }
+
 
     @Override
     public void resetAllValues() {
@@ -235,6 +252,7 @@ public class GPSDataStore implements IGPSDataStore {
         //_geoid = 0; // no reset needed, it's for altitude correction
         _latitude = 0;
         _longitude = 0;
+        _lapState = null;
 
         // TODO(nic) move me to some other place?
         SharedPreferences.Editor editor = _sharedPreferences.edit();
@@ -243,6 +261,8 @@ public class GPSDataStore implements IGPSDataStore {
         editor.putString("SPEEDFRAGMENT_AVGSPEED", _context.getString(R.string.speedfragment_avgspeed_value));
         editor.putString("SPEEDFRAGMENT_DISTANCE", _context.getString(R.string.speedfragment_distance_value));
         editor.putString("SPEEDFRAGMENT_TIME", _context.getString(R.string.speedfragment_time_value));
+
+        editor.remove(KEY_LAPS);
 
         editor.commit();
     }
@@ -266,6 +286,12 @@ public class GPSDataStore implements IGPSDataStore {
         editor.putFloat("GPS_FIRST_LOCATION_LON", _longitude);
         editor.putFloat("GPS_LAST_LOCATION_LAT", _lastLatitude);
         editor.putFloat("GPS_LAST_LOCATION_LON", _lastLongitude);
+
+        // only written once the service has lap state to save, so an unrelated commit() cannot
+        // wipe the laps of a ride that is being recorded
+        if (_lapState != null) {
+            editor.putString(KEY_LAPS, LapStateCodec.toJson(_lapState));
+        }
 
         editor.commit();
     }

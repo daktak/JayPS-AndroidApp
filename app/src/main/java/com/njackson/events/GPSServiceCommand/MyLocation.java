@@ -223,6 +223,40 @@ public abstract class MyLocation {
     public Location getFirstLocation() { return this._firstLocation; }
     public void setFirstLocation(Location firstLocation) { this._firstLocation = firstLocation;}
 
+    /* Lap state of the ride in progress */
+
+    private int _lapCount = 0;
+    public int getLapCount() { return this._lapCount; }
+    public void setLapCount(int lapCount) { this._lapCount = lapCount;}
+
+    private int _lapElapsedTimeSeconds = 0;
+    public int getLapElapsedTimeSeconds() { return this._lapElapsedTimeSeconds; }
+    public void setLapElapsedTimeSeconds(int seconds) { this._lapElapsedTimeSeconds = seconds;}
+
+    private float _lapDistance = 0;
+    public float getLapDistance() { return this._lapDistance; }
+    public void setLapDistance(float lapDistance) { this._lapDistance = lapDistance;}
+
+    private float _lapAvgSpeed = 0;
+    public float getLapAverageSpeed() { return this._lapAvgSpeed; }
+    public void setLapAverageSpeed(float lapAvgSpeed) { this._lapAvgSpeed = lapAvgSpeed;}
+
+    private int _lapAvgPower = 0;
+    public int getLapAveragePower() { return this._lapAvgPower; }
+    public void setLapAveragePower(int lapAvgPower) { this._lapAvgPower = lapAvgPower;}
+
+    private int _lastLapElapsedTimeSeconds = 0;
+    public int getLastLapElapsedTimeSeconds() { return this._lastLapElapsedTimeSeconds; }
+    public void setLastLapElapsedTimeSeconds(int seconds) { this._lastLapElapsedTimeSeconds = seconds;}
+
+    private float _lastLapDistance = 0;
+    public float getLastLapDistance() { return this._lastLapDistance; }
+    public void setLastLapDistance(float lastLapDistance) { this._lastLapDistance = lastLapDistance;}
+
+    private int _bestLapElapsedTimeSeconds = 0;
+    public int getBestLapElapsedTimeSeconds() { return this._bestLapElapsedTimeSeconds; }
+    public void setBestLapElapsedTimeSeconds(int seconds) { this._bestLapElapsedTimeSeconds = seconds;}
+
 
     private boolean _sendNavigation = false;
     public boolean getSendNavigation() { return this._sendNavigation; }

@@ -1,5 +1,7 @@
 package com.njackson.state;
 
+import fr.jayps.android.AdvancedLocation;
+
 /**
  * Created by njackson on 30/01/15.
  */
@@ -50,6 +52,10 @@ public interface IGPSDataStore {
 
     float getLastLocationLongitude();
     void setLastLocationLongitude(float value);
+
+    /* Lap state of the ride in progress, so laps survive a pause */
+    AdvancedLocation.LapState getLapState();
+    void setLapState(AdvancedLocation.LapState value);
 
     /* Resets all values to 0 */
     void resetAllValues();

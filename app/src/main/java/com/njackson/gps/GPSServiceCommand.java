@@ -33,6 +33,7 @@ import com.njackson.events.GPSServiceCommand.NewAltitude;
 import com.njackson.events.GPSServiceCommand.ResetGPSState;
 import com.njackson.events.GPSServiceCommand.NewLocation;
 import com.njackson.events.GPSServiceCommand.SavedLocation;
+import com.njackson.events.UI.LapButtonTouchedEvent;
 import com.njackson.events.base.BaseStatus;
 import com.njackson.pebble.IMessageManager;
 import com.njackson.service.IServiceCommand;
@@ -126,6 +127,19 @@ public class GPSServiceCommand implements IServiceCommand {
             }
         }
     };
+
+    @Subscribe
+    public void onLapButtonTouched(LapButtonTouchedEvent event) {
+        // a lap only means something while a ride is being recorded; dropping the press
+        // otherwise keeps a stopped or paused ride from ending up with a bogus first lap
+        if (_currentStatus != BaseStatus.Status.STARTED || _advancedLocation == null) {
+            return;
+        }
+        _advancedLocation.newLap();
+        // push the new lap out at once: a location update only arrives on the next fix, and
+        // in indoor mode it can be a while, which would leave the rider staring at the old lap
+        broadcastLocation(null);
+    }
 
     @Subscribe
     public void onResetGPSStateEvent(ResetGPSState event) {
@@ -404,6 +418,12 @@ public class GPSServiceCommand implements IServiceCommand {
         _advancedLocation.setNbAscent(_dataStore.getNbAscent());
         _advancedLocation.setMaxSpeed(_dataStore.getMaxSpeed());
 
+        // absent on the first ride, and cleared by a reset: both start the laps from scratch
+        AdvancedLocation.LapState lapState = _dataStore.getLapState();
+        if (lapState != null) {
+            _advancedLocation.setLapState(lapState);
+        }
+
         _advancedLocation.setGeoidHeight(_dataStore.getGEOIDHeight());
         _advancedLocation.setAltitudeCalibrationDelta(_dataStore.getAltitudeCalibrationDelta(_time.getCurrentTimeMilliseconds()));
 
@@ -433,6 +453,7 @@ public class GPSServiceCommand implements IServiceCommand {
         }
         _dataStore.setLastLocationLatitude((float) _advancedLocation.getLatitude());
         _dataStore.setLastLocationLongitude((float) _advancedLocation.getLongitude());
+        _dataStore.setLapState(_advancedLocation.getLapState());
         _dataStore.commit();
     }
 

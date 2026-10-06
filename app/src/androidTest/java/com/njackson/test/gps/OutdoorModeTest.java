@@ -8,6 +8,9 @@ import com.njackson.Constants;
 import com.njackson.adapters.AdvancedLocationToNewLocation;
 import com.njackson.events.GPSServiceCommand.NewLocation;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import fr.jayps.android.AdvancedLocation;
 
 public class OutdoorModeTest extends AndroidTestCase {
@@ -30,22 +33,36 @@ public class OutdoorModeTest extends AndroidTestCase {
         super.tearDown();
     }
 
+    // the ride is a straight line north-east, one point every 30s
+    private static final double BASE_LAT = 48.8566;
+    private static final double BASE_LON = 2.3522;
+    private static final double DELTA_DEG = 0.00027;
+    private static final long POINT_INTERVAL_MS = 30000L;
+
+    // keeps recordMorePoints() continuing the same ride, so timestamps stay ascending
+    private long _rideBaseTime;
+    private int _ridePoints;
+
     /** Records 5 points 30s apart at 155bpm, so a ride spans 2 minutes of history. */
     private void recordRide() {
-        long baseTime = System.currentTimeMillis();
-        double baseLat = 48.8566;
-        double baseLon = 2.3522;
-        double deltaDeg = 0.00027;
-        for (int i = 0; i < 5; i++) {
+        _rideBaseTime = System.currentTimeMillis();
+        _ridePoints = 0;
+        recordMorePoints(5);
+    }
+
+    /** Continues {@link #recordRide()} with the same geometry and cadence. */
+    private void recordMorePoints(int count) {
+        for (int i = 0; i < count; i++) {
             Location loc = new Location("JayPS");
-            loc.setLatitude(baseLat + i * deltaDeg);
-            loc.setLongitude(baseLon);
-            loc.setAltitude(80 + i * 2);
+            loc.setLatitude(BASE_LAT + _ridePoints * DELTA_DEG);
+            loc.setLongitude(BASE_LON);
+            loc.setAltitude(80 + _ridePoints * 2);
             loc.setAccuracy(5);
-            loc.setTime(baseTime + i * 30000L);
+            loc.setTime(_rideBaseTime + _ridePoints * POINT_INTERVAL_MS);
             loc.setSpeed(1.0f);
             adv.onLocationChanged(loc, 155, 92, 220);
             adv.saveCurrentLocationAtInterval(loc.getTime());
+            _ridePoints++;
         }
     }
 
@@ -160,6 +177,102 @@ public class OutdoorModeTest extends AndroidTestCase {
                 adv.getGPX(true).contains("<pb10:calories>" + calories + "</pb10:calories>"));
         assertFalse("plain GPX must not carry calories",
                 adv.getGPX(false).contains("<pb10:calories>"));
+    }
+
+    /**
+     * A lap ends at the first point of the next one, so the exported laps share no trackpoint and
+     * leave no gap in time. Their distances must add up to the ride, which is the property that
+     * breaks silently if a boundary is counted in both laps.
+     */
+    @SmallTest
+    public void testLapsPartitionTheRideInTcxAndGpx() throws Exception {
+        recordRide();
+
+        // close the first lap after 3 of the 5 points, then keep recording
+        adv.newLap();
+        recordMorePoints(3);
+        float rideDistance = adv.getDistance();
+
+        assertEquals("a new lap starts at lap 1", 1, adv.getLapCount());
+        assertTrue("the new lap must have its own distance", adv.getLapDistance() > 0f);
+        assertTrue("the new lap must have its own elapsed time", adv.getLapElapsedTime() > 0L);
+        assertTrue("last lap time must be recorded", adv.getLastLapElapsedTime() > 0L);
+        assertEquals("last lap time is the best so far", adv.getLastLapElapsedTime(), adv.getBestLapElapsedTime());
+        assertTrue("the new lap must have its own average speed", adv.getLapAverageSpeed() > 0f);
+
+        // saveOnLocationChange plus the explicit interval save stores two rows per point
+        int expectedPoints = 2 * _ridePoints;
+        String tcx = adv.getTCX("Biking");
+        assertEquals("TCX must contain one Lap per lap", count(tcx, "<Lap StartTime=\""), 2);
+        assertEquals("TCX must contain one Activity", count(tcx, "<Activity Sport="), 1);
+        assertEquals("every point belongs to exactly one lap", count(tcx, "<Trackpoint>"), expectedPoints);
+        assertTrue("lap distances must add up to the ride, were "
+                        + sumLapDistances(tcx) + " vs " + rideDistance,
+                Math.abs(sumLapDistances(tcx) - rideDistance) < 1f);
+
+        String gpx = adv.getGPX(true);
+        // one segment per lap, i.e. the initial one plus one per lap boundary
+        assertEquals("GPX must start a segment per lap", 2, count(gpx, "<trkseg>"));
+        assertEquals("every point belongs to exactly one segment", expectedPoints, count(gpx, "<trkpt"));
+    }
+
+    /**
+     * The lap state is what carries laps across a pause: saving it and restoring it into a fresh
+     * instance has to reproduce the same numbers, or a rider who pauses loses their laps.
+     */
+    @SmallTest
+    public void testLapStateSurvivesSaveAndRestore() throws Exception {
+        recordRide();
+        adv.newLap();
+        recordMorePoints(2);
+
+        AdvancedLocation.LapState expected = adv.getLapState();
+        AdvancedLocation restored = new AdvancedLocation(getContext());
+        restored.setSaveLocation(true);
+        restored.setSaveOnLocationChange(true);
+        restored.setIndoor(false);
+        restored.setLapState(expected);
+
+        assertEquals("lap count must survive", expected.lapCount, restored.getLapCount());
+        assertEquals("lap distance must survive", expected.lapDistance, restored.getLapDistance(), 0.001);
+        assertEquals("lap elapsed time must survive", expected.lapElapsedTime, restored.getLapElapsedTime());
+        assertEquals("last lap time must survive", expected.lastLapElapsedTime, restored.getLastLapElapsedTime());
+        assertEquals("best lap time must survive", expected.bestLapElapsedTime, restored.getBestLapElapsedTime());
+        assertEquals("lap average power must survive", adv.getLapAveragePower(), restored.getLapAveragePower());
+        assertEquals("ride average power must survive", adv.getAveragePower(), restored.getAveragePower());
+
+        // and the restored instance keeps numbering laps rather than starting over
+        restored.newLap();
+        assertEquals("laps must continue after a restore", expected.lapCount + 1, restored.getLapCount());
+    }
+
+    private static int count(String haystack, String needle) {
+        int n = 0;
+        int i = haystack.indexOf(needle);
+        while (i >= 0) {
+            n++;
+            i = haystack.indexOf(needle, i + needle.length());
+        }
+        return n;
+    }
+
+    /**
+     * Sum of the DistanceMeters of every exported TCX Lap, so the laps can be checked to sum to the
+     * ride. Matches the Lap header only, which is anchored by TotalTimeSeconds: the per-trackpoint
+     * DistanceMeters must not be counted here.
+     */
+    private static float sumLapDistances(String tcx) {
+        Matcher m = Pattern.compile(
+                "<Lap StartTime=\"[^\"]*\">\\s*<TotalTimeSeconds>[^<]*</TotalTimeSeconds>\\s*"
+                        + "<DistanceMeters>([^<]*)</DistanceMeters>").matcher(tcx);
+        float total = 0f;
+        int found = 0;
+        while (m.find()) {
+            total += Float.parseFloat(m.group(1));
+            found++;
+        }
+        assertEquals("every lap header must be parseable", found, count(tcx, "<Lap StartTime=\""));
+        return total;
     }
 
     @SmallTest

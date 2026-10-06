@@ -26,10 +26,14 @@ public class AdvancedLocationToNewLocation extends NewLocation {
             this.setSpeed(advancedLocation.getSpeed() > 0 ? 1/(advancedLocation.getSpeed() * _speedConversion) : 0);
             this.setMaxSpeed(advancedLocation.getMaxSpeed() > 0 ? 1/(advancedLocation.getMaxSpeed() * _speedConversion) : 0);
             this.setAvgSpeed(advancedLocation.getAverageSpeed() > 0 ? 1/(advancedLocation.getAverageSpeed() * _speedConversion) : 0);
+            // running units express speed as time per distance, so the lap follows the same
+            // conversion as the ride averages it sits next to
+            this.setLapAverageSpeed(advancedLocation.getLapAverageSpeed() > 0 ? 1/(advancedLocation.getLapAverageSpeed() * _speedConversion) : 0);
         } else {
             this.setSpeed(advancedLocation.getSpeed() * _speedConversion);
             this.setMaxSpeed(advancedLocation.getMaxSpeed() * _speedConversion);
             this.setAvgSpeed(advancedLocation.getAverageSpeed() * _speedConversion);
+            this.setLapAverageSpeed(advancedLocation.getLapAverageSpeed() * _speedConversion);
         }
         this.setDistance(advancedLocation.getDistance() * _distanceConversion);
         this.setLatitude(advancedLocation.getLatitude());
@@ -51,6 +55,14 @@ public class AdvancedLocationToNewLocation extends NewLocation {
         this.setCyclingCadence(255); // 255: no cadence available
         this.setRunningCadence(255); // 255: no cadence available
         this.setPower(-1); // -1: no Power available
+
+        this.setLapCount(advancedLocation.getLapCount());
+        this.setLapElapsedTimeSeconds((int) (advancedLocation.getLapElapsedTime() / 1000));
+        this.setLapDistance(advancedLocation.getLapDistance() * _distanceConversion);
+        this.setLapAveragePower(advancedLocation.getLapAveragePower());
+        this.setLastLapElapsedTimeSeconds((int) (advancedLocation.getLastLapElapsedTime() / 1000));
+        this.setLastLapDistance(advancedLocation.getLastLapDistance() * _distanceConversion);
+        this.setBestLapElapsedTimeSeconds((int) (advancedLocation.getBestLapElapsedTime() / 1000));
     }
 
     private void createUnits(int units) {

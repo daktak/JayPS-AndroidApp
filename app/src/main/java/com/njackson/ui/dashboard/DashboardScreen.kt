@@ -92,6 +92,7 @@ private val conv = NumberConverter()
 fun DashboardScreen(
     state: DashboardUiState,
     onStartStop: () -> Unit,
+    onLap: () -> Unit,
     onMenu: (String) -> Unit,
     onLightMode: (String, String) -> Unit = { _, _ -> },
     onGoProShutter: (String, Boolean) -> Unit = { _, _ -> },
@@ -108,13 +109,27 @@ fun DashboardScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onStartStop,
-                containerColor = if (state.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
-                icon = { Icon(if (state.isRunning) Icons.Filled.Timer else Icons.AutoMirrored.Filled.DirectionsBike, contentDescription = null) },
-                text = { Text(stringResource(if (state.isRunning) R.string.startbuttonfragment_stop else R.string.startbuttonfragment_start), style = MaterialTheme.typography.titleMedium) }
-            )
+            // Column so the lap button sits above start/stop. It is only offered while a ride is
+            // being recorded: the service would drop the press anyway, and a live button that does
+            // nothing is worse than no button.
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (state.isRunning) {
+                    ExtendedFloatingActionButton(
+                        onClick = onLap,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        icon = { Icon(Icons.Filled.Timer, contentDescription = null) },
+                        text = { Text(stringResource(R.string.lap_button), style = MaterialTheme.typography.titleMedium) }
+                    )
+                }
+                ExtendedFloatingActionButton(
+                    onClick = onStartStop,
+                    containerColor = if (state.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                    icon = { Icon(if (state.isRunning) Icons.Filled.Stop else Icons.AutoMirrored.Filled.DirectionsBike, contentDescription = null) },
+                    text = { Text(stringResource(if (state.isRunning) R.string.startbuttonfragment_stop else R.string.startbuttonfragment_start), style = MaterialTheme.typography.titleMedium) }
+                )
+            }
         }
     ) { pad ->
         Column(
@@ -142,6 +157,7 @@ fun DashboardScreen(
             }
             HeroCard(state)
             StatsGrid(state)
+            LapCard(state)
             SensorRow(state)
             if (state.hasHrm) SensorGraphCard(title = stringResource(R.string.dashboard_heart_rate), graph = state.hrGraph, current = if (state.heartRate in 1..254) state.heartRate else null, unit = "bpm", icon = Icons.Filled.Favorite, color = MaterialTheme.colorScheme.error, emptyText = stringResource(R.string.dashboard_no_hr_data), validRange = 1..254)
             if (state.hasPower) SensorGraphCard(title = stringResource(R.string.dashboard_power), graph = state.powerGraph, current = if (state.power >= 0) state.power else null, unit = "W", icon = Icons.Filled.Bolt, color = MaterialTheme.colorScheme.secondary, emptyText = stringResource(R.string.dashboard_no_power_data), validRange = 0..2000)
@@ -241,6 +257,51 @@ private fun StatsGrid(s: DashboardUiState) {
         }
         // Calories spans the full row: it is the widest label and shares a row with nothing else.
             StatCard(Modifier.fillMaxWidth(), Icons.Filled.LocalFireDepartment, stringResource(R.string.dashboard_calories), s.calories.toString(), "kcal")
+    }
+}
+
+/**
+ * Lap in progress, with the last completed lap underneath. Its time is wall clock, so it keeps
+ * running while the rider stops at a light, and the average speed therefore reflects moving
+ * time rather than the elapsed time shown next to it.
+ */
+@Composable
+private fun LapCard(s: DashboardUiState) {
+    val isPace = Units.isPace(s.units)
+    val speedUnit = Units.getSpeedUnits(s.units).uppercase()
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Timer, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.dashboard_lap_number, s.lap.count + 1), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.weight(1f))
+                Text(DateUtils.formatElapsedTime(s.lap.elapsedSec.toLong()), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                StatCard(
+                    Modifier.weight(1f), Icons.Filled.Route, stringResource(R.string.dashboard_lap_distance),
+                    conv.convertFloatToString(s.lap.distance, 2), Units.getDistanceUnits(s.units)
+                )
+                StatCard(
+                    Modifier.weight(1f), Icons.Filled.Speed, stringResource(R.string.dashboard_speed),
+                    if (isPace) conv.convertSpeedToPace(s.lap.avgSpeed) else conv.convertFloatToString(s.lap.avgSpeed, 1),
+                    speedUnit
+                )
+                // only meaningful once a power meter is feeding the ride
+                if (s.hasPower) {
+                    StatCard(Modifier.weight(1f), Icons.Filled.Bolt, stringResource(R.string.dashboard_lap_power), s.lap.avgPower.toString(), "W")
+                }
+            }
+            if (s.lap.lastElapsedSec > 0) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    stringResource(R.string.dashboard_lap_summary, DateUtils.formatElapsedTime(s.lap.lastElapsedSec.toLong()), DateUtils.formatElapsedTime(s.lap.bestElapsedSec.toLong())),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

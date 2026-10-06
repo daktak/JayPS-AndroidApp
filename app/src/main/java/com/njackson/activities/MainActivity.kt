@@ -29,6 +29,7 @@ import com.njackson.changelog.IChangeLogBuilder
 import com.njackson.events.ActivityRecognitionCommand.ActivityRecognitionStatus
 import com.njackson.events.GPSServiceCommand.GPSStatus
 import com.njackson.events.GPSServiceCommand.ResetGPSState
+import com.njackson.events.UI.LapButtonTouchedEvent
 import com.njackson.events.base.BaseStatus
 import com.njackson.gps.Navigator
 import com.njackson.state.IGPSDataStore
@@ -133,7 +134,7 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                 NavHost(navController = nav, startDestination = "dashboard") {
                     composable("dashboard") {
                         val state by dashVm.state.collectAsState()
-                        DashboardScreen(state = state, onStartStop = { handleStartStop() }, onMenu = { id -> handleMenu(id, nav) }, onLightMode = { addr, mode -> dashVm.setLightMode(addr, mode) }, onGoProShutter = { addr, start -> dashVm.setGoProRecording(addr, start) }, vm = dashVm)
+                        DashboardScreen(state = state, onStartStop = { handleStartStop() }, onLap = { _bus.post(LapButtonTouchedEvent()) }, onMenu = { id -> handleMenu(id, nav) }, onLightMode = { addr, mode -> dashVm.setLightMode(addr, mode) }, onGoProShutter = { addr, start -> dashVm.setGoProRecording(addr, start) }, vm = dashVm)
                     }
                     composable("settings") {
                         SettingsNavHost(rootNav = nav, vm = settingsVm,

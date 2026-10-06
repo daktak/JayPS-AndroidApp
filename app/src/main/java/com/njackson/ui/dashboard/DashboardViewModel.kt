@@ -142,6 +142,16 @@ class DashboardViewModel(
             hrGraph = hrReduce.getGraphData().toList(),
             powerGraph = powerReduce.getGraphData().toList(),
             cadenceGraph = cadenceReduce.getGraphData().toList(),
+            lap = cur.lap.copy(
+                count = e.getLapCount(),
+                elapsedSec = e.getLapElapsedTimeSeconds(),
+                distance = e.getLapDistance(),
+                avgSpeed = e.getLapAverageSpeed(),
+                avgPower = e.getLapAveragePower(),
+                lastElapsedSec = e.getLastLapElapsedTimeSeconds(),
+                lastDistance = e.getLastLapDistance(),
+                bestElapsedSec = e.getBestLapElapsedTimeSeconds(),
+            ),
         )
         if (hr in 1..254) hrm = true
         if (pwr in 1..2000) power = true
@@ -167,6 +177,8 @@ class DashboardViewModel(
         val fresh = DashboardUiState(units = store.getMeasurementUnits(), isIndoor = prefs.getBoolean(Constants.PREF_INDOOR_MODE, false))
         _state.value = fresh.copy(lights = cur.lights.filter { it.address in allowed }, gopros = cur.gopros.filter { it.address in allowed }, trainer = TrainerInfo())
     }
+
+    
 
     @Subscribe fun onGPSStatus(e: GPSStatus) {
         val running = e.getStatus() == BaseStatus.Status.STARTED

@@ -292,6 +292,15 @@
     <string name="dashboard_elevation">ELEVATION</string>
     <string name="dashboard_no_elevation">No elevation yet</string>
     <string name="dashboard_avg_format">avg %1$s %2$s</string>
+    <string name="dashboard_lap">LAP</string>
+    <string name="lap_button">LAP</string>
+    <string name="dashboard_lap_number">LAP %1$d</string>
+    <string name="dashboard_lap_distance">DISTANCE</string>
+    <string name="dashboard_lap_last">LAST</string>
+    <string name="dashboard_lap_best">BEST</string>
+    <string name="dashboard_lap_power">AVG POWER</string>
+    <string name="dashboard_lap_summary">Last %1$s · Best %2$s</string>
+    <string name="dashboard_lap_no_last">No lap completed yet</string>
     <string name="map_title">MAP</string>
     <string name="map_no_track">No track yet</string>
     <plurals name="map_points">

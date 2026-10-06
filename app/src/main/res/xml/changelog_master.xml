@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
     <release version="26.10.0" versioncode="520" >
+        <change>Lap functionality</change>
         <change><![CDATA[<b>Translations</b><br />
             - French<br />
             - German<br />

@@ -48,6 +48,17 @@ data class TrainerInfo(
         (resistanceLevel - minResistance).toFloat() / (maxResistance - minResistance) else 0f
 }
 
+data class LapUiState(
+    val count: Int = 0,
+    val elapsedSec: Int = 0,
+    val distance: Float = 0f,
+    val avgSpeed: Float = 0f,
+    val avgPower: Int = 0,
+    val lastElapsedSec: Int = 0,
+    val lastDistance: Float = 0f,
+    val bestElapsedSec: Int = 0,
+)
+
 data class DashboardUiState(
     val speed: Float = 0f,
     val avgSpeed: Float = 0f,
@@ -75,4 +86,5 @@ data class DashboardUiState(
     val lights: List<LightInfo> = emptyList(),
     val gopros: List<GoProInfo> = emptyList(),
     val trainer: TrainerInfo = TrainerInfo(),
+    val lap: LapUiState = LapUiState(),
 )
