@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import fr.jayps.android.AdvancedLocation;
 
 /**
- * Serialises {@link AdvancedLocation.LapState} to and from the JSON stored in the preferences.
+ * Serialises {@link fr.jayps.android.LapState} to and from the JSON stored in the preferences.
  *
  * <p>Laps ride along with the rest of the ride state, so they survive a pause and a process
  * death. Keeping them in a single value rather than a dozen preference keys means adding a lap
@@ -35,7 +35,7 @@ public final class LapStateCodec {
     private LapStateCodec() {
     }
 
-    public static String toJson(AdvancedLocation.LapState state) {
+    public static String toJson(fr.jayps.android.LapState state) {
         JSONObject json = new JSONObject();
         try {
             json.put(KEY_LAP_COUNT, state.lapCount);
@@ -58,13 +58,13 @@ public final class LapStateCodec {
         return json.toString();
     }
 
-    public static AdvancedLocation.LapState fromJson(String value) {
+    public static fr.jayps.android.LapState fromJson(String value) {
         if (value == null || value.isEmpty()) {
             return null;
         }
         try {
             JSONObject json = new JSONObject(value);
-            return new AdvancedLocation.LapState(
+            return new fr.jayps.android.LapState(
                     json.optInt(KEY_LAP_COUNT, 0),
                     (float) json.optDouble(KEY_LAP_DISTANCE, 0),
                     json.optLong(KEY_LAP_ELAPSED_TIME, 0),

@@ -54,8 +54,8 @@ public interface IGPSDataStore {
     void setLastLocationLongitude(float value);
 
     /* Lap state of the ride in progress, so laps survive a pause */
-    AdvancedLocation.LapState getLapState();
-    void setLapState(AdvancedLocation.LapState value);
+    fr.jayps.android.LapState getLapState();
+    void setLapState(fr.jayps.android.LapState value);
 
     /* Resets all values to 0 */
     void resetAllValues();

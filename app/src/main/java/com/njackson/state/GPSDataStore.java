@@ -38,7 +38,7 @@ public class GPSDataStore implements IGPSDataStore {
     private float _lastLongitude;
     private int _units;
     // in-memory copy, written out by commit(); null until the service has lap state to save
-    private AdvancedLocation.LapState _lapState;
+    private fr.jayps.android.LapState _lapState;
 
 
     public GPSDataStore(SharedPreferences preferences, Context context) {
@@ -229,12 +229,12 @@ public class GPSDataStore implements IGPSDataStore {
     }
 
     @Override
-    public AdvancedLocation.LapState getLapState() {
+    public fr.jayps.android.LapState getLapState() {
         return _lapState;
     }
 
     @Override
-    public void setLapState(AdvancedLocation.LapState value) {
+    public void setLapState(fr.jayps.android.LapState value) {
         _lapState = value;
     }
 

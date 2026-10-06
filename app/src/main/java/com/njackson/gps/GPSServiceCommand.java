@@ -419,7 +419,7 @@ public class GPSServiceCommand implements IServiceCommand {
         _advancedLocation.setMaxSpeed(_dataStore.getMaxSpeed());
 
         // absent on the first ride, and cleared by a reset: both start the laps from scratch
-        AdvancedLocation.LapState lapState = _dataStore.getLapState();
+        fr.jayps.android.LapState lapState = _dataStore.getLapState();
         if (lapState != null) {
             _advancedLocation.setLapState(lapState);
         }
