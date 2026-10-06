@@ -5,6 +5,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
+import androidx.core.content.pm.PackageInfoCompat;
+
 /**
  * Created by jay on 28/12/14.
  */
@@ -16,14 +18,14 @@ public class AndroidVersion implements IAndroidVersion{
             return "";
         }
 
-        int versionCode;
+        long versionCode;
 
         // Get current version code and version name
         try {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo(
                     context.getPackageName(), 0);
 
-            versionCode = packageInfo.versionCode;
+            versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
         } catch (PackageManager.NameNotFoundException e) {
             versionCode = 0;
         }

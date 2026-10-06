@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -297,7 +298,7 @@ public class GPSServiceCommand implements IServiceCommand {
 
         _currentStatus = BaseStatus.Status.INITIALIZED;
         createNewAdvancedLocation();
-        mHandler = new Handler();
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -502,6 +503,12 @@ public class GPSServiceCommand implements IServiceCommand {
         _locationMgr.requestLocationUpdates(LocationManager.GPS_PROVIDER, refresh_interval % 100000, 2.0f, _locationListener);
     }
 
+    /**
+     * GpsStatus.NmeaListener and LocationManager.add/removeNmeaListener were deprecated with no
+     * replacement: they are the only way to read the raw NMEA sentences that the geoid-height
+     * correction depends on.
+     */
+    @SuppressWarnings("deprecation")
     private void registerNmeaListener() {
         if (_indoor || !hasLocationPermission()) {
             return;
@@ -524,6 +531,7 @@ public class GPSServiceCommand implements IServiceCommand {
         _sensorManager.registerListener(_sensorListener, _sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE), 3000000);
     }
 
+    @SuppressWarnings("deprecation") // see registerNmeaListener()
     private void stopLocationUpdates() {
         if (_locationListener != null) {
             _locationMgr.removeUpdates(_locationListener);
@@ -567,11 +575,6 @@ public class GPSServiceCommand implements IServiceCommand {
             }
 
             broadcastLocation(location);
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-
         }
 
         @Override

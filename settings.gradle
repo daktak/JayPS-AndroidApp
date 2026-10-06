@@ -1,2 +1,10 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 include ':app', ':advancedlocation-library'
 project(':advancedlocation-library').projectDir = new File('submodules/AdvancedLocation/advancedlocation-library')

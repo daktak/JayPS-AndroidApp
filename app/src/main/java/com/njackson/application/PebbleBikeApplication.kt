@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.SharedPreferences
 import android.util.Log
 import com.njackson.activities.MainActivity
-import com.njackson.activities.SettingsActivity
 import com.njackson.activityrecognition.ActivityRecognitionIntentService
 import com.njackson.activityrecognition.ActivityRecognitionServiceCommand
 import com.njackson.application.modules.AndroidModule
@@ -48,7 +47,6 @@ class PebbleBikeApplication : Application(), IInjectionContainer {
     override fun inject(obj: Any) {
         when (obj) {
             is MainActivity -> component.inject(obj)
-            is SettingsActivity -> component.inject(obj)
             is StartButtonFragment -> component.inject(obj)
             is SpeedFragment -> component.inject(obj)
             is AltitudeFragment -> component.inject(obj)

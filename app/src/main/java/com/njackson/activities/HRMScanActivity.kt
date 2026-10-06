@@ -3,6 +3,9 @@ package com.njackson.activities
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +17,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,9 +85,17 @@ class HRMScanActivity : ComponentActivity() {
 
     companion object {
         private const val TAG = "PB-HRMScanActivity"
-        private const val REQUEST_ENABLE_BT = 1
-        private const val REQUEST_BT_PERMISSIONS = 2
         private const val SCAN_PERIOD = 10000L
+    }
+
+    private val enableBluetoothLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_CANCELED) { finish(); return@registerForActivityResult }
+        startScanFlow()
+    }
+
+    private val bluetoothPermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+        if (grants.values.all { it }) startScanFlow()
+        else { Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show(); finish() }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,7 +138,7 @@ class HRMScanActivity : ComponentActivity() {
             if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION)
         }
         if (needed.isNotEmpty()) {
-            requestPermissions(needed.toTypedArray(), REQUEST_BT_PERMISSIONS)
+            bluetoothPermissionsLauncher.launch(needed.toTypedArray())
             return false
         }
         return true
@@ -134,7 +146,7 @@ class HRMScanActivity : ComponentActivity() {
 
     private fun startScanFlow() {
         if (mBluetoothAdapter?.isEnabled == false) {
-            startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT)
+            enableBluetoothLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return
         }
         mDevices.clear()
@@ -163,31 +175,51 @@ class HRMScanActivity : ComponentActivity() {
         return "flare" in l || "ion" in l || "circuit" in l || "bontrager" in l || "trek" in l
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_BT_PERMISSIONS) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) startScanFlow()
-            else { Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show(); finish() }
+    private val scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+
+    private val mScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            val device = result.device
+            val advertised = result.scanRecord?.bytes
+            val uuids = parseServiceUuids(advertised)
+            if (!isSupported(device, uuids, advertised)) return
+            runOnUiThread {
+                if (mDevices.none { it.address == device.address }) {
+                    mDevices.add(device)
+                    // keep real uuids if FlareRT via name had empty uuids, inject light service for icon/label
+                    val stored = if (uuids.isEmpty() && isLightName(try { device.name } catch (_: SecurityException) { null })) listOf(UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE)) else uuids
+                    deviceUuids[device.address] = stored
+                    devicesState = mDevices.toList()
+                }
+            }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            Log.e(TAG, "scan failed: $errorCode")
+            mScanning = false
+            Toast.makeText(this@HRMScanActivity, R.string.ble_not_supported, Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_CANCELED) { finish(); return }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
+    private val stopScanRunnable = Runnable { scanLeDevice(false) }
 
     private fun scanLeDevice(enable: Boolean) {
         try {
+            val scanner = mBluetoothAdapter?.bluetoothLeScanner
+            if (scanner == null) {
+                Toast.makeText(this, R.string.ble_error_bluetooth_not_supported, Toast.LENGTH_SHORT).show()
+                finish()
+                return
+            }
+            mHandler.removeCallbacks(stopScanRunnable)
             if (enable) {
-                mHandler.postDelayed({
-                    mScanning = false
-                    try { mBluetoothAdapter?.stopLeScan(mLeScanCallback) } catch (_: SecurityException) {}
-                }, SCAN_PERIOD)
+                mHandler.postDelayed(stopScanRunnable, SCAN_PERIOD)
                 mScanning = true
-                mBluetoothAdapter?.startLeScan(mLeScanCallback)
+                scanner.startScan(null, scanSettings, mScanCallback)
             } else {
                 mScanning = false
-                mBluetoothAdapter?.stopLeScan(mLeScanCallback)
+                scanner.stopScan(mScanCallback)
             }
         } catch (_: SecurityException) {
             Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show()
@@ -233,20 +265,6 @@ class HRMScanActivity : ComponentActivity() {
             BLESampleGattAttributes.GOPRO_SERVICE.lowercase() in set -> "GoPro"
             BLESampleGattAttributes.LIGHT_MODE_SERVICE.lowercase() in set -> "Lights"
             else -> "Sensor"
-        }
-    }
-
-    private val mLeScanCallback = BluetoothAdapter.LeScanCallback { device, _, scanRecord ->
-        val uuids = parseServiceUuids(scanRecord)
-        if (!isSupported(device, uuids, scanRecord)) return@LeScanCallback
-        runOnUiThread {
-            if (mDevices.none { it.address == device.address }) {
-                mDevices.add(device)
-                // keep real uuids if FlareRT via name had empty uuids, inject light service for icon/label
-                val stored = if (uuids.isEmpty() && isLightName(try { device.name } catch (_: SecurityException) { null })) listOf(UUID.fromString(BLESampleGattAttributes.LIGHT_MODE_SERVICE)) else uuids
-                deviceUuids[device.address] = stored
-                devicesState = mDevices.toList()
-            }
         }
     }
 
@@ -339,7 +357,7 @@ class HRMScanActivity : ComponentActivity() {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier.fillMaxWidth().clickable {
-                if (mScanning) try { mBluetoothAdapter?.stopLeScan(mLeScanCallback) } catch (_: SecurityException) {}
+                if (mScanning) scanLeDevice(false)
                 mScanning = false
                 val ret = Intent().apply { putExtra("hrm_name", device.name); putExtra("hrm_address", device.address) }
                 setResult(RESULT_OK, ret); finish()

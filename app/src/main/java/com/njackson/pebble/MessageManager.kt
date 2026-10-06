@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import androidx.core.content.pm.PackageInfoCompat
 import javax.inject.Inject
 import javax.inject.Singleton
 import java.util.concurrent.LinkedBlockingQueue
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MessageManager @Inject constructor(
     private val prefs: SharedPreferences,
     private val navigator: Navigator,
-    @ForApplication private val context: Context
+    @param:ForApplication private val context: Context
 ) : IMessageManager {
 
     private val tag = "PB-MessageManager"
@@ -136,7 +137,7 @@ class MessageManager @Inject constructor(
         ).toMutableMap()
 
         val versionCode = try {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionCode
+            PackageInfoCompat.getLongVersionCode(context.packageManager.getPackageInfo(context.packageName, 0)).toInt()
         } catch (e: PackageManager.NameNotFoundException) {
             0
         }

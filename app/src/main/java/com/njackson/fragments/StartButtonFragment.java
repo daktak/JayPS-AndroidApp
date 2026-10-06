@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import androidx.core.content.ContextCompat;
+
 import com.njackson.R;
 import com.njackson.events.GPSServiceCommand.GPSStatus;
 import com.njackson.events.UI.StartButtonTouchedEvent;
@@ -74,10 +76,10 @@ public class StartButtonFragment extends BaseFragment {
 
     private void makeStartButtonInStartState(Button startButton) {
         startButton.setText(getString(R.string.startbuttonfragment_start));
-        startButton.setBackgroundColor(getResources().getColor(R.color.startbuttonfragment_button_start));
+        startButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.startbuttonfragment_button_start));
     }
     private void makeStartButtonInStopState(Button startButton) {
         startButton.setText(getString(R.string.startbuttonfragment_stop));
-        startButton.setBackgroundColor(getResources().getColor(R.color.startbuttonfragment_button_stop));
+        startButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.startbuttonfragment_button_stop));
     }
 }

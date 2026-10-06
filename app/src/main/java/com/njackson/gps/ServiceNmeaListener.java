@@ -15,6 +15,9 @@ import fr.jayps.android.AdvancedLocation;
 /**
  * Created by njackson on 24/12/14.
  */
+// GpsStatus and GpsStatus.NmeaListener were deprecated with no replacement; they are the only
+// way to read the raw NMEA sentences needed for the geoid-height correction.
+@SuppressWarnings("deprecation")
 public class ServiceNmeaListener implements GpsStatus.NmeaListener {
 
     private static final String TAG = "PB-ServiceNmeaListener";

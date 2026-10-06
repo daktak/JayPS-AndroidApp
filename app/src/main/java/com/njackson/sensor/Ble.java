@@ -18,7 +18,6 @@ import android.os.Build;
 import android.util.Log;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import com.njackson.Constants;
 import com.njackson.application.IInjectionContainer;
 import com.njackson.events.BleServiceCommand.BleSensorData;
@@ -152,6 +151,124 @@ public class Ble implements IBle, ITimerHandler {
         _context = context;
         _csc = new Csc();
     }
+    // BluetoothGattCharacteristic.getValue/setValue, getIntValue, getFloatValue and
+    // BluetoothGattDescriptor.getValue/setValue are all deprecated in API 33 with no replacement
+    // that can read or write at a byte offset: the non-deprecated accessors added in API 13
+    // (getByteValue, setByteValue, getIntValue(int), TYPE_*) are not part of the compile SDK this
+    // project builds against, and the offset-taking forms were dropped in API 33 anyway.
+    // All value traffic is therefore funnelled through the helpers below, so the deprecation is
+    // acknowledged once per helper instead of at ~40 call sites. Each helper reproduces the
+    // framework semantics exactly: little-endian, 0 when the value does not fit.
+
+    @SuppressWarnings("deprecation")
+    private static byte[] bytes(BluetoothGattCharacteristic characteristic) {
+        return characteristic.getValue();
+    }
+
+    @SuppressWarnings("deprecation")
+    private static byte[] bytes(BluetoothGattDescriptor descriptor) {
+        return descriptor.getValue();
+    }
+
+    @SuppressWarnings("deprecation")
+    private static boolean setBytes(BluetoothGattCharacteristic characteristic, byte[] value) {
+        return characteristic.setValue(value);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static boolean setBytes(BluetoothGattDescriptor descriptor, byte[] value) {
+        return descriptor.setValue(value);
+    }
+
+    /** Writes a UINT8, equivalent to setValue(value, FORMAT_UINT8, 0). */
+    @SuppressWarnings("deprecation")
+    private static boolean setUInt8(BluetoothGattCharacteristic characteristic, int value) {
+        return characteristic.setValue(new byte[]{(byte) value});
+    }
+
+    /** Reads a UINT8 at the given offset. */
+    private static int getUInt8(BluetoothGattCharacteristic characteristic, int offset) {
+        byte[] value = bytes(characteristic);
+        if (value == null || value.length - offset < 1) return 0;
+        return value[offset] & 0xFF;
+    }
+
+    /** Reads a UINT16 at the given offset. */
+    private static int getUInt16(BluetoothGattCharacteristic characteristic, int offset) {
+        byte[] value = bytes(characteristic);
+        if (value == null || value.length - offset < 2) return 0;
+        return (value[offset] & 0xFF) | ((value[offset + 1] & 0xFF) << 8);
+    }
+
+    /**
+     * Reads a SINT16 at the given offset. The framework accessor returns a sign-extended value,
+     * so negative instantaneous power is preserved.
+     */
+    private static int getSInt16(BluetoothGattCharacteristic characteristic, int offset) {
+        return (short) getUInt16(characteristic, offset);
+    }
+
+    /** Reads a UINT32 at the given offset. */
+    private static int getUInt32(BluetoothGattCharacteristic characteristic, int offset) {
+        byte[] value = bytes(characteristic);
+        if (value == null || value.length - offset < 4) return 0;
+        return (value[offset] & 0xFF)
+                | ((value[offset + 1] & 0xFF) << 8)
+                | ((value[offset + 2] & 0xFF) << 16)
+                | ((value[offset + 3] & 0xFF) << 24);
+    }
+
+    /** Reads a FLOAT at the given offset. */
+    private static float getFloat(BluetoothGattCharacteristic characteristic, int offset) {
+        return Float.intBitsToFloat(getUInt32(characteristic, offset));
+    }
+
+    /**
+     * Reads the length-prefixed string that getStringValue(offset) returns. The accessor's string
+     * framing is not obvious from the call site, so the deprecated call is kept as is rather than
+     * reimplemented, which would risk changing what devices report.
+     */
+    @SuppressWarnings("deprecation")
+    private static String getStringValueCompat(BluetoothGattCharacteristic characteristic, int offset) {
+        return characteristic.getStringValue(offset);
+    }
+
+    /**
+     * BluetoothGatt.writeCharacteristic(characteristic) and writeDescriptor(descriptor) were
+     * deprecated in API 33 in favour of overloads that take the value and write type explicitly.
+     * Those overloads only exist from API 33 on, and this app supports API 24, so older devices
+     * still have to use the deprecated calls.
+     */
+    private static boolean writeCharacteristicCompat(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return gatt.writeCharacteristic(characteristic, bytes(characteristic), characteristic.getWriteType())
+                    == BluetoothGatt.GATT_SUCCESS;
+        }
+        return writeCharacteristicLegacy(gatt, characteristic);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static boolean writeCharacteristicLegacy(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        return gatt.writeCharacteristic(characteristic);
+    }
+
+    private static boolean writeDescriptorCompat(BluetoothGatt gatt, BluetoothGattDescriptor descriptor) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return gatt.writeDescriptor(descriptor, bytes(descriptor)) == BluetoothGatt.GATT_SUCCESS;
+        }
+        return writeDescriptorLegacy(gatt, descriptor);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static boolean writeDescriptorLegacy(BluetoothGatt gatt, BluetoothGattDescriptor descriptor) {
+        return gatt.writeDescriptor(descriptor);
+    }
+
+    /** Same file name and mode as the PreferenceManager.getDefaultSharedPreferences() it replaces. */
+    private SharedPreferences defaultPreferences() {
+        return _context.getSharedPreferences(_context.getPackageName() + "_preferences", Context.MODE_PRIVATE);
+    }
+
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -388,6 +505,11 @@ public class Ble implements IBle, ITimerHandler {
                         }
                     }
 
+            // BluetoothGattCallback.onCharacteristicRead/Changed(gatt, characteristic) and
+            // onDescriptorRead were deprecated in API 33: on API 33+ the framework delivers the
+            // value through the byte[] overloads instead and never calls these, so those
+            // overloads are overridden below and forwarded to the same handlers.
+            @SuppressWarnings("deprecation")
                     @Override
                     public void onCharacteristicRead(BluetoothGatt gatt,
                                                      BluetoothGattCharacteristic characteristic,
@@ -406,6 +528,7 @@ public class Ble implements IBle, ITimerHandler {
                         }
                     }
 
+                    @SuppressWarnings("deprecation")
                     @Override
                     public void onCharacteristicChanged(BluetoothGatt gatt,
                                                         BluetoothGattCharacteristic characteristic) {
@@ -434,11 +557,11 @@ public class Ble implements IBle, ITimerHandler {
                         if (!descriptorWriteQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " write next descriptor");
                             PendingDescriptorWrite n = descriptorWriteQueue.peek();
-                            n.gatt.writeDescriptor(n.descriptor);
+                            writeDescriptorCompat(n.gatt, n.descriptor);
                         } else if (!characteristicWriteQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " write next characteristic");
                             PendingCharacteristicWrite n = characteristicWriteQueue.peek();
-                            n.gatt.writeCharacteristic(n.characteristic);
+                            writeCharacteristicCompat(n.gatt, n.characteristic);
                         } else if (!readCharacteristicQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " no more descriptor, next read");
                             PendingCharacteristicWrite n = readCharacteristicQueue.peek();
@@ -457,11 +580,11 @@ public class Ble implements IBle, ITimerHandler {
                         if (!descriptorWriteQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " write next descriptor");
                             PendingDescriptorWrite n = descriptorWriteQueue.peek();
-                            n.gatt.writeDescriptor(n.descriptor);
+                            writeDescriptorCompat(n.gatt, n.descriptor);
                         } else if (!characteristicWriteQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " write next characteristic");
                             PendingCharacteristicWrite n = characteristicWriteQueue.peek();
-                            n.gatt.writeCharacteristic(n.characteristic);
+                            writeCharacteristicCompat(n.gatt, n.characteristic);
                         } else if (!readCharacteristicQueue.isEmpty()) {
                             Log.d(TAG, display(gatt) + " no more descriptor, next read");
                             PendingCharacteristicWrite n = readCharacteristicQueue.peek();
@@ -542,7 +665,7 @@ public class Ble implements IBle, ITimerHandler {
                 }
                 if ((newMode==0)||current_mode.equals(0)) {
                     Log.i(TAG, String.format("Setting light mode %d",newMode));
-                    gattChar.setValue(newMode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                    setUInt8(gattChar, newMode);
                     characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
                     light_mode.put(gatt, newMode);
                     postLightState(gatt);
@@ -575,11 +698,11 @@ public class Ble implements IBle, ITimerHandler {
             BluetoothGattCharacteristic gattChar = getCharacter(gatt, UUID_LIGHT_MODE_SERVICE, UUID_LIGHT_MODE, "LIGHT MODE");
             if (gattChar != null) {
                 Log.i(TAG, String.format("User setting light %s mode %s -> %d", device, modeName, newMode));
-                gattChar.setValue(newMode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                setUInt8(gattChar, newMode);
                 // immediate write if possible
                 if (descriptorWriteQueue.isEmpty() && readCharacteristicQueue.isEmpty()) {
                     if (characteristicWriteQueue.isEmpty()) {
-                        gatt.writeCharacteristic(gattChar);
+                        writeCharacteristicCompat(gatt, gattChar);
                     } else {
                         characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
                     }
@@ -708,7 +831,7 @@ public class Ble implements IBle, ITimerHandler {
         if (e.getStatus() == BaseStatus.Status.STARTED) start = true;
         else if (e.getStatus() == BaseStatus.Status.STOPPED) start = false;
         else return;
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(_context);
+        SharedPreferences prefs = defaultPreferences();
         boolean allowLights = prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true);
         boolean allowGoPro = prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true);
         for (BluetoothGatt gatt : mGatts.values()) {
@@ -727,10 +850,10 @@ public class Ble implements IBle, ITimerHandler {
     private void triggerNextWrite() {
         if (!descriptorWriteQueue.isEmpty()) {
             PendingDescriptorWrite d = descriptorWriteQueue.peek();
-            try { d.gatt.writeDescriptor(d.descriptor); } catch (Exception ex) {}
+            try { writeDescriptorCompat(d.gatt, d.descriptor); } catch (Exception ex) {}
         } else if (!characteristicWriteQueue.isEmpty()) {
             PendingCharacteristicWrite w = characteristicWriteQueue.peek();
-            try { w.gatt.writeCharacteristic(w.characteristic); } catch (Exception ex) {}
+            try { writeCharacteristicCompat(w.gatt, w.characteristic); } catch (Exception ex) {}
         } else if (!readCharacteristicQueue.isEmpty()) {
             PendingCharacteristicWrite r = readCharacteristicQueue.peek();
             try { r.gatt.readCharacteristic(r.characteristic); } catch (Exception ex) {}
@@ -832,44 +955,43 @@ public class Ble implements IBle, ITimerHandler {
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
         if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            int flags = getUInt8(characteristic, 0);
             Log.d(TAG, String.format("flags: %d|%s", flags, Integer.toBinaryString(flags)));
             int sensorContactStatus = (flags & 0x06) >> 1;
             // 0,1    Sensor Contact feature is not supported in the current connection
             // 2     Sensor Contact feature is supported, but contact is not detected
             // 3     Sensor Contact feature is supported and contact is detected
             Log.d(TAG, "sensorContactStatus=" + sensorContactStatus);
-            /*byte[] values = characteristic.getValue();
+            /*byte[] values = bytes(characteristic);
             String tmp = "";
             for(int i=0; i<values.length; i++) {
                 tmp += String.format("|%d(%02X)", values[i], values[i]);
             }
             Log.d(TAG, "characteristic HRM=" + tmp);*/
             int offset = 1;
-            int format = -1;
+            final int heartRate;
             if ((flags & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
+                heartRate = getUInt16(characteristic, 1);
                 offset += 2;
             } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
+                heartRate = getUInt8(characteristic, 1);
                 offset += 1;
             }
-            final int heartRate = characteristic.getIntValue(format, 1);
             res = String.format("Received heart rate: %d", heartRate);
 
             if ((flags & (1 << 3)) != 0) {
                 // calories present
-                int energy = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+                int energy = getUInt16(characteristic, offset);
                 offset += 2;
                 Log.d(TAG, "Received energy: " + energy);
             }
             if ( (flags & (1 << 4)) != 0) {
                 // RR interval.
-                int rrCount = ((characteristic.getValue()).length - offset) / 2;
+                int rrCount = ((bytes(characteristic)).length - offset) / 2;
                 int[] rrIntervals = new int[rrCount];
                 String tmp = "";
                 for (int i = 0; i < rrCount; i++){
-                    rrIntervals[i] = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
+                    rrIntervals[i] = getUInt16(characteristic, offset);
                     offset += 2;
                     tmp += " " + rrIntervals[i];
                 }
@@ -881,9 +1003,9 @@ public class Ble implements IBle, ITimerHandler {
             //sensorData.setCyclingWheelRpm(3 * heartRate); // fake values to debug csc
             _bus.post(sensorData);
         } else if (UUID_CSC_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            int flags = getUInt8(characteristic, 0);
             Log.d(TAG, String.format("flags: %d|%s", flags, Integer.toBinaryString(flags)));
-            /*byte[] values = characteristic.getValue();
+            /*byte[] values = bytes(characteristic);
             String tmp = "";
             for(int i=0; i<values.length; i++) {
                 tmp += String.format("|%d(%02X)", values[i], values[i]);
@@ -898,15 +1020,15 @@ public class Ble implements IBle, ITimerHandler {
             int offset = 0;
 
             if ((flags & 0x01) != 0) {
-                cumulativeWheelRevolutions = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32 , 1);
-                lastWheelEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16 , 5);
+                cumulativeWheelRevolutions = getUInt32(characteristic, 1);
+                lastWheelEventTime = getUInt16(characteristic, 5);
                 wheelRevolutionDataPresent = true;
                 offset += 6;
                 Log.d(TAG, "Received wheelRevolutionData");
             }
             if ((flags & 0x02) != 0) {
-                cumulativeCrankRevolutions = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 1+offset);
-                lastCrankEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 3+offset);
+                cumulativeCrankRevolutions = getUInt16(characteristic, 1+offset);
+                lastCrankEventTime = getUInt16(characteristic, 3+offset);
                 crankRevolutionDataPresent = true;
                 Log.d(TAG, "Received crankRevolutionData");
             }
@@ -925,15 +1047,15 @@ public class Ble implements IBle, ITimerHandler {
                 _bus.post(sensorData);
             }
         } else if (UUID_BATTERY_LEVEL.equals(characteristic.getUuid())) {
-            final int battery = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            final int battery = getUInt8(characteristic, 0);
             deviceBattery.put(gatt.getDevice().getAddress(), battery);
             postLightState(gatt);
             try { if (gatt.getService(UUID_GOPRO_SERVICE) != null) postGoProState(gatt); } catch (Exception e) {}
             res = String.format("Received battery: %d", battery);
         } else if (UUID_TEMPERATURE_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            int flags = getUInt8(characteristic, 0);
             Log.d(TAG, String.format("flags: %d|%s", flags, Integer.toBinaryString(flags)));
-            /*byte[] values = characteristic.getValue();
+            /*byte[] values = bytes(characteristic);
             String tmp = "";
             for(int i=0; i<values.length; i++) {
                 tmp += String.format("|%d(%02X)", values[i], values[i]);
@@ -948,7 +1070,7 @@ public class Ble implements IBle, ITimerHandler {
                 units = "Fahrenheit";
                 offset = 2;
             }
-            float temperature = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, offset);
+            float temperature = getFloat(characteristic, offset);
             res = String.format("Received temperature: %f %s", temperature, units);
             if (offset == 2) {
                 // force conversion to celsius
@@ -958,8 +1080,8 @@ public class Ble implements IBle, ITimerHandler {
             sensorData.setTemperature(temperature);
             _bus.post(sensorData);
         } else if (UUID_RSC_MEASUREMENT.equals(characteristic.getUuid())) {
-            int speed = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 1);
-            int cadence = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3);
+            int speed = getUInt16(characteristic, 1);
+            int cadence = getUInt8(characteristic, 3);
 
             res = String.format("Received running speeed: %d m/s, running cadence: %d", speed, cadence);
             BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
@@ -967,10 +1089,10 @@ public class Ble implements IBle, ITimerHandler {
             _bus.post(sensorData);
 
         } else if (UUID_CYCLING_POWER_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flags = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+            int flags = getUInt16(characteristic, 0);
             int offset = 2;
             // Instantaneous Power is mandatory and sits immediately after the Flags field
-            final int instantaneousPower = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, offset);
+            final int instantaneousPower = getSInt16(characteristic, offset);
             offset += 2;
             // bit 0: Pedal Power Balance Present (uint8)
             if ((flags & 0x01) != 0) offset += 1;
@@ -986,8 +1108,8 @@ public class Ble implements IBle, ITimerHandler {
             int cumulativeCrankRevolutions = 0;
             int lastCrankEventTime = 0;
             if (crankPresent) {
-                cumulativeCrankRevolutions = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
-                lastCrankEventTime = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset + 2);
+                cumulativeCrankRevolutions = getUInt16(characteristic, offset);
+                lastCrankEventTime = getUInt16(characteristic, offset + 2);
                 offset += 4;
             }
             // bit 6: Extreme Force Magnitudes Present (sint16 + sint16)
@@ -1042,7 +1164,7 @@ public class Ble implements IBle, ITimerHandler {
             // Bit 12: Elapsed Time (uint16, s)
             // Bit 13: Remaining Time (uint16, s)
             // Bits 14-15: Reserved
-            byte[] data = characteristic.getValue();
+            byte[] data = bytes(characteristic);
             if (data != null && data.length >= 2) {
                 int flags = data[0] & 0xFF | (data[1] & 0xFF) << 8;
                 int offset = 2;
@@ -1093,23 +1215,23 @@ public class Ble implements IBle, ITimerHandler {
             }
         } else if (UUID_FITNESS_MACHINE_STATUS.equals(characteristic.getUuid())) {
             // Fitness Machine Status - 0x2ADA (uint16)
-            int status = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+            int status = getUInt16(characteristic, 0);
             BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
             sensorData.setFtmsStatus(status);
             _bus.post(sensorData);
             res = String.format("FTMS Status: %d", status);
         } else if (UUID_TRAINING_STATUS.equals(characteristic.getUuid())) {
             // Training Status - 0x2AD3 (uint8)
-            int status = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            int status = getUInt8(characteristic, 0);
             BleSensorData sensorData = new BleSensorData(gatt.getDevice().getAddress());
             sensorData.setFtmsTrainingStatus(status);
             _bus.post(sensorData);
             res = String.format("FTMS Training Status: %d", status);
         } else if (UUID_SUPPORTED_RESISTANCE_LEVEL_RANGE.equals(characteristic.getUuid())) {
             // Supported Resistance Level Range - 0x2AD5 (uint16 min, uint16 max)
-            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
-                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+            if (bytes(characteristic) != null && bytes(characteristic).length >= 4) {
+                int min = getUInt16(characteristic, 0);
+                int max = getUInt16(characteristic, 2);
                 String addr = gatt.getDevice().getAddress();
                 trainerMinResistance.put(addr, min);
                 trainerMaxResistance.put(addr, max);
@@ -1120,9 +1242,9 @@ public class Ble implements IBle, ITimerHandler {
             res = "FTMS Resistance Range read";
         } else if (UUID_SUPPORTED_POWER_RANGE.equals(characteristic.getUuid())) {
             // Supported Power Range - 0x2AD6 (uint16 min, uint16 max)
-            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
-                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+            if (bytes(characteristic) != null && bytes(characteristic).length >= 4) {
+                int min = getUInt16(characteristic, 0);
+                int max = getUInt16(characteristic, 2);
                 String addr = gatt.getDevice().getAddress();
                 trainerMinPower.put(addr, min);
                 trainerMaxPower.put(addr, max);
@@ -1131,9 +1253,9 @@ public class Ble implements IBle, ITimerHandler {
             res = "FTMS Power Range read";
         } else if (UUID_SUPPORTED_SPEED_RANGE.equals(characteristic.getUuid())) {
             // Supported Speed Range - 0x2AD8 (uint16 min, uint16 max) in 0.01 km/h
-            if (characteristic.getValue() != null && characteristic.getValue().length >= 4) {
-                int min = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-                int max = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 2);
+            if (bytes(characteristic) != null && bytes(characteristic).length >= 4) {
+                int min = getUInt16(characteristic, 0);
+                int max = getUInt16(characteristic, 2);
                 String addr = gatt.getDevice().getAddress();
                 trainerMinSpeed.put(addr, min);
                 trainerMaxSpeed.put(addr, max);
@@ -1142,7 +1264,7 @@ public class Ble implements IBle, ITimerHandler {
             res = "FTMS Speed Range read";
         } else if (UUID_FITNESS_MACHINE_CONTROL_POINT.equals(characteristic.getUuid())) {
             // Control Point Response - 0x2AD9
-            byte[] data = characteristic.getValue();
+            byte[] data = bytes(characteristic);
             if (data != null && data.length >= 3) {
                 int requestOpcode = data[1] & 0xFF;
                 int responseCode = data[2] & 0xFF;
@@ -1172,7 +1294,7 @@ public class Ble implements IBle, ITimerHandler {
             res = "CPS Feature read";
         } else if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(characteristic.getUuid())) {
             // Wahoo Extension indication (command response)
-            byte[] data = characteristic.getValue();
+            byte[] data = bytes(characteristic);
             if (data != null) {
                 String addr = gatt.getDevice().getAddress();
                 Log.d(TAG, "Wahoo indication from " + addr + ": " + hex(data));
@@ -1216,7 +1338,7 @@ public class Ble implements IBle, ITimerHandler {
             }
             res = "Wahoo Extension indication";
         } else if (UUID_MODEL_NUMBER.equals(characteristic.getUuid())) {
-            String model = characteristic.getStringValue(0);
+            String model = getStringValueCompat(characteristic, 0);
             if (model != null) {
                 model = model.trim();
                 deviceModels.put(gatt.getDevice().getAddress(), model);
@@ -1230,11 +1352,11 @@ public class Ble implements IBle, ITimerHandler {
                 try { if (gatt.getService(UUID_GOPRO_SERVICE) != null) postGoProState(gatt); } catch (Exception e) {}
             }
         } else if (UUID_GOPRO_COMMAND.equals(characteristic.getUuid()) || UUID_GOPRO_RESPONSE.equals(characteristic.getUuid()) || UUID_GOPRO_QUERY.equals(characteristic.getUuid())) {
-            byte[] data = characteristic.getValue();
+            byte[] data = bytes(characteristic);
             Log.d(TAG, "GoPro response: " + (data != null ? java.util.Arrays.toString(data) : "null"));
             postGoProState(gatt);
         } else if (UUID_LIGHT_MODE.equals(characteristic.getUuid())) {
-            int lm = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            int lm = getUInt8(characteristic, 0);
             Log.d(TAG, String.format("recieved mode %d",lm));
             light_mode.put(gatt, lm);
             postLightState(gatt);
@@ -1242,7 +1364,7 @@ public class Ble implements IBle, ITimerHandler {
             _bus.post(sensorData);
         } else {
             // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
+            final byte[] data = bytes(characteristic);
             if (data != null && data.length > 0) {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
                 for(byte byteChar : data) {
@@ -1448,9 +1570,9 @@ public class Ble implements IBle, ITimerHandler {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(BLESampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
             if (UUID_WAHOO_CYCLING_POWER_EXTENSION.equals(characteristic.getUuid())) {
                 // Wahoo trainer confirmations arrive as indications (CCCD value 0x0002), not notifications
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+                setBytes(descriptor, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
             } else {
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                setBytes(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             }
             writeGattDescriptor(gatt, descriptor);
         /*} else {
@@ -1501,17 +1623,17 @@ public class Ble implements IBle, ITimerHandler {
     }
 
     public void start_stop_handler(BluetoothGatt gatt, Boolean status) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(_context);
+        SharedPreferences prefs = defaultPreferences();
         if (gatt.getService(UUID_LIGHT_MODE_SERVICE) != null && prefs.getBoolean(Constants.PREF_AUTOSTART_LIGHTS, true)) setLightMode(gatt, status);
         if (gatt.getService(UUID_GOPRO_SERVICE) != null && prefs.getBoolean(Constants.PREF_AUTOSTART_GOPRO, true)) setGoProRecording(gatt, status);
         Log.d(TAG, "descriptorWriteQueue.size=" + descriptorWriteQueue.size());
         Log.d(TAG, "characteristicWriteQueue.size=" + characteristicWriteQueue.size());
         if (!characteristicWriteQueue.isEmpty()) {
             PendingCharacteristicWrite w = characteristicWriteQueue.peek();
-            w.gatt.writeCharacteristic(w.characteristic);
+            writeCharacteristicCompat(w.gatt, w.characteristic);
         } else if (!descriptorWriteQueue.isEmpty()) {
             PendingDescriptorWrite d = descriptorWriteQueue.peek();
-            d.gatt.writeDescriptor(d.descriptor);
+            writeDescriptorCompat(d.gatt, d.descriptor);
         }
     }
 
@@ -1540,7 +1662,7 @@ public class Ble implements IBle, ITimerHandler {
         final BluetoothGattCharacteristic gattChar = getCharacter(gatt, UUID_GOPRO_SERVICE, UUID_GOPRO_COMMAND, "GOPRO");
         if (gattChar != null) {
             Log.i(TAG, "Setting GoPro "+gopro_on+" for "+gatt.getDevice().getAddress());
-            gattChar.setValue(newMode);
+            setBytes(gattChar, newMode);
             characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, gattChar));
             goproRecording.put(gatt.getDevice().getAddress(), gopro_on);
             if (!goproMode.containsKey(gatt.getDevice().getAddress())) goproMode.put(gatt.getDevice().getAddress(), "Video");
@@ -1629,7 +1751,7 @@ public class Ble implements IBle, ITimerHandler {
             Log.w(TAG, "FTMS Control Point characteristic not found");
             return;
         }
-        chr.setValue(data);
+        setBytes(chr, data);
         characteristicWriteQueue.add(new PendingCharacteristicWrite(gatt, chr));
         triggerNextWrite();
     }
@@ -1885,8 +2007,8 @@ public class Ble implements IBle, ITimerHandler {
                                             ? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
                                             : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
                                     chr.setWriteType(writeType);
-                                    chr.setValue(cmd);
-                                    boolean ok = gatt.writeCharacteristic(chr);
+                                    setBytes(chr, cmd);
+                                    boolean ok = writeCharacteristicCompat(gatt, chr);
                                     Log.d(TAG, "wahoo write " + hex(cmd) + " ok=" + ok);
                                 } else {
                                     Log.w(TAG, "wahoo write " + hex(cmd) + " dropped: no gatt");

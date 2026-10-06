@@ -25,7 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.DirectionsBike
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.InstallMobile
@@ -145,7 +145,7 @@ private fun TracksGroup(nav: NavController, vm: SettingsViewModel) {
                 ClickRow(stringResource(R.string.PREF_RESET_TRACKS_TITLE), stringResource(R.string.PREF_RESET_TRACKS_SUMMARY)) { }
                 SwitchRow("Advanced GPX Export", "Add ascent, GPS and pressure altitudes", s.advancedGpx) { vm.putBool("ADVANCED_GPX", it) }
             } }
-            item { GroupCard(stringResource(R.string.PREF_AUTOSTART_TITLE), Icons.Filled.DirectionsBike) {
+            item { GroupCard(stringResource(R.string.PREF_AUTOSTART_TITLE), Icons.AutoMirrored.Filled.DirectionsBike) {
                 SwitchRow(stringResource(R.string.PREF_AUTOSTART_TITLE), stringResource(R.string.PREF_AUTOSTART_SUMMARY), s.activityRecognition) { vm.putBool("ACTIVITY_RECOGNITION", it) }
                 SwitchRow(stringResource(R.string.PREF_AUTOSTART_WALKING_SUMMARY), "", s.activityWalking) { vm.putBool("ACTIVITY_RECOGNITION_WALKING", it) }
             } }

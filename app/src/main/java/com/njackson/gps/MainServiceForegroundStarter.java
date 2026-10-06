@@ -13,7 +13,6 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.njackson.R;
@@ -77,8 +76,16 @@ public class MainServiceForegroundStarter implements IForegroundServiceStarter {
         }
     }
 
+    /**
+     * Replaces android.preference.PreferenceManager.getDefaultSharedPreferences(), which is
+     * deprecated in API 29. Same file name and mode, so the preferences stay identical.
+     */
+    private SharedPreferences defaultPreferences(Context context) {
+        return context.getSharedPreferences(context.getPackageName() + "_preferences", Context.MODE_PRIVATE);
+    }
+
     private boolean isIndoor(Service service) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(service);
+        SharedPreferences prefs = defaultPreferences(service);
         return prefs.getBoolean("INDOOR_MODE", false);
     }
 
@@ -89,7 +96,7 @@ public class MainServiceForegroundStarter implements IForegroundServiceStarter {
 
     @Override
     public void stopServiceForeground(Service service) {
-        service.stopForeground(true);
+        service.stopForeground(Service.STOP_FOREGROUND_REMOVE);
         builder = null;
     }
 

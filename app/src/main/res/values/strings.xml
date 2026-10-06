@@ -335,4 +335,7 @@
     <string name="gopro_wake_record">Wake &amp; Record</string>
     <string name="gopro_wake_photo">Wake &amp; Photo</string>
 
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+
 </resources>

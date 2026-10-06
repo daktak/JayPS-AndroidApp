@@ -1,6 +1,5 @@
 package com.njackson.utils.services;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -89,13 +88,7 @@ public class ServiceStarter implements IServiceStarter {
 
     @Override
     public boolean serviceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) _context.getSystemService(_context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
+        return serviceClass.getName().equals(MainService.class.getName()) && MainService.isRunning();
     }
 
     private void startActivityServiceIfEnabled() {
@@ -112,6 +105,12 @@ public class ServiceStarter implements IServiceStarter {
         }
     }
 
+    /**
+     * Observable.create(OnSubscribe) is deprecated only in favour of the RxJava 2 API; RxJava 1.3.8
+     * has no non-deprecated equivalent. Migrating ServiceStarter/MainServiceStatusObservable to
+     * RxJava 2 is a separate change.
+     */
+    @SuppressWarnings("deprecation")
     protected void startMainServiceIfNotRunning(final Action1<BaseStatus.Status> action) {
         if(!serviceRunning(MainService.class)) {
             _deferred = rx.Observable.create(new MainServiceStatusObservable(_bus))

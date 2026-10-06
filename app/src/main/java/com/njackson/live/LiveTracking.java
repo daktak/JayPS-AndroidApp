@@ -25,10 +25,14 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.core.content.pm.PackageInfoCompat;
+
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class LiveTracking implements ILiveTracking {
 
@@ -50,6 +54,7 @@ public class LiveTracking implements ILiveTracking {
     private String _password = "";
     private String _url = "";
     private int _versionCode = -1;
+    private final ExecutorService _executor = Executors.newSingleThreadExecutor();
 
     public static final int TYPE_NEXTCLOUD = 1;
     public static final int TYPE_MMT = 2;
@@ -72,7 +77,7 @@ public class LiveTracking implements ILiveTracking {
             PackageInfo packageInfo = this._context.getPackageManager().getPackageInfo(
                     this._context.getPackageName(), 0);
 
-            _versionCode = packageInfo.versionCode;
+            _versionCode = (int) PackageInfoCompat.getLongVersionCode(packageInfo);
         } catch (NameNotFoundException e) {
             _versionCode = -1;
         }
@@ -154,40 +159,18 @@ public class LiveTracking implements ILiveTracking {
         // ok
         _prevTime = location.getTime();
         this._lastLocation = location;
-        new SendLiveTask().execute(new SendLiveTaskParams(_buffer_loc_nv_pairs, _bufferPoints, _bufferAccuracies, _bufferHeartRates, _bufferCadences));
-        return true;
-    }
-
-    class SendLiveTaskParams {
-        Map<String,String> nv_pairs;
-        String points;
-        String accuracies;
-        String heartrates;
-        String cadences;
-
-        public SendLiveTaskParams(Map<String,String> nv_pairs, String points, String accuracies, String heartrates, String cadences) {
-            this.nv_pairs = nv_pairs;
-            this.points = points;
-            this.accuracies = accuracies;
-            this.heartrates = heartrates;
-            this.cadences = cadences;
-        }
-    }
-
-
-    private class SendLiveTask extends AsyncTask<SendLiveTaskParams, Void, Boolean> {
-        protected Boolean doInBackground(SendLiveTaskParams... params) {
-            int count = params.length;
-            boolean result = false;
-            for (int i = 0; i < count; i++) {
-                result = result || _send(params[i].nv_pairs, params[i].points, params[i].accuracies, params[i].heartrates, params[i].cadences);
+        final Map<String,String> nv_pairs = new HashMap<>(_buffer_loc_nv_pairs);
+        final String points = _bufferPoints;
+        final String accuracies = _bufferAccuracies;
+        final String heartrates = _bufferHeartRates;
+        final String cadences = _bufferCadences;
+        _executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                _send(nv_pairs, points, accuracies, heartrates, cadences);
             }
-            return result;
-        }
-
-        protected void onPostExecute(Boolean result) {
-            //if (debug) Log.d(TAG, "onPostExecute(" + result + ")");
-        }
+        });
+        return true;
     }
 
     private boolean _send(Map<String,String> nv_pairs, String points, String accuracies, String heartrates, String cadences) {

@@ -1,10 +1,10 @@
 package com.njackson.service;
 
-import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import androidx.core.app.NotificationCompat;
 
 import com.njackson.activityrecognition.ActivityRecognitionServiceCommand;
 import com.njackson.application.PebbleBikeApplication;
@@ -17,6 +17,7 @@ import com.njackson.utils.time.ITimerHandler;
 import com.squareup.otto.Bus;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,6 +34,16 @@ public class MainService extends Service implements ITimerHandler {
     @Inject ITimer _timer;
     @Inject Bus _bus;
 
+    private static final AtomicBoolean RUNNING = new AtomicBoolean(false);
+
+    /**
+     * In-process equivalent of ActivityManager.getRunningServices() (deprecated in API 26), which
+     * since Oreo only ever reports this app's own services anyway.
+     */
+    public static boolean isRunning() {
+        return RUNNING.get();
+    }
+
     private static final int NOTIFICATION_VOID = 0;
     private static final int NOTIFICATION_GPS = 1;
     private static final int NOTIFICATION_ACTIVITY_RECOGNITION = 2;
@@ -47,6 +58,7 @@ public class MainService extends Service implements ITimerHandler {
     public void onCreate() {
         super.onCreate();
 
+        RUNNING.set(true);
         ((PebbleBikeApplication)getApplication()).inject(this);
     }
 
@@ -55,7 +67,7 @@ public class MainService extends Service implements ITimerHandler {
         Log.d(TAG, "Started Main Service");
 
         handleCommand(intent);
-        _serviceStarter.startServiceForeground(this, "KayPS", "GPS started", Notification.PRIORITY_DEFAULT);
+        _serviceStarter.startServiceForeground(this, "KayPS", "GPS started", NotificationCompat.PRIORITY_DEFAULT);
 
         // ensures that if the service is recycled then it is restarted with the same refresh interval
         // onStartCommand will always be called with a non-null intent
@@ -66,6 +78,7 @@ public class MainService extends Service implements ITimerHandler {
 
     @Override
     public void onDestroy () {
+        RUNNING.set(false);
         _serviceStarter.stopServiceForeground(this);
 
         disposeCommands();
@@ -118,10 +131,10 @@ public class MainService extends Service implements ITimerHandler {
         if (notification != _notification) {
             _notification = notification;
             if (_notification == NOTIFICATION_ACTIVITY_RECOGNITION) {
-                _serviceStarter.changeNotification(this, "Auto Start enabled", Notification.PRIORITY_MIN);
+                _serviceStarter.changeNotification(this, "Auto Start enabled", NotificationCompat.PRIORITY_MIN);
             }
             if (_notification == NOTIFICATION_GPS) {
-                _serviceStarter.changeNotification(this, "GPS started", Notification.PRIORITY_DEFAULT);
+                _serviceStarter.changeNotification(this, "GPS started", NotificationCompat.PRIORITY_DEFAULT);
             }
         }
 

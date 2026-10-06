@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -115,10 +116,10 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
         } catch (_: Exception) {}
         (application as PebbleBikeApplication).inject(this)
         dashVm = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST") override fun <T : ViewModel> create(c: Class<T>): T = DashboardViewModel(_bus, _dataStore, _sharedPreferences) as T
+            @Suppress("UNCHECKED_CAST") override fun <T : ViewModel> create(modelClass: Class<T>): T = DashboardViewModel(_bus, _dataStore, _sharedPreferences) as T
         })[DashboardViewModel::class.java]
         settingsVm = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST") override fun <T : ViewModel> create(c: Class<T>): T = SettingsViewModel(_sharedPreferences, _dataStore, _bus, applicationContext) as T
+            @Suppress("UNCHECKED_CAST") override fun <T : ViewModel> create(modelClass: Class<T>): T = SettingsViewModel(_sharedPreferences, _dataStore, _bus, applicationContext) as T
         })[SettingsViewModel::class.java]
 
         requestRequiredPermissions()
@@ -172,8 +173,8 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
                 try { gpxLauncher.launch(Intent.createChooser(intent, getString(R.string.alert_select_txt_file))) } catch (_: Exception) { Toast.makeText(applicationContext, R.string.alert_unable_to_open_file, Toast.LENGTH_SHORT).show() }
             }
             "action_reset" -> AlertDialog.Builder(this).setTitle(R.string.ALERT_RESET_DATA_TITLE).setMessage(R.string.ALERT_RESET_DATA_MESSAGE).setIcon(android.R.drawable.ic_dialog_alert)
-                .setPositiveButton(android.R.string.yes) { _, _ -> _dataStore.resetAllValues(); _dataStore.commit(); _bus.post(ResetGPSState()); AdvancedLocation(applicationContext).resetGPX(); Toast.makeText(applicationContext, "Done", Toast.LENGTH_SHORT).show() }
-                .setNegativeButton(android.R.string.no, null).show()
+                .setPositiveButton(R.string.dialog_yes) { _, _ -> _dataStore.resetAllValues(); _dataStore.commit(); _bus.post(ResetGPSState()); AdvancedLocation(applicationContext).resetGPX(); Toast.makeText(applicationContext, "Done", Toast.LENGTH_SHORT).show() }
+                .setNegativeButton(R.string.dialog_no, null).show()
             "action_share_location" -> {
                 val lat = _dataStore.getLastLocationLatitude(); val lon = _dataStore.getLastLocationLongitude()
                 if (lat != 0f && lon != 0f) startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:$lat,$lon?q=$lat,$lon")))
@@ -242,7 +243,7 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
     private fun detectNewVersion() {
         var last = _sharedPreferences.getInt("VERSION_CODE", 0)
         var cur = 0
-        try { cur = packageManager.getPackageInfo(packageName, 0).versionCode } catch (_: Exception) { cur = 0 }
+        try { cur = PackageInfoCompat.getLongVersionCode(packageManager.getPackageInfo(packageName, 0)).toInt() } catch (_: Exception) { cur = 0 }
         if (last < cur) {
             Log.d(TAG, "newVersion: $last -> $cur")
             val e = _sharedPreferences.edit()

@@ -19,6 +19,12 @@ import javax.inject.Inject;
  * Time: 21:38
  * To change this template use File | Settings | File Templates.
  */
+/**
+ * IntentService was deprecated in API 30 with no drop-in replacement. Its intended successor is
+ * WorkManager/JobService, which would mean a new dependency plus re-architecting how the activity
+ * recognition PendingIntent delivers results, so the legacy service is kept as is for now.
+ */
+@SuppressWarnings("deprecation")
 public class ActivityRecognitionIntentService extends IntentService {
 
     private static final String TAG = "PB-ActivityRecognitionIntentService";

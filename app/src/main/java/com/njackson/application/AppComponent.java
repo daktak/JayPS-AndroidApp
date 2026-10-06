@@ -1,7 +1,6 @@
 package com.njackson.application;
 
 import com.njackson.activities.MainActivity;
-import com.njackson.activities.SettingsActivity;
 import com.njackson.activityrecognition.ActivityRecognitionIntentService;
 import com.njackson.activityrecognition.ActivityRecognitionServiceCommand;
 import com.njackson.fragments.AltitudeFragment;
@@ -29,7 +28,6 @@ import com.njackson.upload.StravaUpload;
 @Component(modules = com.njackson.application.modules.AndroidModule.class)
 public interface AppComponent {
     void inject(MainActivity a);
-    void inject(SettingsActivity a);
     void inject(StartButtonFragment a);
     void inject(SpeedFragment a);
     void inject(AltitudeFragment a);

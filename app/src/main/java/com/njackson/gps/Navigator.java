@@ -316,7 +316,7 @@ public class Navigator {
                         //loc.setAltitude(Float.parseFloat(eElement.getElementsByTagName("ele").item(0).getTextContent()));
                         Poi wpt = new Poi(loc);
                         wpt.name = eElement.getElementsByTagName("name").item(0).getTextContent();
-                        wpt.desc = android.text.Html.fromHtml(eElement.getElementsByTagName("desc").item(0).getTextContent()).toString();
+                        wpt.desc = android.text.Html.fromHtml(eElement.getElementsByTagName("desc").item(0).getTextContent(), android.text.Html.FROM_HTML_MODE_LEGACY).toString();
                         _wpts.add(wpt);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Exception:" + e);

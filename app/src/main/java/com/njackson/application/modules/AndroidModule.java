@@ -12,7 +12,6 @@ import com.njackson.activityrecognition.ActivityRecognitionIntentService;
 import com.njackson.activityrecognition.ActivityRecognitionServiceCommand;
 import com.njackson.application.MainThreadBus;
 import com.njackson.application.PebbleBikeApplication;
-import com.njackson.activities.SettingsActivity;
 import com.njackson.changelog.ChangeLogBuilder;
 import com.njackson.changelog.IChangeLogBuilder;
 import com.njackson.fragments.AltitudeFragment;
