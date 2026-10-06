@@ -20,8 +20,8 @@ android {
         applicationId "com.njackson"
         minSdk 24
         targetSdk 34
-        versionCode 511
-        versionName "v26.9.1"
+        versionCode 520
+        versionName "v26.10.0"
         testInstrumentationRunner "com.njackson.test.MyInstrumentationTestRunner"
     }
 
@@ -116,4 +116,10 @@ dependencies {
     // framework to run on API 29+. Legacy dexmaker 1.x cannot write dex files on modern
     // Android, which crashed every mock-based instrumentation test.
     androidTestImplementation 'org.mockito:mockito-android:5.11.0'
+
+    // JVM unit tests for the pure parsing/conversion logic that has no Android dependency.
+    // org.json ships real behaviour only on device; the JVM stub throws on every call, so the
+    // reference implementation is put on the unit test classpath.
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
 }

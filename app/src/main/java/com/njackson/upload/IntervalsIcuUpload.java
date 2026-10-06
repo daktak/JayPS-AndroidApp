@@ -44,7 +44,8 @@ public class IntervalsIcuUpload {
     }
 
     private static final String TAG = "PB-IntervalsIcuUpload";
-    private static final String UA = "Mozilla/5.0 (Linux; Android) KayPS";
+    /** Shared with IntervalsIcuAthlete so every intervals.icu call identifies itself the same way. */
+    static final String UA = "Mozilla/5.0 (Linux; Android) KayPS";
     private static final String UPLOAD_URL = "https://intervals.icu/api/v1/athlete/0/activities";
     private static final int TIMEOUT_CONNECT_MS = 15000;
     private static final int TIMEOUT_READ_MS = 60000;

@@ -73,6 +73,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.njackson.Constants
 import com.njackson.R
+import com.njackson.upload.IntervalsIcuAthlete.Profile as IntervalsIcuProfile
 import com.njackson.utils.RiderModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -193,6 +194,9 @@ private fun RiderGroup(nav: NavController, vm: SettingsViewModel) {
     val s by vm.state.collectAsState()
     var hrmZoneOpen by remember { mutableStateOf(false) }
     var sexOpen by remember { mutableStateOf(false) }
+    var importBusy by remember { mutableStateOf(false) }
+    var importResult by remember { mutableStateOf<IntervalsIcuProfile?>(null) }
+    var importError by remember { mutableStateOf<Int?>(null) }
     SettingsScaffold(stringResource(R.string.settings_rider_title), nav) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { GroupCard(stringResource(R.string.settings_rider_title), Icons.Filled.Person) {
@@ -207,11 +211,80 @@ private fun RiderGroup(nav: NavController, vm: SettingsViewModel) {
                 val riderParams = RiderModel.paramsFromPrefs(s.riderHeight, s.riderWeight)
                 val physicsInfo = stringResource(R.string.PREF_RIDER_PHYSICS_INFO, String.format("%.2f", riderParams.cda), String.format("%.4f", RiderModel.CRR))
                 ClickRow(physicsInfo, "", onClick = {})
+                ClickRow(
+                    stringResource(R.string.rider_import_intervals),
+                    when {
+                        importBusy -> stringResource(R.string.rider_import_intervals_fetching)
+                        s.intervalsIcuApiKey.isEmpty() -> stringResource(R.string.rider_import_intervals_no_key)
+                        else -> stringResource(R.string.rider_import_intervals_key_set)
+                    },
+                    onClick = {
+                        if (s.intervalsIcuApiKey.isEmpty()) {
+                            nav.navigate("intervals_icu")
+                        } else if (!importBusy) {
+                            importBusy = true; importError = null
+                            vm.fetchIntervalsProfile { profile, errorRes ->
+                                importBusy = false
+                                if (profile == null) importError = errorRes
+                                else if (profile.keys.isEmpty()) importError = R.string.rider_import_intervals_empty
+                                else importResult = profile
+                            }
+                        }
+                    },
+                )
             } }
         }
         if (hrmZoneOpen) ListDialog(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), arrayOf("Disable","Vibrate at every zone change","Vibrate entering max zone"), arrayOf("0","1","2"), s.hrmZone, { hrmZoneOpen = false }, { vm.putString("PREF_BLE_HRM_ZONE_NOTIFICATION_MODE", it); hrmZoneOpen = false })
         if (sexOpen) ListDialog(stringResource(R.string.PREF_RIDER_SEX), arrayOf(stringResource(R.string.rider_sex_male), stringResource(R.string.rider_sex_female)), arrayOf(Constants.RIDER_SEX_MALE, Constants.RIDER_SEX_FEMALE), s.riderSex, { sexOpen = false }, { vm.putString(Constants.PREF_RIDER_SEX, it); sexOpen = false })
+        importError?.let { msgRes ->
+            AlertDialog(onDismissRequest = { importError = null }, title = { Text(stringResource(R.string.rider_import_intervals)) }, text = { Text(stringResource(msgRes)) }, confirmButton = { TextButton(onClick = { importError = null }) { Text(stringResource(R.string.dialog_ok)) } })
+        }
+        importResult?.let { profile ->
+            // Shows old -> new for every field intervals.icu actually carried, so nothing is
+            // replaced silently. The user confirms before a single preference is written.
+            val changes = profileChanges(profile, s)
+            AlertDialog(
+                onDismissRequest = { importResult = null },
+                title = { Text(stringResource(R.string.rider_import_intervals_title)) },
+                text = {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(stringResource(R.string.rider_import_intervals_summary, changes.size), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (!profile.sport.isNullOrEmpty()) {
+                            Text(stringResource(R.string.rider_import_intervals_sport, profile.sport), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        changes.forEach { (label, from, to) ->
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
+                                Text(from, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("  →  ", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(to, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                },
+                confirmButton = { TextButton(onClick = { vm.applyIntervalsProfile(profile); importResult = null }) { Text(stringResource(R.string.rider_import_intervals_apply)) } },
+                dismissButton = { TextButton(onClick = { importResult = null }) { Text(stringResource(R.string.dialog_cancel)) } },
+            )
+        }
     }
+}
+
+/** Label plus current and incoming value for each field the import will overwrite. */
+@Composable
+private fun profileChanges(p: IntervalsIcuProfile, s: SettingsUiState): List<Triple<String, String, String>> {
+    val out = mutableListOf<Triple<String, String, String>>()
+    val dash = stringResource(R.string.placeholder_dash)
+    fun add(label: String, current: String, incoming: String?) {
+        if (incoming != null) out.add(Triple(label, current.ifEmpty { dash }, incoming))
+    }
+    add(stringResource(R.string.PREF_RIDER_WEIGHT), s.riderWeight, p.weightKg?.toString())
+    add(stringResource(R.string.PREF_RIDER_HEIGHT), s.riderHeight, p.heightCm?.toString())
+    add(stringResource(R.string.PREF_RIDER_AGE), s.riderAge, p.ageYears?.toString())
+    add(stringResource(R.string.PREF_RIDER_RESTING_HR), s.riderRestingHr, p.restingHr?.toString())
+    add(stringResource(R.string.PREF_RIDER_SEX), s.riderSex, p.sex)
+    add(stringResource(R.string.PREF_FTP), s.ftp, p.ftp?.toString())
+    add(stringResource(R.string.PREF_BLE_HRM_HRMAX), s.hrmMax, p.maxHr?.toString())
+    return out
 }
 
 @Composable

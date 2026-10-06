@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelog>
+    <release version="26.10.0" versioncode="520" >
+        <change><![CDATA[<b>Translations</b><br />
+            - French<br />
+            - German<br />
+            - Italian<br />
+            - Japanese<br />
+            - Spanish]]></change>
+        <change><![CDATA[<b>Intervals.icu</b><br />
+            - Support uploading activity<br />
+            - Fetch rider values]]></change>
+        <change>Calorie calculation</change>
+        <change><![CDATA[<b>Smart trainer control</b><br />
+            - ERG mode<br />
+            - Set gradient]]></change>
+    </release>
     <release version="26.9.1" versioncode="511" >
         <change>New UI</change>
         <change>Openstreetmap with breadcrumbs</change>

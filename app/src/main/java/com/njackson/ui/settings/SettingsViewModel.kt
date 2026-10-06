@@ -4,12 +4,17 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.njackson.Constants
 import com.njackson.events.GPSServiceCommand.ChangeIndoorMode
 import com.njackson.events.GPSServiceCommand.ChangeRefreshInterval
 import com.njackson.events.PebbleServiceCommand.HrMonitorEnable
 import com.njackson.state.IGPSDataStore
+import com.njackson.upload.IntervalsIcuAthlete
+import com.njackson.upload.IntervalsIcuAthlete.Profile as IntervalsIcuProfile
 import com.squareup.otto.Bus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +26,8 @@ class SettingsViewModel(
     private val bus: Bus,
     private val ctx: Context,
 ) : ViewModel() {
+
+    private companion object { const val TAG = "PB-SettingsViewModel" }
 
     private val _state = MutableStateFlow(load())
     val state: StateFlow<SettingsUiState> = _state.asStateFlow()
@@ -106,6 +113,50 @@ class SettingsViewModel(
             }
         }
     }
+    /**
+     * Fetches the rider profile from intervals.icu without touching preferences; the caller shows a
+     * preview and only then calls [applyIntervalsProfile], so nothing is overwritten by surprise.
+     *
+     * [onFetched] receives either the profile or a string resource id explaining the failure. It runs
+     * on the main thread; the request itself happens on a background thread.
+     */
+    fun fetchIntervalsProfile(onFetched: (IntervalsIcuProfile?, Int) -> Unit) {
+        val apiKey = prefs.getString("INTERVALS_ICU_API_KEY", "") ?: ""
+        if (apiKey.isBlank()) {
+            onFetched(null, com.njackson.R.string.rider_import_intervals_error_no_key)
+            return
+        }
+        val activityType = prefs.getString("TCX_ACTIVITY_TYPE", "Biking") ?: "Biking"
+        Thread {
+            val profile = try {
+                IntervalsIcuAthlete().fetchProfile(apiKey, activityType)
+            } catch (e: Exception) {
+                Log.e(TAG, "intervals.icu athlete fetch failed: ${e.message}")
+                null
+            }
+            onPost { onFetched(profile, if (profile == null) com.njackson.R.string.rider_import_intervals_error_fetch else 0) }
+        }.start()
+    }
+
+    /** Writes [profile] into the rider preferences, replacing what was there before. */
+    fun applyIntervalsProfile(profile: IntervalsIcuProfile) {
+        // One commit: the reader either sees the old rider or the fully imported one, never a
+        // half-applied profile, and the settings reload happens once instead of seven times.
+        val editor = prefs.edit()
+        profile.weightKg?.let { editor.putString(Constants.PREF_RIDER_WEIGHT, it.toString()) }
+        profile.heightCm?.let { editor.putString(Constants.PREF_RIDER_HEIGHT, it.toString()) }
+        profile.ageYears?.let { editor.putString(Constants.PREF_RIDER_AGE, it.toString()) }
+        profile.restingHr?.let { editor.putString(Constants.PREF_RIDER_RESTING_HR, it.toString()) }
+        profile.sex?.let { editor.putString(Constants.PREF_RIDER_SEX, it) }
+        profile.ftp?.let { editor.putString(Constants.PREF_FTP, it.toString()) }
+        profile.maxHr?.let { editor.putString(Constants.PREF_BLE_HRM_HRMAX, it.toString()) }
+        editor.apply()
+        _state.value = load()
+        store.reloadPreferencesFromSettings()
+    }
+
+    private fun onPost(block: () -> Unit) = Handler(Looper.getMainLooper()).post(block)
+
     fun clearBle(i: Int) { prefs.edit().putString("hrm_name${i+1}", "").putString("hrm_address${i+1}", "").apply(); _state.value = load() }
     fun setBle(i: Int, name: String, addr: String) { prefs.edit().putString("hrm_name${i+1}", name).putString("hrm_address${i+1}", addr).apply(); _state.value = load() }
 }

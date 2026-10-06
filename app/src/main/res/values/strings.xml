@@ -129,6 +129,17 @@
     <string name="rider_sex_male">Male</string>
     <string name="rider_sex_female">Female</string>
     <string name="dashboard_calories">Calories</string>
+    <string name="rider_import_intervals">Import from intervals.icu</string>
+    <string name="rider_import_intervals_key_set">Tap to fetch your rider values</string>
+    <string name="rider_import_intervals_no_key">API key not set - tap to configure intervals.icu</string>
+    <string name="rider_import_intervals_fetching">Fetching…</string>
+    <string name="rider_import_intervals_title">Import rider profile</string>
+    <string name="rider_import_intervals_summary">%1$d value(s) will be replaced:</string>
+    <string name="rider_import_intervals_sport">FTP and max HR from: %1$s</string>
+    <string name="rider_import_intervals_apply">Replace</string>
+    <string name="rider_import_intervals_error_fetch">Could not read your profile from intervals.icu. Check the API key and try again.</string>
+    <string name="rider_import_intervals_error_no_key">No intervals.icu API key is set.</string>
+    <string name="rider_import_intervals_empty">No rider values are set on intervals.icu.</string>
     <string name="settings_rider_title">Rider &amp; Physics</string>
     <string name="settings_rider_summary">Height, weight, FTP, max heart rate, zone alarms</string>
     <string name="PREF_BLE_HRM_ZONE_NOTIFICATION_MODE_DEFAULT" translatable="false">0</string>
