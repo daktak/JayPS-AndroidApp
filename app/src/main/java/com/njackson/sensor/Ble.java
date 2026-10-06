@@ -505,15 +505,32 @@ public class Ble implements IBle, ITimerHandler {
                         }
                     }
 
-            // BluetoothGattCallback.onCharacteristicRead/Changed(gatt, characteristic) and
-            // onDescriptorRead were deprecated in API 33: on API 33+ the framework delivers the
-            // value through the byte[] overloads instead and never calls these, so those
-            // overloads are overridden below and forwarded to the same handlers.
-            @SuppressWarnings("deprecation")
+                    // API 33 deprecated onCharacteristicRead(gatt, ch, status) and
+                    // onCharacteristicChanged(gatt, ch) in favour of the overloads that also pass
+                    // the value. From API 33 on the framework only calls the byte[] overloads, so
+                    // both are overridden here: the deprecated ones still drive API 24-32, and the
+                    // byte[] ones store the value in the characteristic and reuse the same
+                    // handlers, so decoding is identical on every supported version.
+                    @SuppressWarnings("deprecation")
                     @Override
                     public void onCharacteristicRead(BluetoothGatt gatt,
                                                      BluetoothGattCharacteristic characteristic,
                                                      int status) {
+                        handleCharacteristicRead(gatt, characteristic, status);
+                    }
+
+                    @Override
+                    public void onCharacteristicRead(BluetoothGatt gatt,
+                                                     BluetoothGattCharacteristic characteristic,
+                                                     byte[] value,
+                                                     int status) {
+                        if (value != null) setBytes(characteristic, value);
+                        handleCharacteristicRead(gatt, characteristic, status);
+                    }
+
+                    private void handleCharacteristicRead(BluetoothGatt gatt,
+                                                          BluetoothGattCharacteristic characteristic,
+                                                          int status) {
                         readCharacteristicQueue.poll();
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -532,8 +549,21 @@ public class Ble implements IBle, ITimerHandler {
                     @Override
                     public void onCharacteristicChanged(BluetoothGatt gatt,
                                                         BluetoothGattCharacteristic characteristic) {
+                        handleCharacteristicChanged(gatt, characteristic);
+                    }
+
+                    @Override
+                    public void onCharacteristicChanged(BluetoothGatt gatt,
+                                                        BluetoothGattCharacteristic characteristic,
+                                                        byte[] value) {
+                        if (value != null) setBytes(characteristic, value);
+                        handleCharacteristicChanged(gatt, characteristic);
+                    }
+
+                    private void handleCharacteristicChanged(BluetoothGatt gatt,
+                                                             BluetoothGattCharacteristic characteristic) {
                         String msg = decodeCharacteristic(gatt, characteristic);
-                        if (debug) Log.d(TAG, display(gatt) + " onCharacteristicChanged" + display(characteristic) + " " + msg);
+                        if (debug) Log.d(TAG, display(gatt, characteristic) + " onCharacteristicChanged" + display(characteristic) + " " + msg);
                     }
 
                     @Override
@@ -1520,8 +1550,9 @@ public class Ble implements IBle, ITimerHandler {
 
     /**
      * Request a read on a given {@code BluetoothGattCharacteristic}. The read result is reported
-     * asynchronously through the {@code BluetoothGattCallback#onCharacteristicRead(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, int)}
-     * callback.
+     * asynchronously through the {@code BluetoothGattCallback#onCharacteristicRead} callback, in
+     * its API 24-32 form (gatt, characteristic, status) or its API 33+ form that also carries the
+     * value (gatt, characteristic, value, status).
      *
      * @param characteristic The characteristic to read from.
      */
