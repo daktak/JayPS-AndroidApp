@@ -1,5 +1,6 @@
 package com.njackson.utils.gpx;
 
+import com.njackson.Constants;
 import com.njackson.R;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.njackson.utils.RiderPrefs;
 
 import fr.jayps.android.AdvancedLocation;
 
@@ -29,12 +32,10 @@ public class GpxExport {
         new Thread(new Runnable() {
             public void run() {
                 AdvancedLocation advancedLocation = new AdvancedLocation(_context);
-                String gpx;
-                if (fileFormat.equals("tcx")) {
-                    gpx = advancedLocation.getTCX(tcxType);
-                } else {
-                    gpx = advancedLocation.getGPX(_extended_gpx);
-                }
+                RiderPrefs.applyTo(advancedLocation, _context.getSharedPreferences(
+                        Constants.PREF_NAME, Context.MODE_PRIVATE));
+                String gpx = fileFormat.equals("tcx") ? advancedLocation.getTCX(tcxType)
+                        : advancedLocation.getGPX(_extended_gpx);
 
                 try {
                     String fileName = new SimpleDateFormat("'track_'yyyyMMddHHmm'.'").format(new Date());

@@ -83,6 +83,14 @@ public abstract class MyLocation {
         this._nbAscent = _nbAscent;
     }
 
+    private int _calories;
+    public int getCalories() {
+        return _calories;
+    }
+    public void setCalories(int _calories) {
+        this._calories = _calories;
+    }
+
     private float _slope;
     public float getSlope() {
         return _slope;

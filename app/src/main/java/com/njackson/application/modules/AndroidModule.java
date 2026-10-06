@@ -7,6 +7,7 @@ import android.location.LocationManager;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognition;
+import com.njackson.Constants;
 import com.njackson.activities.MainActivity;
 import com.njackson.activityrecognition.ActivityRecognitionIntentService;
 import com.njackson.activityrecognition.ActivityRecognitionServiceCommand;
@@ -100,7 +101,7 @@ public class AndroidModule {
     }
 
     @Provides @Singleton SharedPreferences provideSharedPreferences() {
-        return application.getSharedPreferences("com.njackson_preferences", Context.MODE_PRIVATE);
+        return application.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE);
     }
 
     @Provides @Singleton

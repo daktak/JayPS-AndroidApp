@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
+import com.njackson.utils.RiderPrefs;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,6 +76,7 @@ public class StravaUpload {
                 try {
                     Log.i(TAG, "upload start (sessionLen=" + session.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
+                    RiderPrefs.applyTo(advancedLocation, _sharedPreferences);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
                     // always TCX: it is the only carrier of Activity Sport, which is how
                     // Strava learns the activity type (no sport_type form field is sent)

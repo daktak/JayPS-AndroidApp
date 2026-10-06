@@ -54,6 +54,10 @@ class SettingsViewModel(
             ftp = prefs.getString(Constants.PREF_FTP, "0") ?: "0",
             riderHeight = prefs.getString(Constants.PREF_RIDER_HEIGHT, "") ?: "",
             riderWeight = prefs.getString(Constants.PREF_RIDER_WEIGHT, "") ?: "",
+            riderAge = prefs.getString(Constants.PREF_RIDER_AGE, "0") ?: "0",
+            riderRestingHr = prefs.getString(Constants.PREF_RIDER_RESTING_HR, "0") ?: "0",
+            riderSex = prefs.getString(Constants.PREF_RIDER_SEX, Constants.RIDER_SEX_MALE)
+                ?: Constants.RIDER_SEX_MALE,
             wheelPreset = prefs.getString("PREF_BLE_CSC_WHEEL_PRESET", "") ?: "",
             wheelSize = prefs.getString("PREF_BLE_CSC_WHEEL_SIZE", "") ?: "",
             liveTracking = prefs.getBoolean("LIVE_TRACKING", false),

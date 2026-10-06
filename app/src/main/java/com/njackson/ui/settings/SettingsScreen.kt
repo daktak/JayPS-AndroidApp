@@ -192,11 +192,15 @@ private fun SensorsGroup(nav: NavController, vm: SettingsViewModel, onScanBle: (
 private fun RiderGroup(nav: NavController, vm: SettingsViewModel) {
     val s by vm.state.collectAsState()
     var hrmZoneOpen by remember { mutableStateOf(false) }
+    var sexOpen by remember { mutableStateOf(false) }
     SettingsScaffold(stringResource(R.string.settings_rider_title), nav) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { GroupCard(stringResource(R.string.settings_rider_title), Icons.Filled.Person) {
                 EditRow(stringResource(R.string.PREF_RIDER_HEIGHT), s.riderHeight) { vm.putString(Constants.PREF_RIDER_HEIGHT, it.filter { c -> c.isDigit() }) }
                 EditRow(stringResource(R.string.PREF_RIDER_WEIGHT), s.riderWeight) { vm.putString(Constants.PREF_RIDER_WEIGHT, it.filter { c -> c.isDigit() }) }
+                EditRow(stringResource(R.string.PREF_RIDER_AGE), s.riderAge) { vm.putString(Constants.PREF_RIDER_AGE, it.filter { c -> c.isDigit() }) }
+                EditRow(stringResource(R.string.PREF_RIDER_RESTING_HR), s.riderRestingHr) { vm.putString(Constants.PREF_RIDER_RESTING_HR, it.filter { c -> c.isDigit() }) }
+                ClickRow(stringResource(R.string.PREF_RIDER_SEX), riderSexLabel(s.riderSex)) { sexOpen = true }
                 EditRow(stringResource(R.string.PREF_FTP), s.ftp) { vm.putString(Constants.PREF_FTP, it.filter { c -> c.isDigit() }) }
                 EditRow(stringResource(R.string.PREF_BLE_HRM_HRMAX), s.hrmMax) { vm.putString("PREF_BLE_HRM_HRMAX", it) }
                 ClickRow(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), hrmZoneLabel(s.hrmZone)) { hrmZoneOpen = true }
@@ -206,8 +210,13 @@ private fun RiderGroup(nav: NavController, vm: SettingsViewModel) {
             } }
         }
         if (hrmZoneOpen) ListDialog(stringResource(R.string.PREF_BLE_HRM_ZONE_NOTIFICATION_MODE), arrayOf("Disable","Vibrate at every zone change","Vibrate entering max zone"), arrayOf("0","1","2"), s.hrmZone, { hrmZoneOpen = false }, { vm.putString("PREF_BLE_HRM_ZONE_NOTIFICATION_MODE", it); hrmZoneOpen = false })
+        if (sexOpen) ListDialog(stringResource(R.string.PREF_RIDER_SEX), arrayOf(stringResource(R.string.rider_sex_male), stringResource(R.string.rider_sex_female)), arrayOf(Constants.RIDER_SEX_MALE, Constants.RIDER_SEX_FEMALE), s.riderSex, { sexOpen = false }, { vm.putString(Constants.PREF_RIDER_SEX, it); sexOpen = false })
     }
 }
+
+@Composable
+private fun riderSexLabel(sex: String): String = stringResource(
+    if (sex == Constants.RIDER_SEX_FEMALE) R.string.rider_sex_female else R.string.rider_sex_male)
 
 @Composable
 private fun NavigationGroup(nav: NavController, vm: SettingsViewModel, onPickGpx: () -> Unit) {

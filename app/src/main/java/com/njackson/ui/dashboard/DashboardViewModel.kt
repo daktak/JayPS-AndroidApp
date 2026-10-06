@@ -136,6 +136,7 @@ class DashboardViewModel(
             heartRate = newHr,
             power = newPower,
             cadence = newCad,
+            calories = e.getCalories(),
             accuracy = e.getAccuracy(),
             trail = newTrail,
             hrGraph = hrReduce.getGraphData().toList(),

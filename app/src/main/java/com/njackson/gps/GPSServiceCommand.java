@@ -40,6 +40,7 @@ import com.njackson.upload.StravaUpload;
 import com.njackson.state.IGPSDataStore;
 import com.njackson.utils.AltitudeGraphReduce;
 import com.njackson.utils.BatteryStatus;
+import com.njackson.utils.RiderPrefs;
 import com.njackson.utils.services.IServiceStarter;
 import com.njackson.utils.time.ITime;
 import com.squareup.otto.Bus;
@@ -456,6 +457,7 @@ public class GPSServiceCommand implements IServiceCommand {
         _advancedLocation.setSaveLocation(_sharedPreferences.getBoolean("ENABLE_TRACKS", false));
         _indoor = _sharedPreferences.getBoolean(Constants.PREF_INDOOR_MODE, false);
         _advancedLocation.setIndoor(_indoor);
+        RiderPrefs.applyTo(_advancedLocation, _sharedPreferences);
         applySaveMode();
     }
 
@@ -607,6 +609,10 @@ public class GPSServiceCommand implements IServiceCommand {
             _ypos = Math.floor(_ypos / 10);
         }
         int units = _dataStore.getMeasurementUnits();
+
+        // Re-applied every tick so rider profile edits take effect without restarting the ride.
+        // setRiderProfile is a no-op when nothing changed, so the cached total survives.
+        RiderPrefs.applyTo(_advancedLocation, _sharedPreferences);
 
         NewLocation event = new AdvancedLocationToNewLocation(_advancedLocation, _xpos, _ypos, units);
         event.setFirstLocation(firstLocation);

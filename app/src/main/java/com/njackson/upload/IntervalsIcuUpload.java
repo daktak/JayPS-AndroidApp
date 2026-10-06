@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.njackson.R;
 import com.njackson.application.PebbleBikeApplication;
+import com.njackson.utils.RiderPrefs;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,6 +71,7 @@ public class IntervalsIcuUpload {
                 try {
                     Log.i(TAG, "upload start (apiKeyLen=" + apiKey.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
+                    RiderPrefs.applyTo(advancedLocation, _sharedPreferences);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
                     // always TCX: it is the only carrier of Activity Sport, which is how
                     // the service learns the activity type

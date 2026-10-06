@@ -59,6 +59,7 @@ data class DashboardUiState(
     val heartRate: Int = 0,
     val power: Int = -1,
     val cadence: Int = 0,
+    val calories: Int = 0,
     val accuracy: Float = 0f,
     val units: Int = 1,
     val isRunning: Boolean = false,

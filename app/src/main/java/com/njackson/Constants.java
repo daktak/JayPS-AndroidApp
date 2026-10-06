@@ -30,9 +30,17 @@ public class Constants {
     public static final int PEBBLE_MSG_HEART_RATE = 0x2A;
     public static final int PEBBLE_MSG_HR_MONITOR_ENABLE = 0x2B;
 
+    public static final String PREF_NAME = "com.njackson_preferences";
     public static final String PREF_FTP = "PREF_FTP";
     public static final String PREF_RIDER_HEIGHT = "PREF_RIDER_HEIGHT";
     public static final String PREF_RIDER_WEIGHT = "PREF_RIDER_WEIGHT";
+    // "0" means unset, which makes EnergyModel fall back to a less demanding estimator
+    public static final String PREF_RIDER_AGE = "PREF_RIDER_AGE";
+    public static final String PREF_RIDER_RESTING_HR = "PREF_RIDER_RESTING_HR";
+    public static final String PREF_RIDER_SEX = "PREF_RIDER_SEX";
+    public static final String PREF_BLE_HRM_HRMAX = "PREF_BLE_HRM_HRMAX";
+    public static final String RIDER_SEX_MALE = "m";
+    public static final String RIDER_SEX_FEMALE = "f";
 
     public static final int PLAY_PRESS = 0x0;
     public static final int STOP_PRESS = 0x1;

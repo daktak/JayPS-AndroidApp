@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material.icons.filled.PlayArrow
@@ -238,6 +239,8 @@ private fun StatsGrid(s: DashboardUiState) {
             StatCard(Modifier.weight(1f), Icons.Filled.Timer, stringResource(R.string.dashboard_time), DateUtils.formatElapsedTime(s.elapsedSec.toLong()), "")
             StatCard(Modifier.weight(1f), Icons.Filled.Speed, stringResource(R.string.dashboard_max_speed), conv.convertFloatToString(s.maxSpeed, 1), Units.getSpeedUnits(s.units))
         }
+        // Calories spans the full row: it is the widest label and shares a row with nothing else.
+            StatCard(Modifier.fillMaxWidth(), Icons.Filled.LocalFireDepartment, stringResource(R.string.dashboard_calories), s.calories.toString(), "kcal")
     }
 }
 
