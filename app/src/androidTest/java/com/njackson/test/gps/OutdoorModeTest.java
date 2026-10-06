@@ -94,6 +94,14 @@ public class OutdoorModeTest extends AndroidTestCase {
         assertTrue("TCX must contain Speed", tcx.contains("<ns3:Speed>"));
         assertTrue("TCX must contain DistanceMeters", tcx.contains("<DistanceMeters>"));
         assertTrue("TCX DistanceMeters must be >0", tcx.contains("<DistanceMeters>" + String.valueOf((int) adv.getDistance()).substring(0, 1)));
+        assertFalse("TCX must not contain the literal null", tcx.contains(">null<"));
+        assertTrue("TCX Lap must have StartTime", tcx.contains("<Lap StartTime=\""));
+        assertTrue("TCX must contain TotalTimeSeconds", tcx.contains("<TotalTimeSeconds>"));
+        assertTrue("TCX must contain lap DistanceMeters", tcx.contains("</TotalTimeSeconds>\n    <DistanceMeters>"));
+        assertTrue("TCX must contain Calories", tcx.contains("<Calories>"));
+        assertTrue("TCX must contain Intensity Active", tcx.contains("<Intensity>Active</Intensity>"));
+        assertTrue("TCX must contain TriggerMethod Manual", tcx.contains("<TriggerMethod>Manual</TriggerMethod>"));
+        assertTrue("TCX must contain Sport Biking", tcx.contains("<Activity Sport=\"Biking\">"));
 
         String gpx = adv.getGPX(true);
         assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));

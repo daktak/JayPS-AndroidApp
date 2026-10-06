@@ -101,6 +101,9 @@ public class IndoorPowermeterTest extends AndroidTestCase {
         assertTrue("TCX must contain Speed from wheel", tcx.contains("<ns3:Speed>"));
         assertTrue("TCX must contain DistanceMeters from wheel", tcx.contains("<DistanceMeters>"));
         assertTrue("TCX speed value must match sensor", tcx.contains(String.valueOf(sensorSpeed).substring(0, 3)));
+        // indoor writes NULL loca_altitude, so it must be omitted rather than printed
+        assertFalse("TCX must not contain the literal null", tcx.contains(">null<"));
+        assertFalse("TCX must omit AltitudeMeters when altitude is NULL", tcx.contains("<AltitudeMeters>"));
 
         String gpx = adv.getGPX(true);
         assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));
@@ -135,6 +138,14 @@ public class IndoorPowermeterTest extends AndroidTestCase {
         assertTrue("TCX must contain Speed", tcx.contains("<ns3:Speed>"));
         assertTrue("TCX must contain DistanceMeters", tcx.contains("<DistanceMeters>"));
         assertTrue("TCX distance value must be >0", adv.getDistance() > 0f);
+        assertFalse("TCX must not contain the literal null", tcx.contains(">null<"));
+        assertFalse("TCX must omit AltitudeMeters when altitude is NULL", tcx.contains("<AltitudeMeters>"));
+        assertTrue("TCX Lap must have StartTime", tcx.contains("<Lap StartTime=\""));
+        assertTrue("TCX must contain TotalTimeSeconds", tcx.contains("<TotalTimeSeconds>"));
+        assertTrue("TCX must contain lap DistanceMeters", tcx.contains("</TotalTimeSeconds>\n    <DistanceMeters>"));
+        assertTrue("TCX must contain Calories", tcx.contains("<Calories>"));
+        assertTrue("TCX must contain Intensity Active", tcx.contains("<Intensity>Active</Intensity>"));
+        assertTrue("TCX must contain TriggerMethod Manual", tcx.contains("<TriggerMethod>Manual</TriggerMethod>"));
 
         String gpx = adv.getGPX(true);
         assertTrue("GPX must contain HR", gpx.contains("<gpxtpx:hr>" + hr + "</gpxtpx:hr>"));

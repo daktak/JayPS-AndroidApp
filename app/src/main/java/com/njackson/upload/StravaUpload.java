@@ -76,16 +76,10 @@ public class StravaUpload {
                     Log.i(TAG, "upload start (sessionLen=" + session.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
-                    String filename;
-                    String data;
-                    if (advancedLocation.hasPowerData()) {
-                        data = advancedLocation.getTCX(activityType);
-                        filename = "activity.tcx";
-                    } else {
-                        data = advancedLocation.getGPX(false);
-                        filename = "activity.gpx";
-                    }
-                    message = _upload(session.trim(), data, filename);
+                    // always TCX: it is the only carrier of Activity Sport, which is how
+                    // Strava learns the activity type (no sport_type form field is sent)
+                    String data = advancedLocation.getTCX(activityType);
+                    message = _upload(session.trim(), data, "activity.tcx");
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e, e);
                     message = "Error - " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());

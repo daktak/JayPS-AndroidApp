@@ -71,16 +71,10 @@ public class IntervalsIcuUpload {
                     Log.i(TAG, "upload start (apiKeyLen=" + apiKey.trim().length() + ")");
                     AdvancedLocation advancedLocation = new AdvancedLocation(_context);
                     String activityType = _sharedPreferences.getString("TCX_ACTIVITY_TYPE", "Biking");
-                    String filename;
-                    String data;
-                    if (advancedLocation.hasPowerData()) {
-                        data = advancedLocation.getTCX(activityType);
-                        filename = "activity.tcx";
-                    } else {
-                        data = advancedLocation.getGPX(false);
-                        filename = "activity.gpx";
-                    }
-                    message = _upload(apiKey.trim(), data, filename);
+                    // always TCX: it is the only carrier of Activity Sport, which is how
+                    // the service learns the activity type
+                    String data = advancedLocation.getTCX(activityType);
+                    message = _upload(apiKey.trim(), data, "activity.tcx");
                 } catch (Exception e) {
                     Log.e(TAG, "Exception:" + e, e);
                     message = "Error - " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
